@@ -1,4 +1,4 @@
-using System.Runtime.CompilerServices;
+using RushedCrops.Player;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -21,12 +21,14 @@ public class PlayerController : MonoBehaviour
 
 
     private Rigidbody rb;
+    private PlayerLook look;
     private Vector2 moveInput;
     private bool jumpRequested;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        look = GetComponent<PlayerLook>();
     }
 
     private void OnEnable()
@@ -55,8 +57,9 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        Vector3 direction = new Vector3(moveInput.x, 0f, moveInput.y);
-        direction = Vector3.ClampMagnitude(direction, 1f);
+        // Walk where the camera faces. Without a PlayerLook, use the body's own facing.
+        float yaw = look != null ? look.Yaw : transform.eulerAngles.y;
+        Vector3 direction = MoveMath.GetMoveDirection(moveInput, yaw);
         float speed = moveSpeed;
 
         if (sprintAction.action.IsPressed())
