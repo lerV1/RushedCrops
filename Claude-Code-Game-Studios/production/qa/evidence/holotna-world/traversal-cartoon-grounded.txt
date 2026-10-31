@@ -1,3 +1,0 @@
-Cartoon grounded farm trail: 20.21m, end (-0.29, 1.00, -4.28) PASS
-Cartoon grounded Willow bridge: 19.70m, end (-71.61, 1.00, 60.09) PASS
-Cartoon grounded Timber bridge: 19.81m, end (87.41, 1.00, -28.00) PASS

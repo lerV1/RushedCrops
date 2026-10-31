@@ -49,13 +49,13 @@ This pass includes a day/night cycle. Weather, seasons, and gameplay effects of 
 
 ## CI and delivery
 
-The fast CI workflow runs the real inventory and clock logic on every branch push and pull request:
+The local logic test runner checks the real inventory and clock logic:
 
 ```powershell
 dotnet run --project CI/LogicTests -c Release
 ```
 
-The `Windows delivery` GitHub Actions workflow is manually dispatched against the chosen branch/revision. It runs the logic gate, validates the Unity scene, builds Windows, and uploads a revision-named artifact. Configure the repository's GameCI Unity licence secrets (`UNITY_LICENSE`, and `UNITY_EMAIL` / `UNITY_PASSWORD` when required by that licence) before using that hosted workflow. No credentials are stored in the project.
+Under the requested repository layout, `CI/` and `.github/` are local, ignored folders. A fresh clone does not include the local logic runner or the GitHub Actions workflows, and new pushes no longer run those workflows. The Unity scene validator and Windows build method remain tracked under `Assets/`.
 
 The same Unity gate/build can be run locally:
 
@@ -74,6 +74,6 @@ Close this project's interactive editor before starting a second editor against 
 - Historical Play-mode input checks on the earlier two-bridge layout passed: farm-to-merchant trail 20.21 m; Willow bridge 19.70 m; Timber bridge 19.81 m. These do not certify traversal of the newer one-bridge layout. Repeat traversal in Play for the current map.
 - The live cycle crossed from Day 1 at 23:54 into Day 2; the ten lanterns enabled at night.
 - Images and traversal/cycle logs are retained under `Claude-Code-Game-Studios/production/qa/evidence/holotna-world/` in the local working copy.
-- The first local Windows build attempt was cancelled when the art direction was revised. No completed Windows player is claimed for this pass; the manual delivery workflow still needs a hosted Unity licence setup and a successful run.
+- The first local Windows build attempt was cancelled when the art direction was revised. No completed Windows player is claimed for this pass. The tracked Unity build method can still be run locally; the hosted workflow is now local-only and ignored.
 
 Inspector setup: none. Current-layout traversal, gamepad-specific traversal, and a full gameplay session remain manual playtest steps.

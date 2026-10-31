@@ -1,3 +1,0 @@
-Farm to merchant trail: 20.31m, end (-0.22, 1.00, -4.22) PASS
-Willow bridge: 20.07m, end (-71.85, 1.00, 60.38) PASS
-Timber bridge: 19.80m, end (87.40, 1.00, -28.00) PASS
