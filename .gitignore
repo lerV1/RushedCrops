@@ -1,3 +1,10 @@
+# Keep only the Unity project folders and this ignore file in the repository.
+/*
+!/.gitignore
+!/Assets/
+!/Packages/
+!/ProjectSettings/
+
 # This .gitignore file should be placed at the root of your Unity project directory
 #
 # Get latest from https://github.com/github/gitignore/blob/main/Unity.gitignore
@@ -107,11 +114,6 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
-
-# CI logic tests are a plain .NET project, so keep its project file but not its build output.
-!/CI/**/*.csproj
-/CI/**/bin/
-/CI/**/obj/
 
 # CodeGraph indexes and WAL files are generated separately on each machine.
 /.codegraph/
