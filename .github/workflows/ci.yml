@@ -1,0 +1,23 @@
+# Runs the game's logic tests on every push and pull request.
+# They build the real game scripts against small UnityEngine stand-ins,
+# so this job needs .NET only, not a Unity licence.
+#
+# Run the same check locally from the repo root:
+#   dotnet run --project CI/LogicTests -c Release
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  logic-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Run logic tests
+        run: dotnet run --project CI/LogicTests -c Release
