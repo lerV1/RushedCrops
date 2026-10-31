@@ -368,12 +368,12 @@ namespace RushedCrops.Editor
 
         private static void BuildSigns(Transform parent)
         {
-            Sign(parent,V(-22,-31),"OLD BARN\nPLANTING PLOTS",-25f);
-            Sign(parent,V(-7,-10),"MERCHANT",0f);
-            Sign(parent,V(20,20),"STONE QUARRY  >",-20f);
-            Sign(parent,V(23,-25),"TIMBER CAMP  >",-30f);
-            Sign(parent,V(-57,31),"WILLOW BRIDGE",10f);
-            Sign(parent,V(61,-25),"RIVERSIDE",0f);
+            Sign(parent,V(-18,-32),"OLD BARN\nPLANTING PLOTS",-25f);
+            Sign(parent,V(-9,-5),"MERCHANT",0f);
+            Sign(parent,V(15,24),"STONE QUARRY  >",-20f);
+            Sign(parent,V(20,-31),"TIMBER CAMP  >",-30f);
+            Sign(parent,V(-54,32),"WILLOW BRIDGE",10f);
+            Sign(parent,V(63,-22),"RIVERSIDE",0f);
         }
 
         private static void Sign(Transform parent, Vector2 position, string message, float yaw)

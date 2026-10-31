@@ -14,8 +14,13 @@ public class EnvironmentCycle : MonoBehaviour
     [SerializeField] private Light moon;
     [SerializeField] private Light[] lanterns = new Light[0];
     [SerializeField, Min(0f)] private float daylightIntensity = 1.35f;
-    [SerializeField, Min(0f)] private float moonlightIntensity = 0.32f;
+    [SerializeField, Min(0f)] private float moonlightIntensity = 0.45f;
     [SerializeField, Min(0f)] private float lanternIntensity = 3f;
+
+    [Header("Night readability")]
+    [SerializeField] private Color nightSkyAmbient = new Color(0.23f, 0.29f, 0.43f);
+    [SerializeField] private Color nightHorizonAmbient = new Color(0.21f, 0.25f, 0.34f);
+    [SerializeField] private Color nightGroundAmbient = new Color(0.11f, 0.15f, 0.21f);
 
     private WorldClock clock;
     private Material originalSkybox;
@@ -101,9 +106,9 @@ public class EnvironmentCycle : MonoBehaviour
         }
 
         RenderSettings.ambientMode = AmbientMode.Trilight;
-        RenderSettings.ambientSkyColor = Color.Lerp(new Color(0.12f, 0.18f, 0.32f), new Color(0.60f, 0.72f, 0.85f), daylight);
-        RenderSettings.ambientEquatorColor = Color.Lerp(new Color(0.10f, 0.14f, 0.23f), new Color(0.55f, 0.60f, 0.46f), daylight);
-        RenderSettings.ambientGroundColor = Color.Lerp(new Color(0.06f, 0.09f, 0.15f), new Color(0.29f, 0.33f, 0.21f), daylight);
+        RenderSettings.ambientSkyColor = Color.Lerp(nightSkyAmbient, new Color(0.60f, 0.72f, 0.85f), daylight);
+        RenderSettings.ambientEquatorColor = Color.Lerp(nightHorizonAmbient, new Color(0.55f, 0.60f, 0.46f), daylight);
+        RenderSettings.ambientGroundColor = Color.Lerp(nightGroundAmbient, new Color(0.29f, 0.33f, 0.21f), daylight);
         RenderSettings.fog = true;
         RenderSettings.fogMode = FogMode.Linear;
         RenderSettings.fogStartDistance = Mathf.Lerp(45f, 85f, daylight);
