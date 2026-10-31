@@ -71,7 +71,9 @@ namespace RushedCrops.Editor
             BuildForest(Group("07_ForestAndMeadows"));
             BuildSigns(Group("08_Wayfinding"));
             BuildBoundaries(Group("09_WorldBoundary"));
+            CartoonWorldStyler.Apply();
             BuildEnvironment();
+            WorldGrounding.Apply();
 
             // Keep the original test ground available, and keep all player/input components intact.
             var oldGround = GameObject.Find("Ground");
