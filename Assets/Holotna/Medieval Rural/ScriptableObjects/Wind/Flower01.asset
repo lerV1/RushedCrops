@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e740ac6fbd2eb2f4baf6bff2a49a019d, type: 3}
+  m_Name: Flower01
+  m_EditorClassIdentifier: 
+  windStates:
+  - name: Off
+    bendStrength: 0
+    bendSpeed: 0
+    bendDistortion: 0
+    bendDirection: {x: 0, y: 0, z: 0}
+    wiggleStrength: 0
+    wiggleSpeed: 0
+  - name: Calm
+    bendStrength: 2
+    bendSpeed: 1
+    bendDistortion: 2
+    bendDirection: {x: 4, y: 0, z: 4}
+    wiggleStrength: 0.03
+    wiggleSpeed: 0.3
+  - name: Breeze
+    bendStrength: 3
+    bendSpeed: 1.5
+    bendDistortion: 2
+    bendDirection: {x: 8, y: 0, z: 8}
+    wiggleStrength: 0.06
+    wiggleSpeed: 0.3
+  - name: Storm
+    bendStrength: 4
+    bendSpeed: 2
+    bendDistortion: 2
+    bendDirection: {x: 12, y: 0, z: 12}
+    wiggleStrength: 0.1
+    wiggleSpeed: 0.3
+  affectedMaterials:
+  - {fileID: 2100000, guid: b2e08ab16dee7dd4ea102db9b70ede97, type: 2}
+  - {fileID: 2100000, guid: 50f89d28eeb8c9a4caeb59ad94b428bc, type: 2}
+  - {fileID: 2100000, guid: 42424e8e2c7e199469ee479217301a13, type: 2}
+  - {fileID: 2100000, guid: acafcbe01feb1f54393f89a2a89ac491, type: 2}
+  - {fileID: 2100000, guid: f0a04317cc930da49a0d725ccbfa0f14, type: 2}

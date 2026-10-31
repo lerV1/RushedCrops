@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e740ac6fbd2eb2f4baf6bff2a49a019d, type: 3}
+  m_Name: Bush01
+  m_EditorClassIdentifier: 
+  windStates:
+  - name: Off
+    bendStrength: 0
+    bendSpeed: 0
+    bendDistortion: 0
+    bendDirection: {x: 0, y: 0, z: 0}
+    wiggleStrength: 0
+    wiggleSpeed: 0
+  - name: Calm
+    bendStrength: 4
+    bendSpeed: 1
+    bendDistortion: 2
+    bendDirection: {x: 2, y: 0, z: 2}
+    wiggleStrength: 0.1
+    wiggleSpeed: 0.5
+  - name: Breeze
+    bendStrength: 5
+    bendSpeed: 1.5
+    bendDistortion: 2
+    bendDirection: {x: 4, y: 0, z: 4}
+    wiggleStrength: 0.3
+    wiggleSpeed: 0.5
+  - name: Storm
+    bendStrength: 6
+    bendSpeed: 2
+    bendDistortion: 2
+    bendDirection: {x: 6, y: 0, z: 6}
+    wiggleStrength: 1
+    wiggleSpeed: 0.5
+  affectedMaterials:
+  - {fileID: 2100000, guid: ea672c5f0d6b74d439b3c678fddfb5ee, type: 2}

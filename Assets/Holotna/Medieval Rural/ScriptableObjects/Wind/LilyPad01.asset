@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e740ac6fbd2eb2f4baf6bff2a49a019d, type: 3}
+  m_Name: LilyPad01
+  m_EditorClassIdentifier: 
+  windStates:
+  - name: Off
+    bendStrength: 0
+    bendSpeed: 0
+    bendDistortion: 0
+    bendDirection: {x: 0, y: 0, z: 0}
+    wiggleStrength: 0
+    wiggleSpeed: 0
+  - name: Calm
+    bendStrength: 25
+    bendSpeed: 1
+    bendDistortion: 5
+    bendDirection: {x: 15, y: 0, z: 15}
+    wiggleStrength: 0.5
+    wiggleSpeed: 0.25
+  - name: Breeze
+    bendStrength: 50
+    bendSpeed: 1.5
+    bendDistortion: 5
+    bendDirection: {x: 30, y: 0, z: 30}
+    wiggleStrength: 1
+    wiggleSpeed: 0.25
+  - name: Storm
+    bendStrength: 75
+    bendSpeed: 2
+    bendDistortion: 5
+    bendDirection: {x: 45, y: 0, z: 45}
+    wiggleStrength: 1.5
+    wiggleSpeed: 0.25
+  affectedMaterials:
+  - {fileID: 2100000, guid: c2bc61b42cec6f346a0a01d5686be02d, type: 2}
