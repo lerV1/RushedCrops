@@ -69,7 +69,7 @@ namespace RushedCrops.Editor
             BuildQuarry(Group("05_StoneQuarry"));
             BuildLogging(Group("06_LoggingArea"));
             BuildForest(Group("07_ForestAndMeadows"));
-            BuildSigns(Group("08_Wayfinding"));
+            Group("08_Wayfinding"); // Reserved; this map intentionally has no direction signs.
             BuildBoundaries(Group("09_WorldBoundary"));
             CartoonWorldStyler.Apply();
             BuildEnvironment();
@@ -390,29 +390,6 @@ namespace RushedCrops.Editor
                 if(PathDistance(p)<4f||Distance(p,River)<7f||InClearing(p,0))continue;
                 Prefab("Vegetation/Flowers0"+random.Next(1,4),parent,p,R(0,360),R(1f,1.6f),0f,false);
             }
-        }
-
-        private static void BuildSigns(Transform parent)
-        {
-            Sign(parent,V(-18,-32),"OLD BARN\nPLANTING PLOTS",-25f);
-            Sign(parent,V(-9,-5),"MERCHANT",0f);
-            Sign(parent,V(15,24),"STONE QUARRY  >",-20f);
-            Sign(parent,V(20,-31),"TIMBER CAMP  >",-30f);
-            Sign(parent,V(-54,32),"WILLOW BRIDGE",10f);
-            Sign(parent,V(63,-22),"RIVERSIDE",0f);
-        }
-
-        private static void Sign(Transform parent, Vector2 position, string message, float yaw)
-        {
-            Transform sign=new GameObject("Sign - "+message.Replace("\n"," / ")).transform;
-            sign.SetParent(parent,false);sign.position=At(position,0);sign.rotation=Quaternion.Euler(0,yaw,0);
-            LocalBox("Post",sign,new Vector3(0,1.1f,0),new Vector3(0.15f,2.2f,0.15f),Materials["Wood"],true);
-            LocalBox("Wooden board",sign,new Vector3(0,2f,0),new Vector3(3f,0.8f,0.16f),Materials["Plank"],true);
-            LocalBox("Painted face",sign,new Vector3(0,2f,-0.09f),new Vector3(2.82f,0.65f,0.02f),Materials["CanvasCream"],false);
-            var text=new GameObject("Directions").AddComponent<TextMesh>();
-            text.transform.SetParent(sign,false);text.transform.localPosition=new Vector3(0,2f,-0.108f);
-            text.anchor=TextAnchor.MiddleCenter;text.alignment=TextAlignment.Center;text.text=message;
-            text.fontSize=64;text.characterSize=0.052f;text.color=new Color(0.17f,0.10f,0.04f);
         }
 
         private static void BuildBoundaries(Transform parent)
