@@ -21,12 +21,14 @@ public class PlayerController : MonoBehaviour
 
 
     private Rigidbody rb;
+    private PlayerLook look;
     private Vector2 moveInput;
     private bool jumpRequested;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        look = GetComponent<PlayerLook>();
     }
 
     private void OnEnable()
@@ -57,6 +59,11 @@ public class PlayerController : MonoBehaviour
     {
         Vector3 direction = new Vector3(moveInput.x, 0f, moveInput.y);
         direction = Vector3.ClampMagnitude(direction, 1f);
+
+        // Turn the input to match where the camera faces, so W always walks forward on screen.
+        float yaw = look != null ? look.Yaw : transform.eulerAngles.y;
+        direction = Quaternion.Euler(0f, yaw, 0f) * direction;
+
         float speed = moveSpeed;
 
         if (sprintAction.action.IsPressed())
