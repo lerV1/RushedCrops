@@ -397,6 +397,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2151721816163589314}
+  - component: {fileID: 1199774794510137751}
   m_Layer: 0
   m_Name: HandsRoot
   m_TagString: Untagged
@@ -420,6 +421,26 @@ Transform:
   - {fileID: 8549294205428524069}
   m_Father: {fileID: 5761688239629393836}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1199774794510137751
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9027353962662906650}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35536f43bcecc48449a90058c7022a37, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HandSway
+  look: {fileID: 5149157879892233964}
+  body: {fileID: 662024135156976920}
+  swayAmount: 0.0002
+  maxSway: 0.04
+  swaySmoothing: 8
+  bobFrequency: 1.6
+  bobAmount: 0.012
+  fullBobSpeed: 5
 --- !u!1001 &8155887764859126734
 PrefabInstance:
   m_ObjectHideFlags: 0

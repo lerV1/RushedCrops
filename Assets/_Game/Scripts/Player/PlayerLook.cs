@@ -32,6 +32,9 @@ public class PlayerLook : MonoBehaviour
     // Facing around the Y axis in degrees. Movement uses this so W walks where the camera points.
     public float Yaw => yaw;
 
+    // How many degrees the view turned this frame (x = right, y = up). Hand sway reads this.
+    public Vector2 LookDelta { get; private set; }
+
     private void Awake()
     {
         // Start facing whichever way the player was placed in the scene.
@@ -61,6 +64,7 @@ public class PlayerLook : MonoBehaviour
         Vector2 delta = fromMouse
             ? input * mouseSensitivity
             : input * (stickSensitivity * Time.deltaTime);
+        LookDelta = delta;
 
         yaw = Mathf.Repeat(yaw + delta.x, 360f);
         pitch = Mathf.Clamp(pitch + (invertY ? delta.y : -delta.y), minPitch, maxPitch);
