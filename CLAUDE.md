@@ -17,6 +17,17 @@ Unity 6 (6000.5.9f1) farming game using URP and the Input System.
 - Commit every new asset together with its `.meta` file. CI fails if a `.meta` file is missing or orphaned.
 - Run the edit mode tests before pushing when the Unity editor is closed:
   `Unity.exe -batchmode -projectPath . -runTests -testPlatform EditMode -testResults Logs/test-results.xml`
+- Check `.meta` files locally with `bash .github/scripts/check-meta-files.sh` (it reads staged and committed files).
+
+## CI
+
+`.github/workflows/ci.yml` runs on every pull request and every push to `main`:
+
+1. `meta-files` checks that assets and `.meta` files match.
+2. `tests` runs the edit mode tests with GameCI.
+3. `build` makes a Windows build after a merge to `main` and uploads it as a workflow artifact.
+
+The Unity jobs need the repository secrets `UNITY_LICENSE`, `UNITY_EMAIL` and `UNITY_PASSWORD`. Without them they are skipped with a warning.
 
 ## Commit messages
 
