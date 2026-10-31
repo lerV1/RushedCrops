@@ -6,7 +6,7 @@ Unity 6 (6000.5.9f1) farming game using URP and the Input System.
 
 - Game code and assets live in `Assets/_Game/`. Scripts go under `Assets/_Game/Scripts/<Area>/`.
 - Game scripts compile into the `RushedCrops` assembly (`Assets/_Game/Scripts/RushedCrops.asmdef`).
-- Edit mode tests live in `Assets/_Game/Tests/EditMode/`.
+- Tests live in `Assets/_Game/Tests/EditMode/` (pure logic) and `Assets/_Game/Tests/PlayMode/` (loads scenes and drives the player with fake input).
 - Player input is defined in `Assets/_Game/Input/IA_PlayerControls.inputactions`.
 - Asset prefixes: `SC_` scenes, `PF_` prefabs, `IA_` input actions.
 
@@ -15,8 +15,9 @@ Unity 6 (6000.5.9f1) farming game using URP and the Input System.
 - Never commit straight to `main`. Work on a branch (`feature/...`, `fix/...`) and open a pull request.
 - Keep each commit to one change, and keep the project compiling at every commit.
 - Commit every new asset together with its `.meta` file. CI fails if a `.meta` file is missing or orphaned.
-- Run the edit mode tests before pushing when the Unity editor is closed:
-  `Unity.exe -batchmode -projectPath . -runTests -testPlatform EditMode -testResults Logs/test-results.xml`
+- Run both test suites before pushing. Batch mode only works while the Unity editor is closed:
+  `Unity.exe -batchmode -projectPath . -runTests -testPlatform EditMode -testResults Logs/editmode-results.xml`
+  `Unity.exe -batchmode -projectPath . -runTests -testPlatform PlayMode -testResults Logs/playmode-results.xml`
 - Check `.meta` files locally with `bash .github/scripts/check-meta-files.sh` (it reads staged and committed files).
 
 ## CI
@@ -24,7 +25,7 @@ Unity 6 (6000.5.9f1) farming game using URP and the Input System.
 `.github/workflows/ci.yml` runs on every pull request and every push to `main`:
 
 1. `meta-files` checks that assets and `.meta` files match.
-2. `tests` runs the edit mode tests with GameCI.
+2. `tests` runs the edit mode and play mode tests with GameCI.
 3. `build` makes a Windows build after a merge to `main` and uploads it as a workflow artifact.
 
 The Unity jobs need the repository secrets `UNITY_LICENSE`, `UNITY_EMAIL` and `UNITY_PASSWORD`. Without them they are skipped with a warning.

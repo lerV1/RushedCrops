@@ -37,7 +37,7 @@ jobs:
           fi
 
   tests:
-    name: Run edit mode tests
+    name: Run edit and play mode tests
     needs: [meta-files, unity-license]
     if: needs.unity-license.outputs.available == 'true'
     runs-on: ubuntu-latest
@@ -55,9 +55,9 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          testMode: editmode
+          testMode: all
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-          checkName: Edit mode test results
+          checkName: Test results
       - uses: actions/upload-artifact@v4
         if: always()
         with:
