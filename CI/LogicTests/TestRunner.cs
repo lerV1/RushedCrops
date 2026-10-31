@@ -13,6 +13,7 @@ public class TestRunner
     {
         var run = new TestRunner();
         InventoryTests.Register(run);
+        WorldClockTests.Register(run);
         return run.RunAll();
     }
 

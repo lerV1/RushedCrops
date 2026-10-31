@@ -19,6 +19,7 @@
   <ItemGroup>
     <Compile Include="../../Assets/_Game/Scripts/Economy/ResourceType.cs" Link="Game/ResourceType.cs" />
     <Compile Include="../../Assets/_Game/Scripts/Economy/Inventory.cs" Link="Game/Inventory.cs" />
+    <Compile Include="../../Assets/_Game/Scripts/World/WorldClock.cs" Link="Game/WorldClock.cs" />
   </ItemGroup>
 
 </Project>
