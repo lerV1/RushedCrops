@@ -37,6 +37,8 @@ public class InventoryDebugDisplay : MonoBehaviour
                 alignment = TextAnchor.UpperLeft,
                 fontSize = fontSize,
                 richText = true,
+                // Long lines wrap onto the next line instead of being cut off at the box edge.
+                wordWrap = true,
                 padding = new RectOffset(10, 10, 8, 8),
             };
         }
