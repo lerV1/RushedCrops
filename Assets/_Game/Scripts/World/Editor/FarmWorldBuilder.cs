@@ -255,11 +255,7 @@ namespace RushedCrops.Editor
                 Vector2 plot = Garden + V((col-1)*6.4f,(row-0.5f)*7.6f);
                 var patch=Prefab("Patch02",parent,plot,0f,1f);
                 patch.name="Planting plot "+(row*3+col+1);
-                if (row==0 && col<2)
-                {
-                    for(int a=0;a<3;a++) for(int b=0;b<4;b++)
-                        Prefab(col==0?"Crops/CarrotPlant03":"Crops/WheatPlant03",parent,plot+V((a-1)*1.2f,(b-1.5f)*1.2f),R(0f,360f),0.8f);
-                }
+                HideStockCrops(patch.transform);
             }
             FenceLine(parent, Garden+V(-13,-11), Garden+V(13,-11));
             FenceLine(parent, Garden+V(-13,-11), Garden+V(-13,11));
@@ -267,6 +263,34 @@ namespace RushedCrops.Editor
             FenceLine(parent, Garden+V(13,3), Garden+V(13,11));
             Lantern(parent, Barn+V(-6,-10), 0f);
             Lantern(parent, Garden+V(13,2),90f);
+        }
+
+        [MenuItem("Rushed Crops/World/Clear farming plots")]
+        public static void ClearFarmingPlots()
+        {
+            if(Application.isPlaying)throw new InvalidOperationException("Clear the saved plots outside Play.");
+            var garden=GameObject.Find(RootName).transform.Find("03_BarnAndPlantingPlots");
+            var remove=new List<GameObject>();
+            foreach(Transform child in garden)
+            {
+                if(child.name.StartsWith("Planting plot"))HideStockCrops(child);
+                else if(child.name.StartsWith("CarrotPlant")||child.name.StartsWith("WheatPlant"))remove.Add(child.gameObject);
+            }
+            foreach(GameObject crop in remove)Undo.DestroyObjectImmediate(crop);
+            EditorSceneManager.MarkSceneDirty(garden.gameObject.scene);
+            Debug.Log("Cleared all six farming plots; only empty soil beds remain.");
+        }
+
+        private static void HideStockCrops(Transform plot)
+        {
+            // The imported patch includes planted beets. Disable only those nested crop roots,
+            // retaining the soil, original pack asset, and prefab connection.
+            foreach(LODGroup lod in plot.GetComponentsInChildren<LODGroup>(true))
+            {
+                if(!lod.name.Contains("Plant"))continue;
+                Undo.RecordObject(lod.gameObject,"Clear stock planting");
+                lod.gameObject.SetActive(false);
+            }
         }
 
         private static void BuildMarket(Transform parent)

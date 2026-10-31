@@ -124,7 +124,7 @@ namespace RushedCrops.Editor
             {
                 // Holotna's planted patches contain nested crop prefabs as well as soil ridges.
                 foreach (LODGroup lod in imported.GetComponentsInChildren<LODGroup>(true))
-                    if (lod.name.Contains("Plant")) StyleImported(lod.gameObject);
+                    if (lod.gameObject.activeInHierarchy && lod.name.Contains("Plant")) StyleImported(lod.gameObject);
                 return;
             }
             foreach (LODGroup lod in imported.GetComponentsInChildren<LODGroup>(true)) lod.enabled = false;
