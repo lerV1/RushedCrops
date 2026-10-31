@@ -6,123 +6,118 @@ using UnityEngine;
 
 namespace RushedCrops.Editor
 {
-    // Ground against the saved terrain collider, never against another prop or a prefab pivot.
+    // Grounds scenery against the saved terrain collider, never against another prop or a prefab pivot.
+    //   Embed: trees, stumps, rocks, plants, fences and posts sink slightly into the lowest ground under them,
+    //          so no edge hangs in the air on a slope.
+    //   Rest:  buildings, carts, crates and other props sit on top of the ground. They are only placed
+    //          on the flat pads, so resting on the highest point leaves no gap underneath.
+    //   Supported items (on a counter, block or stack) and authored structures are left alone.
     public static class WorldGrounding
     {
+        private const float RestTolerance = 0.05f;
+        private const float MaxRestSlope = 0.3f;
+
         [MenuItem("Rushed Crops/World/Align scenery to ground")]
         public static void Apply()
         {
             if (Application.isPlaying) throw new InvalidOperationException("Align the saved scene outside Play.");
-            var world = GameObject.Find(FarmWorldBuilder.RootName);
-            var terrain = world.transform.Find("00_Terrain/Walkable valley").GetComponent<MeshCollider>();
-            var roots = new List<Transform>();
-            foreach (Transform child in world.GetComponentsInChildren<Transform>(true))
-                if (PrefabUtility.IsOutermostPrefabInstanceRoot(child.gameObject)) roots.Add(child);
-
+            MeshCollider[] terrain = FindTerrain(out GameObject world);
             int aligned = 0;
-            foreach (Transform root in roots)
+            foreach (Transform item in Scenery(world))
             {
-                // These props have an explicit support or are hung from an authored beam.
-                if (root.name.StartsWith("Lantern") || root.name == "Carrot01" || root.name == "Axe01") continue;
-                if (!VisibleBounds(root, out Bounds bounds)) continue;
-                if (!SupportHeight(terrain, root, bounds, out float height)) continue;
-                AlignBase(root, bounds, height);
+                if (!Sample(terrain, item, out Bounds bounds, out float lowest, out float highest)) continue;
+                float target = FitFor(item, bounds, out float sink) == Fit.Embed ? lowest - sink : highest + 0.01f;
+                item.position += Vector3.up * (target - bounds.min.y);
                 aligned++;
             }
-
-            // Posts and signs are authored groups, rather than imported prefabs.
-            foreach (string groupName in new[] { "03_BarnAndPlantingPlots", "04_MerchantClearing", "05_StoneQuarry", "06_LoggingArea", "08_Wayfinding" })
-            foreach (Transform group in world.transform.Find(groupName))
-            {
-                if (!(group.name == "Dusk lantern" || group.name.StartsWith("Sign -") || group.name == "Fallen repair timber")) continue;
-                if (VisibleBounds(group, out Bounds bounds) && SupportHeight(terrain, group, bounds, out float height))
-                    AlignBase(group, bounds, height);
-            }
-
-            // Place display produce on the actual table top and the axe on its chopping block.
-            Transform market = world.transform.Find("04_MerchantClearing");
-            Transform table = FindChild(market, "Table01");
-            Transform logging = world.transform.Find("06_LoggingArea");
-            Transform block = FindChild(logging, "ChoppingBlock01");
-            foreach (Transform root in roots)
-            {
-                if (root.name == "Carrot01" && table != null && VisibleBounds(table, out Bounds top) && VisibleBounds(root, out Bounds produce))
-                    AlignBase(root, produce, top.max.y);
-                if (root.name == "Axe01" && block != null && VisibleBounds(block, out Bounds blockTop) && VisibleBounds(root, out Bounds axe))
-                    AlignBase(root, axe, blockTop.max.y);
-            }
-
-            // Separate preview crops share the soil surface of the patch beneath them.
-            Transform garden = world.transform.Find("03_BarnAndPlantingPlots");
-            foreach (Transform crop in garden)
-            {
-                if (!(crop.name.StartsWith("CarrotPlant") || crop.name.StartsWith("WheatPlant"))) continue;
-                foreach (Transform plot in garden)
-                {
-                    if (!plot.name.StartsWith("Planting plot") || !VisibleBounds(plot, out Bounds plotBounds)) continue;
-                    Vector3 p = crop.position;
-                    if (p.x < plotBounds.min.x || p.x > plotBounds.max.x || p.z < plotBounds.min.z || p.z > plotBounds.max.z) continue;
-                    float soil = float.MinValue;
-                    foreach (Renderer renderer in plot.GetComponentsInChildren<Renderer>())
-                        if (renderer.enabled && renderer.name.StartsWith("Ridge")) soil = Mathf.Max(soil, renderer.bounds.max.y);
-                    if (soil != float.MinValue && VisibleBounds(crop, out Bounds cropBounds)) AlignBase(crop, cropBounds, soil);
-                    break;
-                }
-            }
             EditorSceneManager.MarkSceneDirty(world.scene);
-            Debug.Log("Ground alignment complete: " + aligned + " scenery roots; table, tool, crop and hanging supports preserved.");
+            Debug.Log("Ground alignment complete: " + aligned + " scenery objects.");
         }
 
-        public static int CountBuriedScenery()
+        // Returns how many objects float above, or are sunk into, the ground. Lists the first few in report.
+        public static int CountMisplaced(out string report)
         {
-            var world = GameObject.Find(FarmWorldBuilder.RootName);
-            var terrain = world.transform.Find("00_Terrain/Walkable valley").GetComponent<MeshCollider>();
-            int buried = 0;
-            foreach (Transform root in world.GetComponentsInChildren<Transform>(true))
+            MeshCollider[] terrain = FindTerrain(out GameObject world);
+            var problems = new List<string>();
+            foreach (Transform item in Scenery(world))
             {
-                if (!PrefabUtility.IsOutermostPrefabInstanceRoot(root.gameObject)) continue;
-                if (root.name.StartsWith("Lantern") || root.name == "Carrot01" || root.name == "Axe01") continue;
-                if (VisibleBounds(root, out Bounds bounds) && SupportHeight(terrain, root, bounds, out float height) && height - bounds.min.y > 0.08f)
-                    buried++;
+                if (!Sample(terrain, item, out Bounds bounds, out float lowest, out float highest)) continue;
+                string problem = null;
+                if (FitFor(item, bounds, out float sink) == Fit.Embed)
+                {
+                    if (bounds.min.y > lowest + 0.02f) problem = "floats " + (bounds.min.y - lowest).ToString("F2") + " m";
+                }
+                else if (Mathf.Abs(bounds.min.y - highest - 0.01f) > RestTolerance) problem = "base is " + (bounds.min.y - highest).ToString("F2") + " m off the ground";
+                else if (highest - lowest > MaxRestSlope) problem = "stands on a slope of " + (highest - lowest).ToString("F2") + " m";
+                if (problem != null) problems.Add(item.name + " at " + item.position.ToString("F0") + " " + problem);
             }
-            return buried;
+            report = string.Join("\n", problems.GetRange(0, Mathf.Min(problems.Count, 12)));
+            return problems.Count;
         }
 
-        private static void AlignBase(Transform root, Bounds bounds, float supportHeight)
+        private enum Fit { Embed, Rest }
+
+        private static Fit FitFor(Transform item, Bounds bounds, out float sink)
         {
-            float difference = supportHeight + 0.015f - bounds.min.y;
-            if (Mathf.Abs(difference) < 0.002f) return;
-            Undo.RecordObject(root, "Align scenery base");
-            root.position += Vector3.up * difference;
+            string name = item.name;
+            sink = 0f;
+            if (name.StartsWith("Oak") || name.StartsWith("Pine") || name.StartsWith("Spruce") || name.StartsWith("Willow")) { sink = 0.15f; return Fit.Embed; }
+            if (name.StartsWith("Stone") || name.StartsWith("QuarryFace")) { sink = bounds.size.y * 0.3f; return Fit.Embed; }
+            if (name.StartsWith("Rubble") || name.StartsWith("Patch") || name.StartsWith("Planting plot")) { sink = 0.05f; return Fit.Embed; }
+            if (name.StartsWith("Grass") || name.StartsWith("Fern") || name.StartsWith("Bush") || name.StartsWith("Flower") || name.StartsWith("Cattail")) { sink = 0.05f; return Fit.Embed; }
+            if (name.StartsWith("Fence") || name.StartsWith("Garden gate") || name.StartsWith("Dusk lantern")) { sink = 0.1f; return Fit.Embed; }
+            return Fit.Rest;
         }
 
-        private static bool TerrainHeight(MeshCollider terrain, Vector3 point, out float height)
+        // Imported prefabs plus authored lantern posts; supported items and the hung lantern models are excluded.
+        private static List<Transform> Scenery(GameObject world)
         {
-            var ray = new Ray(new Vector3(point.x, 100f, point.z), Vector3.down);
-            if (terrain.Raycast(ray, out RaycastHit hit, 200f)) { height = hit.point.y; return true; }
-            height = 0f;
-            return false;
+            var items = new List<Transform>();
+            foreach (Transform child in world.GetComponentsInChildren<Transform>(true))
+            {
+                bool imported = PrefabUtility.IsOutermostPrefabInstanceRoot(child.gameObject);
+                if (!(imported || child.name == "Dusk lantern")) continue;
+                if (child.name.Contains("(on ") || child.name.Contains("(stacked)") || child.name.StartsWith("Lantern0")) continue;
+                items.Add(child);
+            }
+            return items;
         }
 
-        private static bool SupportHeight(MeshCollider terrain, Transform root, Bounds bounds, out float height)
+        // Lowest and highest terrain heights under the object's footprint (its lowest vertices).
+        private static bool Sample(MeshCollider[] terrain, Transform item, out Bounds bounds, out float lowest, out float highest)
         {
-            height = float.MinValue;
-            // Probe the mesh's actual low vertices. A broad tree crown must not lift its trunk,
-            // and a rock's off-centre base must not be aligned using its bounding-box centre.
-            foreach (MeshFilter filter in root.GetComponentsInChildren<MeshFilter>())
+            lowest = float.MaxValue;
+            highest = float.MinValue;
+            if (!VisibleBounds(item, out bounds)) return false;
+            foreach (MeshFilter filter in item.GetComponentsInChildren<MeshFilter>())
             {
                 var renderer = filter.GetComponent<Renderer>();
                 if (renderer == null || !renderer.enabled || filter.sharedMesh == null) continue;
-                foreach (Vector3 vertex in filter.sharedMesh.vertices)
+                Vector3[] vertices = filter.sharedMesh.vertices;
+                int step = Mathf.Max(1, vertices.Length / 400);
+                for (int i = 0; i < vertices.Length; i += step)
                 {
-                    Vector3 world = filter.transform.TransformPoint(vertex);
-                    if (world.y > bounds.min.y + 0.4f) continue;
-                    if (TerrainHeight(terrain, world, out float surface))
-                        height = Mathf.Max(height, surface - (world.y - bounds.min.y));
+                    Vector3 point = filter.transform.TransformPoint(vertices[i]);
+                    if (point.y > bounds.min.y + 0.3f) continue;
+                    if (!TerrainHeight(terrain, point, out float surface)) continue;
+                    lowest = Mathf.Min(lowest, surface);
+                    highest = Mathf.Max(highest, surface);
                 }
             }
-            if (height != float.MinValue) return true;
-            return TerrainHeight(terrain, bounds.center, out height);
+            if (highest != float.MinValue) return true;
+            if (!TerrainHeight(terrain, bounds.center, out float centre)) return false;
+            lowest = highest = centre;
+            return true;
+        }
+
+        // Highest hit among the walkable terrain and the distant hills beneath it.
+        private static bool TerrainHeight(MeshCollider[] terrain, Vector3 point, out float height)
+        {
+            var ray = new Ray(new Vector3(point.x, 100f, point.z), Vector3.down);
+            height = float.MinValue;
+            foreach (MeshCollider surface in terrain)
+                if (surface != null && surface.Raycast(ray, out RaycastHit hit, 200f)) height = Mathf.Max(height, hit.point.y);
+            return height != float.MinValue;
         }
 
         private static bool VisibleBounds(Transform root, out Bounds bounds)
@@ -138,10 +133,15 @@ namespace RushedCrops.Editor
             return found;
         }
 
-        private static Transform FindChild(Transform parent, string name)
+        private static MeshCollider[] FindTerrain(out GameObject world)
         {
-            foreach (Transform child in parent) if (child.name == name) return child;
-            return null;
+            world = GameObject.Find(FarmWorldBuilder.RootName);
+            if (world == null) throw new InvalidOperationException("The farm map is missing. Use Rushed Crops > World > Rebuild map.");
+            var hills = world.transform.Find(FarmWorldBuilder.HillsPath);
+            return new[] {
+                world.transform.Find(FarmWorldBuilder.TerrainPath).GetComponent<MeshCollider>(),
+                hills != null ? hills.GetComponent<MeshCollider>() : null
+            };
         }
     }
 }

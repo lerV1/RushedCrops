@@ -30,20 +30,18 @@ namespace RushedCrops.Editor
         {
             GameObject root = GameObject.Find(FarmWorldBuilder.RootName);
             Require(root != null, "The saved farm map is missing.");
-            foreach (string group in new[] { "00_Terrain", "01_Paths", "02_RiverAndBridges", "03_BarnAndPlantingPlots", "04_MerchantClearing", "05_StoneQuarry", "06_LoggingArea", "07_ForestAndMeadows", "08_Wayfinding", "09_WorldBoundary" })
+            foreach (string group in FarmWorldBuilder.Groups)
                 Require(root.transform.Find(group) != null, "Missing world group: " + group);
 
             Require(GameObject.Find("Player")?.GetComponent<PlayerController>() != null, "Player movement is missing.");
             Require(Camera.main != null, "Main camera is missing.");
             Require(UnityEngine.Object.FindFirstObjectByType<Inventory>() != null, "The shared Inventory is missing.");
             Require(UnityEngine.Object.FindFirstObjectByType<InventoryHud>() != null, "The existing inventory HUD is missing.");
-            var terrain = root.transform.Find("00_Terrain/Walkable valley");
+            var terrain = root.transform.Find(FarmWorldBuilder.TerrainPath);
             Require(terrain != null && terrain.GetComponent<MeshCollider>()?.sharedMesh != null, "Terrain must have a saved collision mesh.");
             Require(terrain.gameObject.layer == 6, "Terrain must use the player's existing Ground layer.");
-            Require(root.transform.Find("02_RiverAndBridges/Willow bridge") != null, "Willow bridge is missing.");
-            Require(root.transform.Find("02_RiverAndBridges/Timber bridge") != null, "Timber bridge is missing.");
-            Require(root.transform.Find("08_Wayfinding").childCount == 0, "This map should have no direction signs.");
-            Transform garden = root.transform.Find("03_BarnAndPlantingPlots");
+            Require(root.transform.Find(FarmWorldBuilder.BridgePath) != null, "The river bridge to the quarry is missing.");
+            Transform garden = root.transform.Find(FarmWorldBuilder.FarmGroup);
             int plots = 0;
             foreach (Transform child in garden) if (child.name.StartsWith("Planting plot")) plots++;
             Require(plots == 6, "Keep all six empty soil plots.");
@@ -59,7 +57,8 @@ namespace RushedCrops.Editor
             for (int i = 0; i < settings.FindProperty("lanterns").arraySize; i++)
                 Require(settings.FindProperty("lanterns").GetArrayElementAtIndex(i).objectReferenceValue != null, "A lantern reference is missing.");
             Require(UnityEngine.Object.FindFirstObjectByType<EnvironmentClockHud>() != null, "The day/time display is missing.");
-            Require(WorldGrounding.CountBuriedScenery() == 0, "Scenery is embedded in the terrain. Run Align scenery to ground.");
+            int misplaced = WorldGrounding.CountMisplaced(out string report);
+            Require(misplaced == 0, misplaced + " scenery objects are not sitting on the ground. Run Align scenery to ground.\n" + report);
 
             foreach (GameObject sceneRoot in scene.GetRootGameObjects())
             foreach (Transform child in sceneRoot.GetComponentsInChildren<Transform>(true))

@@ -6,29 +6,28 @@ This map follows the proposal's inherited barn and nearby planting plots, plus t
 
 ## Layout
 
-The walkable valley is approximately 208 by 176 Unity units. The farm is southwest of the merchant crossroads; the quarry is northeast, and the logging area is southeast. Trails form a return loop through the farm and timber camp. Two timber bridges lead to riverside woodland walks.
+The current walkable valley is approximately 160 by 140 Unity units, with distant hills beyond it. The farm is southwest of the merchant crossroads, the quarry is north across the river, and the logging camp is east. Three terrain-painted routes connect the farm, market, quarry bridge, and logging camp. There is one river bridge.
 
 | Landmark | Approximate X, Z |
 | --- | --- |
-| Barn | -36, -20 |
-| Six planting plots | -35, -44 |
-| Merchant stall | 0, 0 |
-| Quarry | 39, 39 |
-| Logging area | 39, -35 |
-| Willow bridge | -66, 51 |
-| Timber bridge | 77, -28 |
+| Barn | -41, -2 |
+| Six planting plots | -25, -31 |
+| Merchant stall | 4, -6 |
+| Quarry | 10, 49 |
+| Logging camp | 42, -22 |
+| River bridge | 6, 24 |
 
 The six farming plots are empty soil beds. The pack's stock plants are hidden in these scene instances, and the added crop previews have been removed. Planting/harvesting, trading, gathering, combat, and barn-repair interactions remain separate gameplay work. The shared inventory's resource types are unchanged.
 
 ## Editing the map
 
-- `WORLD_RushedCrops` contains named terrain, trail, river, landmark, forest, and boundary groups. Holotna objects remain prefab instances with scene overrides. Source pack assets are not edited. The reserved wayfinding group is empty.
+- `WORLD_RushedCrops` contains named terrain, river, farm, market, quarry, logging, forest, and boundary groups. Paths, clearings, and tilled soil are painted into the terrain mesh. Holotna objects remain prefab instances with scene overrides. Source pack assets are not edited. There are no direction signs.
 - The original `Ground` object is inactive and retained. The new terrain and bridge deck colliders use the controller's existing Ground layer.
 - Generated mesh/material assets are under `Assets/_Game/World/`. They are saved assets; the map is not generated each time the game starts.
-- `Rushed Crops > World > Build concept map` is an editor authoring tool. It refuses to overwrite an existing world root. Normal adjustments should be made directly to the saved scene.
+- `Rushed Crops > World > Rebuild map` recreates the world from the current layout settings after a confirmation dialog. Rebuilding replaces hand edits to the map. Normal adjustments can be made directly to the saved scene.
 - `Rushed Crops > World > Validate saved map` checks landmark groups, collision mesh, player, Inventory/HUD, missing scripts/materials, and lighting references.
 - `Rushed Crops > World > Clear farming plots` restores bare soil beds without editing the imported pack.
-- `Rushed Crops > World > Apply low poly cartoon style` rebuilds the faceted tree/plant visuals and flat prop palette while retaining the layout. `Align scenery to ground` aligns visible mesh bases against the actual terrain collider. Display produce, hanging lanterns, and the chopping-block axe use their own supports.
+- `Rushed Crops > World > Apply low poly cartoon style` rebuilds the faceted tree/plant visuals and flat prop palette while retaining the layout. `Align scenery to ground` checks each visible footprint against the terrain and distant hills: loose props rest on flat pads, while trees, rocks, and vegetation have embedded bases. Display produce, hanging lanterns, and the chopping-block axe use their own supports.
 
 ## Environment cycle
 
@@ -40,7 +39,7 @@ Select `WORLD_Environment` and edit `EnvironmentCycle`:
 | Current Hour | Starts at 09:00; editable during Play |
 | Cycle Running | Freeze/unfreeze time |
 | Sun / Moon | Existing directional sun and added moon light |
-| Lanterns | All 10 path and building lights |
+| Lanterns | All 12 path and building lights in the current scene |
 | Light intensities | Tune daylight, moonlight, and lantern brightness |
 | Night readability | Tune sky, horizon, and ground ambient colours |
 
@@ -70,11 +69,11 @@ Close this project's interactive editor before starting a second editor against 
 
 - 24 logic tests passed, including the existing 17 resource tests and 7 clock tests.
 - Unity 6000.5.9f1 compiled the runtime and editor scripts without C# errors.
-- The saved map validator passed with all 10 lantern references assigned, six empty plots, no direction signs, and zero buried scenery roots in the visible-base support check.
+- The current saved map validator passed with all 12 lantern references assigned, six empty plots, one river bridge, and no misplaced scenery in the footprint support check.
 - The initial pivot placement check found 599 buried scenery bases. Grounding now samples the low mesh vertices against the terrain collider and preserves mounted supports.
-- Play-mode input checks repeated after the cartoon/grounding revision used the existing controller: farm-to-merchant trail 20.21 m; Willow bridge 19.70 m; Timber bridge 19.81 m. All passed.
+- Historical Play-mode input checks on the earlier two-bridge layout passed: farm-to-merchant trail 20.21 m; Willow bridge 19.70 m; Timber bridge 19.81 m. These do not certify traversal of the newer one-bridge layout. Repeat traversal in Play for the current map.
 - The live cycle crossed from Day 1 at 23:54 into Day 2; the ten lanterns enabled at night.
 - Images and traversal/cycle logs are retained under `Claude-Code-Game-Studios/production/qa/evidence/holotna-world/` in the local working copy.
 - The first local Windows build attempt was cancelled when the art direction was revised. No completed Windows player is claimed for this pass; the manual delivery workflow still needs a hosted Unity licence setup and a successful run.
 
-Inspector setup: none. Gamepad-specific traversal and a full gameplay session remain manual playtest steps.
+Inspector setup: none. Current-layout traversal, gamepad-specific traversal, and a full gameplay session remain manual playtest steps.

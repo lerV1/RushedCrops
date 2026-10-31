@@ -112,3 +112,6 @@ InitTestScene*.unity*
 !/CI/**/*.csproj
 /CI/**/bin/
 /CI/**/obj/
+
+# CodeGraph indexes and WAL files are generated separately on each machine.
+/.codegraph/
