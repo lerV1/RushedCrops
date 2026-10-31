@@ -107,3 +107,8 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# CI logic tests are a plain .NET project, so keep its project file but not its build output.
+!/CI/**/*.csproj
+/CI/**/bin/
+/CI/**/obj/
