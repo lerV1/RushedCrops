@@ -582,6 +582,8 @@ GameObject:
   m_Component:
   - component: {fileID: 2151721816163589314}
   - component: {fileID: 1199774794510137751}
+  - component: {fileID: 3270196778718248552}
+  - component: {fileID: 2305179911293612690}
   m_Layer: 0
   m_Name: HandsRoot
   m_TagString: Untagged
@@ -626,3 +628,39 @@ MonoBehaviour:
   bobFrequency: 1.6
   bobAmount: 0.012
   fullBobSpeed: 5
+--- !u!95 &3270196778718248552
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9027353962662906650}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 4ed74176ea5a02b47ae5dc97e724a86c, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &2305179911293612690
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9027353962662906650}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40f3f3d79df062d478bf0e6fbd253294, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HandAnimator
+  attackAction: {fileID: 4088291247242398431, guid: f5efa458efab1e94091419e01d045740, type: 3}
+  interactAction: {fileID: -6264010307199074488, guid: f5efa458efab1e94091419e01d045740, type: 3}
