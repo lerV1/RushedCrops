@@ -1,10 +1,11 @@
 using UnityEngine;
 
 // One square of a farm bed. Each square is farmed on its own:
-//   1. Till it with the hoe (Use Tool).          Untilled -> Tilled
-//   2. Plant the selected seed (Interact).        Tilled   -> Growing
-//   3. Wait while it grows through its stages.    Growing  -> Ripe
-//   4. Harvest it (Interact). The soil stays tilled, ready for the next seed.
+//   1. Till it with the hoe (Use Tool).            Untilled -> Tilled
+//   2. Plant the selected seed (Interact).          Tilled   -> Growing
+//   3. Water it with the watering can (Use Tool).   A dry crop doesn't grow.
+//      A crop that needs water twice grows half way, dries out and waits for the second watering.
+//   4. Harvest it when ripe (Interact). The soil stays tilled, ready for the next seed.
 // The bed it belongs to (FarmPlot on a parent) holds the Inventory, the crops and the growth speed.
 [RequireComponent(typeof(Collider))]
 public class FarmTile : MonoBehaviour, IInteractable, IToolTarget, IHighlightable
@@ -22,8 +23,11 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget, IHighlightabl
 
     private FarmPlot plot;
     private GameObject plant;
+    private Renderer soilRenderer;
+    private Material drySoil;
     private float growTime;
     private int shownStage = -1;
+    private int waterings;
 
     public TileState State { get; private set; } = TileState.Untilled;
 
@@ -32,6 +36,12 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget, IHighlightabl
 
     // 0 just planted, 1 ripe.
     public float Progress => Crop == null ? 0f : Mathf.Clamp01(growTime / Crop.GrowSeconds);
+
+    // True while the soil is watered and the crop is growing.
+    public bool IsWet { get; private set; }
+
+    // A planted crop waiting for the watering can.
+    public bool NeedsWater => State == TileState.Growing && !IsWet;
 
     private void Awake()
     {
@@ -42,18 +52,28 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget, IHighlightabl
             enabled = false;
             return;
         }
+        soilRenderer = soil.GetComponentInChildren<Renderer>(true);
+        drySoil = soilRenderer != null ? soilRenderer.sharedMaterial : null;
         soil.SetActive(false);
         highlight.SetActive(false);
     }
 
     private void Update()
     {
-        if (State != TileState.Growing)
+        if (State != TileState.Growing || !IsWet)
         {
             return;
         }
 
         growTime += Time.deltaTime * plot.GrowthSpeed;
+
+        // Each watering lets the crop grow an equal share of its grow time, then the soil dries.
+        float wateredUntil = Crop.GrowSeconds * waterings / Crop.WaterNeeded;
+        if (growTime >= wateredUntil)
+        {
+            growTime = wateredUntil;
+            SetWet(false);
+        }
 
         // Split the grow time evenly between the stages; the last stage is the ripe plant.
         int lastStage = Crop.StageCount - 1;
@@ -106,7 +126,9 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget, IHighlightabl
                 string crop = selected.DisplayName.ToLower();
                 return seeds > 0 ? $"Plant {crop} seed ({seeds} left)" : $"No {crop} seeds left";
             case TileState.Growing:
-                return $"{Crop.DisplayName} growing: {Mathf.FloorToInt(Progress * 100f)}%";
+                return IsWet
+                    ? $"{Crop.DisplayName} growing: {Mathf.FloorToInt(Progress * 100f)}%"
+                    : $"{Crop.DisplayName} needs water";
             default:
                 return $"Harvest {Crop.DisplayName.ToLower()}";
         }
@@ -124,20 +146,45 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget, IHighlightabl
         }
     }
 
-    // ---------- Use Tool (left click): till ----------
+    // ---------- Use Tool (left click): till and water ----------
 
     public string GetToolPrompt(PlayerTools tools)
     {
-        return tools.Equipped == ToolType.Hoe && State == TileState.Untilled ? "Till soil" : null;
+        if (tools.Equipped == ToolType.Hoe && State == TileState.Untilled)
+        {
+            return "Till soil";
+        }
+        if (tools.Equipped == ToolType.WateringCan && NeedsWater)
+        {
+            return tools.WaterLeft > 0
+                ? $"Water {Crop.DisplayName.ToLower()} ({tools.WaterLeft} left)"
+                : "Watering can is empty. Fill it at the river";
+        }
+        return null;
     }
 
-    public bool CanUseTool(PlayerTools tools) => GetToolPrompt(tools) != null;
+    public bool CanUseTool(PlayerTools tools)
+    {
+        switch (tools.Equipped)
+        {
+            case ToolType.Hoe:
+                return State == TileState.Untilled;
+            case ToolType.WateringCan:
+                return NeedsWater && tools.WaterLeft > 0;
+            default:
+                return false;
+        }
+    }
 
     public void UseTool(PlayerTools tools)
     {
         if (tools.Equipped == ToolType.Hoe)
         {
             Till();
+        }
+        else if (tools.Equipped == ToolType.WateringCan && NeedsWater && tools.UseWater())
+        {
+            Water();
         }
     }
 
@@ -175,8 +222,23 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget, IHighlightabl
 
         Crop = crop;
         growTime = 0f;
+        waterings = 0;
+        SetWet(false); // a new seed waits for its first watering
         State = TileState.Growing;
         ShowStage(0);
+        return true;
+    }
+
+    // Waters a dry crop so it grows its next share. Returns false if nothing here needs water.
+    public bool Water()
+    {
+        if (!NeedsWater)
+        {
+            return false;
+        }
+
+        waterings++;
+        SetWet(true);
         return true;
     }
 
@@ -192,8 +254,20 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget, IHighlightabl
         RemovePlant();
         Crop = null;
         growTime = 0f;
+        waterings = 0;
+        SetWet(false);
         State = TileState.Tilled;
         return true;
+    }
+
+    // Darker soil while watered.
+    private void SetWet(bool wet)
+    {
+        IsWet = wet;
+        if (soilRenderer != null && plot.WetSoil != null)
+        {
+            soilRenderer.sharedMaterial = wet ? plot.WetSoil : drySoil;
+        }
     }
 
     private void ShowStage(int stage)

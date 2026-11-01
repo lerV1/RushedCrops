@@ -38387,6 +38387,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 925db227256b77646a2ba8e150afbb06, type: 2}
   - {fileID: 11400000, guid: 73257a236c875bd4ca79cfee6687e810, type: 2}
   growthSpeed: 1
+  wetSoil: {fileID: 2100000, guid: 02c4e598aa4f73344a8a7c81d6320778, type: 2}
 --- !u!1 &92021293
 GameObject:
   m_ObjectHideFlags: 0
@@ -77110,6 +77111,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 925db227256b77646a2ba8e150afbb06, type: 2}
   - {fileID: 11400000, guid: 73257a236c875bd4ca79cfee6687e810, type: 2}
   growthSpeed: 1
+  wetSoil: {fileID: 2100000, guid: 02c4e598aa4f73344a8a7c81d6320778, type: 2}
 --- !u!1001 &203102557
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -300783,6 +300785,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 925db227256b77646a2ba8e150afbb06, type: 2}
   - {fileID: 11400000, guid: 73257a236c875bd4ca79cfee6687e810, type: 2}
   growthSpeed: 1
+  wetSoil: {fileID: 2100000, guid: 02c4e598aa4f73344a8a7c81d6320778, type: 2}
 --- !u!1 &810360763
 GameObject:
   m_ObjectHideFlags: 0
@@ -376758,7 +376761,9 @@ GameObject:
   - component: {fileID: 1028048990}
   - component: {fileID: 1028048992}
   - component: {fileID: 1028048991}
-  m_Layer: 0
+  - component: {fileID: 1028048994}
+  - component: {fileID: 1028048993}
+  m_Layer: 4
   m_Name: River water
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -376837,6 +376842,40 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1028048989}
   m_Mesh: {fileID: 4300000, guid: 5df6860972f41824280a2fddf40205d6, type: 2}
+--- !u!114 &1028048993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1028048989}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0625beb7b0c3bfe4d937f24863c50bef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WaterSource
+--- !u!64 &1028048994
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1028048989}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: daa508de5723f7e4fa345f57509b8c90, type: 2}
 --- !u!1 &1028444337
 GameObject:
   m_ObjectHideFlags: 0
@@ -678531,6 +678570,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 925db227256b77646a2ba8e150afbb06, type: 2}
   - {fileID: 11400000, guid: 73257a236c875bd4ca79cfee6687e810, type: 2}
   growthSpeed: 1
+  wetSoil: {fileID: 2100000, guid: 02c4e598aa4f73344a8a7c81d6320778, type: 2}
 --- !u!1 &1853155717
 GameObject:
   m_ObjectHideFlags: 0
@@ -765498,6 +765538,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 925db227256b77646a2ba8e150afbb06, type: 2}
   - {fileID: 11400000, guid: 73257a236c875bd4ca79cfee6687e810, type: 2}
   growthSpeed: 1
+  wetSoil: {fileID: 2100000, guid: 02c4e598aa4f73344a8a7c81d6320778, type: 2}
 --- !u!1001 &2096838657
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -771684,6 +771725,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 925db227256b77646a2ba8e150afbb06, type: 2}
   - {fileID: 11400000, guid: 73257a236c875bd4ca79cfee6687e810, type: 2}
   growthSpeed: 1
+  wetSoil: {fileID: 2100000, guid: 02c4e598aa4f73344a8a7c81d6320778, type: 2}
 --- !u!1 &2114152341
 GameObject:
   m_ObjectHideFlags: 0

@@ -312,6 +312,7 @@ namespace RushedCrops.Editor
         private static void BuildRiver(Transform parent)
         {
             Ribbon("River water", River, 7.6f, parent, Materials["Water"], -0.65f);
+            RiverWaterSetup.SetUp(parent.Find("River water").gameObject);
 
             // A few smooth stones along the banks, never near the bridge or a path.
             for (int i = 4; i < River.Length - 1; i += 7)

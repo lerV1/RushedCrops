@@ -22,3 +22,4 @@ MonoBehaviour:
   - {fileID: 5049061528732859882, guid: 90ee632d9648ec74b8c3f5eaa91058c2, type: 3}
   - {fileID: 6029270849404580638, guid: 602e2a567967f164cbc38111929f285d, type: 3}
   - {fileID: 5476539772727378094, guid: d3421e67a727e7b47bf8fbe472e7caf0, type: 3}
+  waterNeeded: 2

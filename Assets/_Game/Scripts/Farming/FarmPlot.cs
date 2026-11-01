@@ -15,7 +15,11 @@ public class FarmPlot : MonoBehaviour
     [Tooltip("1 is normal speed, 2 grows twice as fast. Upgrades can raise this later.")]
     [SerializeField, Min(0.1f)] private float growthSpeed = 1f;
 
+    [Tooltip("The soil colour of a watered square.")]
+    [SerializeField] private Material wetSoil;
+
     public Inventory Inventory => inventory;
+    public Material WetSoil => wetSoil;
 
     public float GrowthSpeed
     {
