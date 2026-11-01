@@ -17,7 +17,18 @@ The current walkable valley is approximately 160 by 140 Unity units, with distan
 | Logging camp | 42, -22 |
 | River bridge | 6, 24 |
 
-The six farming plots are empty soil beds. The pack's stock plants are hidden in these scene instances, and the added crop previews have been removed. Planting/harvesting, trading, gathering, combat, and barn-repair interactions remain separate gameplay work. The shared inventory's resource types are unchanged.
+The six farming plots start as empty soil beds; the pack's stock plants stay hidden. Each bed has a `FarmPlot`: look at it and press E to plant the selected seed, wait while it grows, then press E to harvest. Q switches between carrot and tomato seeds. Trading, gathering, combat, and barn-repair interactions remain separate gameplay work. The shared inventory's resource types are unchanged.
+
+## Farming
+
+| Part | Where |
+| --- | --- |
+| Crop settings (seed, harvest amount, grow time, stage models) | `Assets/_Game/Data/DA_Carrot`, `DA_Tomato` |
+| Carrot plants | The pack's `CarrotPlant01-03` |
+| Tomato plants | `Assets/_Game/Models/Crops`, made in Blender because the pack has none |
+| Plot behaviour | `FarmPlot` on each `Planting plot`, with 25 `Crop spots` and an `Interact area` trigger |
+
+Carrots take 60 seconds and tomatoes 90; a harvest gives 3 of the crop. `FarmPlot.GrowthSpeed` scales growing for later upgrades. `Rushed Crops > Farming > Set up farm plots` rebuilds the spots, triggers and FarmPlot settings, and `Rebuild map` runs it for new beds.
 
 ## Editing the map
 
@@ -25,7 +36,7 @@ The six farming plots are empty soil beds. The pack's stock plants are hidden in
 - The original `Ground` object is inactive and retained. The new terrain and bridge deck colliders use the controller's existing Ground layer.
 - Generated mesh/material assets are under `Assets/_Game/World/`. They are saved assets; the map is not generated each time the game starts.
 - `Rushed Crops > World > Rebuild map` recreates the world from the current layout settings after a confirmation dialog. Rebuilding replaces hand edits to the map. Normal adjustments can be made directly to the saved scene.
-- `Rushed Crops > World > Validate saved map` checks landmark groups, collision mesh, player, Inventory/HUD, missing scripts/materials, and lighting references.
+- `Rushed Crops > World > Validate saved map` checks landmark groups, collision mesh, player, Inventory/HUD, farm plots, missing scripts/materials, and lighting references.
 - `Rushed Crops > World > Clear farming plots` restores bare soil beds without editing the imported pack.
 - `Rushed Crops > World > Apply low poly cartoon style` rebuilds the faceted tree/plant visuals and flat prop palette while retaining the layout. `Align scenery to ground` checks each visible footprint against the terrain and distant hills: loose props rest on flat pads, while trees, rocks, and vegetation have embedded bases. Display produce, hanging lanterns, and the chopping-block axe use their own supports.
 

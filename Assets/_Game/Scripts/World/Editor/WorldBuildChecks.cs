@@ -23,7 +23,7 @@ namespace RushedCrops.Editor
                 scene = EditorSceneManager.OpenScene(FarmWorldBuilder.ScenePath);
             }
             Validate(scene);
-            Debug.Log("World validation passed: landmarks, player, colliders, materials and environment references.");
+            Debug.Log("World validation passed: landmarks, player, farm plots, colliders, materials and environment references.");
         }
 
         private static void Validate(Scene scene)
@@ -47,6 +47,13 @@ namespace RushedCrops.Editor
             Require(plots == 6, "Keep all six empty soil plots.");
             foreach (Transform child in garden.GetComponentsInChildren<Transform>())
                 Require(child == garden || !child.name.Contains("Plant") || child.name.StartsWith("Planting plot"), "The farming plots should remain unplanted.");
+            foreach (Transform child in garden)
+                if (child.name.StartsWith("Planting plot")) ValidateFarmPlot(child);
+
+            GameObject player = GameObject.Find("Player");
+            Require(player.GetComponent<PlayerInteractor>() != null, "The player can't use things: PlayerInteractor is missing.");
+            Require(player.GetComponent<SeedSelector>() != null, "The player can't switch seeds: SeedSelector is missing.");
+            Require(UnityEngine.Object.FindAnyObjectByType<SelectedSeedHud>() != null, "The selected seed display is missing.");
 
             var cycle = UnityEngine.Object.FindFirstObjectByType<EnvironmentCycle>();
             Require(cycle != null, "The day/night cycle is missing.");
@@ -66,6 +73,36 @@ namespace RushedCrops.Editor
             foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>(true))
             foreach (Material material in renderer.sharedMaterials)
                 Require(material != null && material.shader != null && material.shader.name != "Hidden/InternalErrorShader", "Missing material or shader on " + renderer.name);
+        }
+
+        // Each soil bed must be ready to farm: a FarmPlot with the Inventory, crops that have
+        // every growth model, places for the plants, and a trigger the player can aim at.
+        private static void ValidateFarmPlot(Transform plot)
+        {
+            var farmPlot = plot.GetComponent<FarmPlot>();
+            Require(farmPlot != null, plot.name + " is missing its FarmPlot. Run Rushed Crops > Farming > Set up farm plots.");
+            var settings = new SerializedObject(farmPlot);
+            Require(settings.FindProperty("inventory").objectReferenceValue != null, plot.name + " needs the Inventory assigned.");
+
+            SerializedProperty crops = settings.FindProperty("crops");
+            Require(crops.arraySize > 0, plot.name + " has no crops to grow.");
+            for (int i = 0; i < crops.arraySize; i++)
+            {
+                var crop = crops.GetArrayElementAtIndex(i).objectReferenceValue as CropData;
+                Require(crop != null, plot.name + " has an empty crop slot.");
+                for (int stage = 0; stage < crop.StageCount; stage++)
+                    Require(crop.GetStageModel(stage) != null, crop.name + " is missing the model for growth stage " + (stage + 1) + ".");
+            }
+
+            SerializedProperty spots = settings.FindProperty("spots");
+            Require(spots.arraySize > 0, plot.name + " has no crop spots.");
+            for (int i = 0; i < spots.arraySize; i++)
+                Require(spots.GetArrayElementAtIndex(i).objectReferenceValue != null, plot.name + " has a missing crop spot.");
+
+            bool aimable = false;
+            foreach (Collider collider in plot.GetComponentsInChildren<Collider>())
+                if (collider.isTrigger) aimable = true;
+            Require(aimable, plot.name + " needs its trigger so the player can aim at it.");
         }
 
         // CI creates a downloadable Windows player only after the scene checks pass.
