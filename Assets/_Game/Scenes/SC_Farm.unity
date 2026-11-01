@@ -78501,7 +78501,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: 0
+  m_Text: 
 --- !u!1001 &208739279
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -96675,7 +96675,6 @@ GameObject:
   - component: {fileID: 257176843}
   - component: {fileID: 257176842}
   - component: {fileID: 257176841}
-  - component: {fileID: 257176845}
   m_Layer: 5
   m_Name: HUD_Inventory
   m_TagString: Untagged
@@ -96698,23 +96697,24 @@ MonoBehaviour:
   inventory: {fileID: 1423067451}
   coinsText: {fileID: 1273019384}
   slots:
-  - resource: 1
+  - background: {fileID: 1003143413}
     nameText: {fileID: 2135904305}
     countText: {fileID: 584765073}
-  - resource: 2
+  - background: {fileID: 1734435523}
     nameText: {fileID: 1416762989}
     countText: {fileID: 891099821}
-  - resource: 3
+  - background: {fileID: 143240960}
     nameText: {fileID: 265785068}
     countText: {fileID: 208514171}
-  - resource: 4
+  - background: {fileID: 1196379356}
     nameText: {fileID: 1771952280}
     countText: {fileID: 1835915916}
-  - resource: 5
+  - background: {fileID: 641743510}
     nameText: {fileID: 596367604}
     countText: {fileID: 1445181782}
-  emptyCountColor: {r: 1, g: 1, b: 1, a: 0.35}
-  countColor: {r: 1, g: 1, b: 1, a: 1}
+  normalColor: {r: 0.08, g: 0.07, b: 0.05, a: 0.72}
+  selectedColor: {r: 0.62, g: 0.43, b: 0.12, a: 0.92}
+  selectedItemText: {fileID: 1070793241}
 --- !u!114 &257176842
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -96784,27 +96784,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!114 &257176845
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 257176840}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f8fe533773a9564cbcc38592e0f73b5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SelectedSeedHud
-  slots:
-  - crop: 0
-    background: {fileID: 1003143413}
-  - crop: 1
-    background: {fileID: 1734435523}
-  normalColor: {r: 0.08, g: 0.07, b: 0.05, a: 0.72}
-  selectedColor: {r: 0.62, g: 0.43, b: 0.12, a: 0.92}
-  hint: {fileID: 1070793241}
-  switchSeedAction: {fileID: -5123444220427761587, guid: f5efa458efab1e94091419e01d045740, type: 3}
 --- !u!1001 &257206673
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -100154,7 +100133,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Carrots
+  m_Text: 
 --- !u!1 &265826777
 GameObject:
   m_ObjectHideFlags: 0
@@ -216652,7 +216631,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: 0
+  m_Text: 
 --- !u!1001 &584907859
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -221260,7 +221239,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Wood
+  m_Text: 
 --- !u!1001 &596416615
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -330482,7 +330461,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: 0
+  m_Text: 
 --- !u!1001 &891121531
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -394081,7 +394060,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Seed: Carrot   [Q] Switch'
+  m_Text: 
 --- !u!114 &1070793242
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -515163,7 +515142,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: TomatoSeeds
+  m_Text: 
 --- !u!1 &1416951709
 GameObject:
   m_ObjectHideFlags: 0
@@ -517731,8 +517710,6 @@ GameObject:
   - component: {fileID: 1423067448}
   - component: {fileID: 1423067447}
   - component: {fileID: 1423067451}
-  - component: {fileID: 1423067453}
-  - component: {fileID: 1423067452}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -517780,55 +517757,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b387635d994644341a067d09afac6aef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Inventory
-  startingCoins: 20
-  startingCarrotSeeds: 5
-  startingTomatoSeeds: 5
-  startingCarrots: 0
-  startingTomatoes: 0
-  startingWood: 0
-  startingStone: 0
---- !u!114 &1423067452
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1423067446}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41508126bce94e02acb16c7c06621f2c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InventoryDebugDisplay
-  inventory: {fileID: 1423067451}
-  controls: {fileID: 1423067453}
-  position: {x: 10, y: 10}
-  width: 340
-  fontSize: 18
---- !u!114 &1423067453
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1423067446}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bcc11acdb68b48b29be1e94a46ff39f3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InventoryDebugControls
-  inventory: {fileID: 1423067451}
-  grantAmount: 5
-  singleCost:
-    type: 0
-    amount: 5
-  multiCost:
-  - type: 5
-    amount: 10
-  - type: 6
-    amount: 5
-  - type: 0
-    amount: 15
-  invalidAmount: -5
+  startingCoins: 0
+  maxStack: 99
 --- !u!1 &1423145459
 GameObject:
   m_ObjectHideFlags: 0
@@ -525287,7 +525217,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: 0
+  m_Text: 
 --- !u!114 &1445181783
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -646698,7 +646628,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Tomatoes
+  m_Text: 
 --- !u!1 &1772030168
 GameObject:
   m_ObjectHideFlags: 0
@@ -671588,7 +671518,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: 0
+  m_Text: 
 --- !u!1 &1836028886
 GameObject:
   m_ObjectHideFlags: 0
@@ -777579,7 +777509,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: CarrotSeeds
+  m_Text: 
 --- !u!1 &2135979429
 GameObject:
   m_ObjectHideFlags: 0
@@ -781965,6 +781895,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -25.561914
       objectReference: {fileID: 0}
+    - target: {fileID: 1483791215367605487, guid: bf8c920c9c39dfa4b8100fa2b8fb0a06, type: 3}
+      propertyPath: inventory
+      value:
+      objectReference: {fileID: 1423067451}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

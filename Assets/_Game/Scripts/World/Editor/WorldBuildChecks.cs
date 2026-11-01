@@ -52,8 +52,8 @@ namespace RushedCrops.Editor
 
             GameObject player = GameObject.Find("Player");
             Require(player.GetComponent<PlayerInteractor>() != null, "The player can't use things: PlayerInteractor is missing.");
-            Require(player.GetComponent<SeedSelector>() != null, "The player can't switch seeds: SeedSelector is missing.");
-            Require(UnityEngine.Object.FindAnyObjectByType<SelectedSeedHud>() != null, "The selected seed display is missing.");
+            var heldTools = player.GetComponent<PlayerTools>();
+            Require(heldTools != null && heldTools.Inventory != null, "The player's PlayerTools needs the Inventory assigned, so keys 1-5 can select hotbar slots.");
             Require(player.GetComponent<Health>() != null, "The player has no Health. Run Rushed Crops > Player > Set up health and respawn.");
             var respawn = player.GetComponent<RespawnController>();
             Require(respawn != null, "The player has no RespawnController. Run Rushed Crops > Player > Set up health and respawn.");

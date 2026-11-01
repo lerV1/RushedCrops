@@ -1,21 +1,20 @@
 using System;
-using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
-// The player's on-screen inventory: a coin counter and a 5-slot hotbar.
-// Each slot shows one resource from the shared Inventory. Pick which resource
-// goes in which slot in the Inspector.
+// The player's on-screen inventory: a coin counter and the 5-slot hotbar.
+// Each slot shows what is in the matching Inventory slot (name and count), or nothing
+// when it is empty. The selected slot lights up and its item's name shows above the hotbar.
 //
 // It only redraws when the Inventory raises Changed, instead of every frame.
 public class InventoryHud : MonoBehaviour
 {
-    // One hotbar slot: which resource it shows and the two texts it writes to.
+    // The UI for one hotbar slot. Slot 1 in the list shows Inventory slot 1, and so on.
     // [Serializable] makes each slot appear as a foldout in the Inspector.
     [Serializable]
     private class HotbarSlot
     {
-        public ResourceType resource;
+        public Image background;
         public Text nameText;
         public Text countText;
     }
@@ -27,10 +26,11 @@ public class InventoryHud : MonoBehaviour
     [SerializeField] private Text coinsText;
 
     [Header("Hotbar")]
-    [SerializeField] private HotbarSlot[] slots = new HotbarSlot[5];
-    [Tooltip("Count color when the player has none of that resource.")]
-    [SerializeField] private Color emptyCountColor = new Color(1f, 1f, 1f, 0.35f);
-    [SerializeField] private Color countColor = Color.white;
+    [SerializeField] private HotbarSlot[] slots = new HotbarSlot[Inventory.SlotCount];
+    [SerializeField] private Color normalColor = new Color(0.08f, 0.07f, 0.05f, 0.72f);
+    [SerializeField] private Color selectedColor = new Color(0.62f, 0.43f, 0.12f, 0.92f);
+    [Tooltip("Optional text above the hotbar with the name of the selected item.")]
+    [SerializeField] private Text selectedItemText;
 
     private void OnEnable()
     {
@@ -62,41 +62,43 @@ public class InventoryHud : MonoBehaviour
             coinsText.text = inventory.GetCount(ResourceType.Coins).ToString();
         }
 
-        foreach (HotbarSlot slot in slots)
+        int shown = Mathf.Min(slots.Length, Inventory.SlotCount);
+        for (int i = 0; i < shown; i++)
         {
-            if (slot == null)
+            if (slots[i] != null)
             {
-                continue;
+                DrawSlot(slots[i], i);
             }
+        }
 
-            int count = inventory.GetCount(slot.resource);
-
-            if (slot.nameText != null)
-            {
-                slot.nameText.text = DisplayName(slot.resource);
-            }
-
-            if (slot.countText != null)
-            {
-                slot.countText.text = count.ToString();
-                slot.countText.color = count > 0 ? countColor : emptyCountColor;
-            }
+        if (selectedItemText != null)
+        {
+            selectedItemText.text = inventory.TryGetSelectedItem(out ResourceType item)
+                ? ResourceTypes.DisplayName(item)
+                : "";
         }
     }
 
-    // Turns "CarrotSeeds" into "Carrot Seeds" by adding a space before each capital letter.
-    private static string DisplayName(ResourceType type)
+    private void DrawSlot(HotbarSlot slot, int index)
     {
-        string name = type.ToString();
-        var result = new StringBuilder(name.Length + 4);
-        for (int i = 0; i < name.Length; i++)
+        bool empty = inventory.IsSlotEmpty(index);
+        ResourceType item = inventory.GetSlotItem(index);
+
+        if (slot.background != null)
         {
-            if (i > 0 && char.IsUpper(name[i]))
-            {
-                result.Append(' ');
-            }
-            result.Append(name[i]);
+            slot.background.color = index == inventory.SelectedSlot ? selectedColor : normalColor;
         }
-        return result.ToString();
+
+        if (slot.nameText != null)
+        {
+            slot.nameText.text = empty ? "" : ResourceTypes.DisplayName(item);
+        }
+
+        if (slot.countText != null)
+        {
+            // Tools don't stack, so "1" under a hoe would only be noise.
+            bool showCount = !empty && inventory.MaxStackFor(item) > 1;
+            slot.countText.text = showCount ? inventory.GetSlotCount(index).ToString() : "";
+        }
     }
 }

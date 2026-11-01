@@ -1,15 +1,13 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-// A line above the hotbar that says what is in the player's hand, like "Hoe   [F] Switch".
-// Hidden until the player owns at least one tool. Redraws only when PlayerTools changes.
+// A line above the hotbar showing the watering can's water, like "Water 3 / 6".
+// Hidden unless the can is in hand. Redraws only when PlayerTools changes.
+// The name of whatever is held is shown by InventoryHud.
 public class ToolHud : MonoBehaviour
 {
     [SerializeField] private PlayerTools tools;
     [SerializeField] private Text label;
-    [Tooltip("Used to show the right key.")]
-    [SerializeField] private InputActionReference switchAction;
 
     private void OnEnable()
     {
@@ -34,27 +32,11 @@ public class ToolHud : MonoBehaviour
 
     private void Refresh()
     {
-        bool ownsAny = tools.Has(ToolType.Hoe) || tools.Has(ToolType.WateringCan);
-        label.enabled = ownsAny;
-        if (!ownsAny)
+        bool holdingCan = tools.Equipped == ToolType.WateringCan;
+        label.enabled = holdingCan;
+        if (holdingCan)
         {
-            return;
-        }
-
-        string key = switchAction != null ? switchAction.action.GetBindingDisplayString(0) : "F";
-        label.text = $"{Describe(tools.Equipped)}   [{key}] Switch";
-    }
-
-    private string Describe(ToolType tool)
-    {
-        switch (tool)
-        {
-            case ToolType.Hoe:
-                return "Hoe";
-            case ToolType.WateringCan:
-                return $"Watering can ({tools.WaterLeft}/{tools.CanCapacity})";
-            default:
-                return "Empty hands";
+            label.text = $"Water {tools.WaterLeft} / {tools.CanCapacity}";
         }
     }
 }

@@ -2,33 +2,44 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-// The one shared store of resources: coins, seeds, harvested crops, wood and stone.
+// The one shared store of the player's things: a coin wallet and a 5-slot hotbar.
 // Farming, the shop and barn repairs should all hold a reference to this component
 // (drag it into their Inspector field) and change counts only through the methods below.
 //
+// Hotbar rules:
+//   - Something picked up first tops up slots that already hold the same item,
+//     then goes into the first empty slot.
+//   - A slot holds up to 99 of one item (Max Stack). Tools don't stack: one per slot.
+//   - The selected slot (keys 1-5) is what the player holds.
+//
 // Every method that changes a count checks its input first and returns false
-// if the change is not allowed, so a count can never go below zero.
+// if the change is not allowed, so a count can never go below zero and
+// nothing is half added or half spent.
 //
 // DefaultExecutionOrder(-100) runs this Awake before other scripts,
-// so the starting amounts are already in place when they first read them.
+// so the inventory is ready when they first read it.
 [DefaultExecutionOrder(-100)]
 public class Inventory : MonoBehaviour
 {
-    [Header("Starting Amounts")]
-    [SerializeField, Min(0)] private int startingCoins = 20;
-    [SerializeField, Min(0)] private int startingCarrotSeeds = 5;
-    [SerializeField, Min(0)] private int startingTomatoSeeds = 5;
-    [SerializeField, Min(0)] private int startingCarrots = 0;
-    [SerializeField, Min(0)] private int startingTomatoes = 0;
-    [SerializeField, Min(0)] private int startingWood = 0;
-    [SerializeField, Min(0)] private int startingStone = 0;
+    public const int SlotCount = 5;
 
-    private static readonly int ResourceTypeCount = Enum.GetValues(typeof(ResourceType)).Length;
+    [Tooltip("Coins the player starts with.")]
+    [SerializeField, Min(0)] private int startingCoins = 0;
 
-    // One slot per resource, indexed by (int)ResourceType. counts[(int)ResourceType.Wood] is the wood count.
-    private readonly int[] counts = new int[ResourceTypeCount];
+    [Tooltip("The most of one item a hotbar slot can hold.")]
+    [SerializeField, Min(1)] private int maxStack = 99;
 
-    // Raised after any count changes. A HUD can listen to this instead of checking every frame.
+    private readonly ResourceType[] slotItems = new ResourceType[SlotCount];
+    // A count of 0 means the slot is empty; its item is then ignored.
+    private readonly int[] slotCounts = new int[SlotCount];
+    private int coins;
+
+    /// <summary>The hotbar slot the player is holding, 0 to 4.</summary>
+    public int SelectedSlot { get; private set; }
+
+    public int MaxStack => maxStack;
+
+    // Raised after any count or the selected slot changes. A HUD can listen to this instead of checking every frame.
     public event Action Changed;
 
     private void Awake()
@@ -36,63 +47,181 @@ public class Inventory : MonoBehaviour
         ResetToStartingAmounts();
     }
 
-    /// <summary>Sets every count back to its starting amount from the Inspector.</summary>
+    /// <summary>Empties the hotbar, selects the first slot and sets coins back to the starting amount.</summary>
     public void ResetToStartingAmounts()
     {
-        counts[(int)ResourceType.Coins] = startingCoins;
-        counts[(int)ResourceType.CarrotSeeds] = startingCarrotSeeds;
-        counts[(int)ResourceType.TomatoSeeds] = startingTomatoSeeds;
-        counts[(int)ResourceType.Carrots] = startingCarrots;
-        counts[(int)ResourceType.Tomatoes] = startingTomatoes;
-        counts[(int)ResourceType.Wood] = startingWood;
-        counts[(int)ResourceType.Stone] = startingStone;
+        Array.Clear(slotCounts, 0, SlotCount);
+        coins = startingCoins;
+        SelectedSlot = 0;
         Changed?.Invoke();
     }
 
-    /// <summary>How many of this resource the player has right now.</summary>
-    public int GetCount(ResourceType type) => counts[(int)type];
+    // ---------- Reading ----------
+
+    /// <summary>How many of this item the player has right now, across every slot.</summary>
+    public int GetCount(ResourceType type)
+    {
+        if (type == ResourceType.Coins)
+        {
+            return coins;
+        }
+
+        int total = 0;
+        for (int i = 0; i < SlotCount; i++)
+        {
+            if (slotCounts[i] > 0 && slotItems[i] == type)
+            {
+                total += slotCounts[i];
+            }
+        }
+        return total;
+    }
+
+    public bool IsSlotEmpty(int slot) => slotCounts[slot] == 0;
+
+    public int GetSlotCount(int slot) => slotCounts[slot];
+
+    /// <summary>The item in a slot. Check IsSlotEmpty first: an empty slot has no item.</summary>
+    public ResourceType GetSlotItem(int slot) => slotItems[slot];
 
     /// <summary>
-    /// Adds a positive amount. Returns false and changes nothing for zero, negative
-    /// or too-large amounts. Example: inventory.Add(ResourceType.Wood, 3);
+    /// Gives the item in the selected slot. Returns false when that slot is empty.
+    /// Example: if (inventory.TryGetSelectedItem(out ResourceType item)) { ... }
     /// </summary>
-    public bool Add(ResourceType type, int amount)
+    public bool TryGetSelectedItem(out ResourceType item)
+    {
+        item = slotItems[SelectedSlot];
+        return slotCounts[SelectedSlot] > 0;
+    }
+
+    /// <summary>How many of this item fit in one slot. Tools don't stack.</summary>
+    public int MaxStackFor(ResourceType type) => ResourceTypes.IsTool(type) ? 1 : maxStack;
+
+    // ---------- Selecting ----------
+
+    /// <summary>Selects a hotbar slot, 0 to 4. Returns false for a slot that doesn't exist.</summary>
+    public bool SelectSlot(int slot)
+    {
+        if (slot < 0 || slot >= SlotCount)
+        {
+            Debug.LogWarning($"There is no hotbar slot {slot}. Slots go from 0 to {SlotCount - 1}.", this);
+            return false;
+        }
+        if (slot == SelectedSlot)
+        {
+            return true;
+        }
+
+        SelectedSlot = slot;
+        Changed?.Invoke();
+        return true;
+    }
+
+    // ---------- Adding ----------
+
+    /// <summary>True when this many fit right now. Coins always fit; other items need hotbar room.</summary>
+    public bool CanAdd(ResourceType type, int amount)
     {
         if (!IsValidAmount(amount))
         {
             return false;
         }
-
-        // Stops the count wrapping round to a negative number if it ever got huge.
-        if (counts[(int)type] > int.MaxValue - amount)
+        if (type == ResourceType.Coins)
         {
-            Debug.LogWarning($"Can't add {amount} {type}: the count would be too large.", this);
+            // Stops the count wrapping round to a negative number if it ever got huge.
+            return coins <= int.MaxValue - amount;
+        }
+        return RoomFor(type) >= amount;
+    }
+
+    /// <summary>
+    /// Adds a positive amount. All of it goes in or none of it does: returns false and
+    /// changes nothing if the hotbar is too full or the amount is invalid.
+    /// Example: inventory.Add(ResourceType.Wood, 3);
+    /// </summary>
+    public bool Add(ResourceType type, int amount)
+    {
+        if (!CanAdd(type, amount))
+        {
             return false;
         }
 
-        counts[(int)type] += amount;
+        if (type == ResourceType.Coins)
+        {
+            coins += amount;
+            Changed?.Invoke();
+            return true;
+        }
+
+        int left = amount;
+        int stackLimit = MaxStackFor(type);
+
+        // First top up slots that already hold this item...
+        for (int i = 0; i < SlotCount && left > 0; i++)
+        {
+            if (slotCounts[i] > 0 && slotItems[i] == type)
+            {
+                int moved = Mathf.Min(left, stackLimit - slotCounts[i]);
+                slotCounts[i] += moved;
+                left -= moved;
+            }
+        }
+
+        // ...then fill empty slots, starting from the first.
+        for (int i = 0; i < SlotCount && left > 0; i++)
+        {
+            if (slotCounts[i] == 0)
+            {
+                int moved = Mathf.Min(left, stackLimit);
+                slotItems[i] = type;
+                slotCounts[i] = moved;
+                left -= moved;
+            }
+        }
+
         Changed?.Invoke();
         return true;
     }
 
+    // How many more of this item the hotbar can take.
+    private int RoomFor(ResourceType type)
+    {
+        int stackLimit = MaxStackFor(type);
+        int room = 0;
+        for (int i = 0; i < SlotCount; i++)
+        {
+            if (slotCounts[i] == 0)
+            {
+                room += stackLimit;
+            }
+            else if (slotItems[i] == type)
+            {
+                room += Mathf.Max(0, stackLimit - slotCounts[i]);
+            }
+        }
+        return room;
+    }
+
+    // ---------- Spending ----------
+
     /// <summary>True when the player has at least this many. Invalid amounts return false.</summary>
     public bool CanAfford(ResourceType type, int amount)
     {
-        return IsValidAmount(amount) && counts[(int)type] >= amount;
+        return IsValidAmount(amount) && GetCount(type) >= amount;
     }
 
     /// <summary>True when the player has everything in the cost list at once.</summary>
     public bool CanAfford(IReadOnlyList<ResourceAmount> cost)
     {
-        long[] totals = TotalCost(cost);
+        Dictionary<ResourceType, long> totals = TotalCost(cost);
         if (totals == null)
         {
             return false;
         }
 
-        for (int i = 0; i < ResourceTypeCount; i++)
+        foreach (KeyValuePair<ResourceType, long> line in totals)
         {
-            if (counts[i] < totals[i])
+            if (GetCount(line.Key) < line.Value)
             {
                 return false;
             }
@@ -101,7 +230,7 @@ public class Inventory : MonoBehaviour
     }
 
     /// <summary>
-    /// Spends one resource. Returns false and changes nothing if the amount is
+    /// Spends one item. Returns false and changes nothing if the amount is
     /// invalid or the player has too few. Example: if (inventory.TrySpend(ResourceType.Coins, 5)) { ... }
     /// </summary>
     public bool TrySpend(ResourceType type, int amount)
@@ -111,15 +240,15 @@ public class Inventory : MonoBehaviour
             return false;
         }
 
-        counts[(int)type] -= amount;
+        Remove(type, amount);
         Changed?.Invoke();
         return true;
     }
 
     /// <summary>
-    /// Spends a cost made of several resources, such as 10 Wood and 5 Stone.
+    /// Spends a cost made of several items, such as 10 Wood and 5 Stone.
     /// The whole cost is checked before anything is taken, so either every
-    /// resource is spent or none of them are.
+    /// item is spent or none of them are.
     /// </summary>
     public bool TrySpend(IReadOnlyList<ResourceAmount> cost)
     {
@@ -132,31 +261,63 @@ public class Inventory : MonoBehaviour
         // Step 2: we know the player can pay for all of it, so take every line.
         foreach (ResourceAmount line in cost)
         {
-            counts[(int)line.type] -= line.amount;
+            Remove(line.type, line.amount);
         }
         Changed?.Invoke();
         return true;
     }
 
-    // Adds up a cost list per resource, so "3 Wood" listed twice counts as 6 Wood.
+    // Takes items the caller has already checked are there.
+    // The selected slot goes first (planting uses the seeds in hand), then the last slots first,
+    // so the stacks near the start of the hotbar stay full.
+    private void Remove(ResourceType type, int amount)
+    {
+        if (type == ResourceType.Coins)
+        {
+            coins -= amount;
+            return;
+        }
+
+        int left = TakeFromSlot(SelectedSlot, type, amount);
+        for (int i = SlotCount - 1; i >= 0 && left > 0; i--)
+        {
+            left = TakeFromSlot(i, type, left);
+        }
+    }
+
+    // Takes up to amount from one slot if it holds this item, and returns how many are still to take.
+    private int TakeFromSlot(int slot, ResourceType type, int amount)
+    {
+        if (slotCounts[slot] == 0 || slotItems[slot] != type)
+        {
+            return amount;
+        }
+
+        int taken = Mathf.Min(amount, slotCounts[slot]);
+        slotCounts[slot] -= taken;
+        return amount - taken;
+    }
+
+    // Adds up a cost list per item, so "3 Wood" listed twice counts as 6 Wood.
     // Returns null when the list is empty or any line has an invalid amount.
     // long (a bigger whole number) is used so very large costs can't overflow while adding.
-    private long[] TotalCost(IReadOnlyList<ResourceAmount> cost)
+    private Dictionary<ResourceType, long> TotalCost(IReadOnlyList<ResourceAmount> cost)
     {
         if (cost == null || cost.Count == 0)
         {
-            Debug.LogWarning("A cost needs at least one resource.", this);
+            Debug.LogWarning("A cost needs at least one item.", this);
             return null;
         }
 
-        long[] totals = new long[ResourceTypeCount];
+        var totals = new Dictionary<ResourceType, long>();
         foreach (ResourceAmount line in cost)
         {
             if (!IsValidAmount(line.amount))
             {
                 return null;
             }
-            totals[(int)line.type] += line.amount;
+            totals.TryGetValue(line.type, out long sum);
+            totals[line.type] = sum + line.amount;
         }
         return totals;
     }
@@ -169,7 +330,7 @@ public class Inventory : MonoBehaviour
             return true;
         }
 
-        Debug.LogWarning($"Invalid resource amount {amount}. Amounts must be greater than zero.", this);
+        Debug.LogWarning($"Invalid amount {amount}. Amounts must be greater than zero.", this);
         return false;
     }
 }

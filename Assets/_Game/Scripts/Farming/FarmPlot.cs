@@ -9,7 +9,7 @@ public class FarmPlot : MonoBehaviour
     [Tooltip("The scene's shared Inventory. Seeds come from it and harvests go into it.")]
     [SerializeField] private Inventory inventory;
 
-    [Tooltip("Every crop this bed can grow. The GameManager's selected crop picks one.")]
+    [Tooltip("Every crop this bed can grow. The seeds in the selected hotbar slot pick one.")]
     [SerializeField] private CropData[] crops;
 
     [Tooltip("1 is normal speed, 2 grows twice as fast. Upgrades can raise this later.")]
@@ -38,13 +38,17 @@ public class FarmPlot : MonoBehaviour
 
     public bool CanGrow(CropData crop) => crop != null && Array.IndexOf(crops, crop) >= 0;
 
-    // The crop matching the GameManager's selected crop type, if this bed can grow it.
+    // The crop whose seeds are in the selected hotbar slot, if this bed can grow it.
+    // Null when the player isn't holding seeds.
     public CropData SelectedCrop()
     {
-        CropType selected = GameManager.Instance != null ? GameManager.Instance.SelectedCrop : CropType.Carrot;
+        if (!inventory.TryGetSelectedItem(out ResourceType held))
+        {
+            return null;
+        }
         foreach (CropData crop in crops)
         {
-            if (crop != null && crop.CropType == selected)
+            if (crop != null && crop.SeedResource == held)
             {
                 return crop;
             }
