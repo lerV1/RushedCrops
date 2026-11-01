@@ -29,6 +29,14 @@ public class HandAnimator : MonoBehaviour
     [Tooltip("Seconds into the equip, unequip and swap animations when the arm is below the screen.")]
     [SerializeField, Min(0f)] private float toolSwapDelay = 0.3f;
 
+    [Header("Watering can")]
+    [Tooltip("Drops falling from the can's spout while it pours.")]
+    [SerializeField] private ParticleSystem waterStream;
+    [Tooltip("Seconds into the pour animation when the can is tipped far enough for water to come out.")]
+    [SerializeField, Min(0f)] private float pourStart = 0.27f;
+    [Tooltip("How long the water runs.")]
+    [SerializeField, Min(0f)] private float pourLength = 0.5f;
+
     [Header("Input")]
     [SerializeField] private InputActionReference interactAction;
 
@@ -77,8 +85,28 @@ public class HandAnimator : MonoBehaviour
 
     public void PlayPunch() => PlayRight(AttackTrigger);
 
-    // Tips the watering can forward: watering a crop, or dipping it in the river to fill it.
-    public void PlayPour() => PlayRight(PourTrigger);
+    // Tips the watering can forward: watering a crop (withWater shows the stream of drops),
+    // or dipping it in the river to fill it.
+    public void PlayPour(bool withWater)
+    {
+        if (!IsResting(rightArm))
+        {
+            return;
+        }
+        rightArm.SetTrigger(PourTrigger);
+        if (withWater && waterStream != null)
+        {
+            StartCoroutine(RunWater());
+        }
+    }
+
+    private IEnumerator RunWater()
+    {
+        yield return new WaitForSeconds(pourStart);
+        waterStream.Play();
+        yield return new WaitForSeconds(pourLength);
+        waterStream.Stop(); // drops already falling finish their fall
+    }
 
     public void PlayInteract()
     {
