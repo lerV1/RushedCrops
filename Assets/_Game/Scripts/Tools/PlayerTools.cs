@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -17,6 +18,10 @@ public class PlayerTools : MonoBehaviour
     [Header("References")]
     [SerializeField] private PlayerInteractor interactor;
     [SerializeField] private HandAnimator hands;
+
+    [Header("Timing")]
+    [Tooltip("Seconds into the hoe swing when the blade hits the ground.")]
+    [SerializeField, Min(0f)] private float hoeHitDelay = 0.3f;
 
     private readonly bool[] owned = new bool[Enum.GetValues(typeof(ToolType)).Length];
 
@@ -115,7 +120,28 @@ public class PlayerTools : MonoBehaviour
                 break;
             case ToolType.Hoe:
                 hands.PlaySwing();
+                UseOnTarget(hoeHitDelay);
                 break;
+        }
+    }
+
+    // If the crosshair is on something this tool works on, use it when the tool gets there.
+    private void UseOnTarget(float delay)
+    {
+        IToolTarget target = interactor.FindToolTarget();
+        if (target != null && target.CanUseTool(this))
+        {
+            StartCoroutine(UseAfter(target, delay));
+        }
+    }
+
+    private IEnumerator UseAfter(IToolTarget target, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        // Check again: the target could have been removed, or changed, during the swing.
+        if (target as UnityEngine.Object != null && target.CanUseTool(this))
+        {
+            target.UseTool(this);
         }
     }
 }
