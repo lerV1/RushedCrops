@@ -17,18 +17,42 @@ The current walkable valley is approximately 160 by 140 Unity units, with distan
 | Logging camp | 42, -22 |
 | River bridge | 6, 24 |
 
-The six farming plots start as empty soil beds; the pack's stock plants stay hidden. Each bed has a `FarmPlot`: look at it and press E to plant the selected seed, wait while it grows, then press E to harvest. Q switches between carrot and tomato seeds. Trading, gathering, combat, and barn-repair interactions remain separate gameplay work. The shared inventory's resource types are unchanged.
+The six farming plots start as flat soil beds; the pack's stock plants and ridges stay hidden. Each bed is a 5 x 5 grid of 1 m squares, farmed one square at a time. Trading, gathering, combat, and barn-repair interactions remain separate gameplay work. The shared inventory's resource types are unchanged.
 
 ## Farming
 
+The player starts with empty hands. The hoe and the watering can wait on the cut tree stump just west of the garden gate.
+
+| Step | How |
+| --- | --- |
+| Pick up a tool | Look at it on the stump, press E. A tool picked up with empty hands goes straight into the hand. |
+| Switch tools | F (gamepad Y / Triangle) cycles empty hands, hoe, watering can. |
+| Till a square | Hold the hoe, aim at the square (it gets an outline), left click. |
+| Plant | Aim at a tilled square, press E. One seed per square; Q switches carrot / tomato seeds. |
+| Water | Hold the watering can, left click a planted square. A dry crop doesn't grow. Wet soil is darker. |
+| Fill the can | Hold the can, aim at the river, left click. One fill waters 6 squares; the can starts empty. |
+| Harvest | Press E on a ripe square. The soil stays tilled for the next seed. |
+
+| Crop | Grows in | Waterings | Harvest per square |
+| --- | --- | --- | --- |
+| Carrot | 60 s | 1 | 2 carrots |
+| Tomato | 90 s | 2 (it dries out half way) | 3 tomatoes |
+
 | Part | Where |
 | --- | --- |
-| Crop settings (seed, harvest amount, grow time, stage models) | `Assets/_Game/Data/DA_Carrot`, `DA_Tomato` |
-| Carrot plants | The pack's `CarrotPlant01-03` |
-| Tomato plants | `Assets/_Game/Models/Crops`, made in Blender because the pack has none |
-| Plot behaviour | `FarmPlot` on each `Planting plot`, with 25 `Crop spots` and an `Interact area` trigger |
+| Crop settings (seed, harvest, grow time, waterings, stage models) | `Assets/_Game/Data/DA_Carrot`, `DA_Tomato` |
+| Carrot plants, hoe, stump | The Holotna pack (`CarrotPlant01-03`, `Hoe01`, `OakStump01`) |
+| Tomato plants, watering can, soil mound, square outline | `Assets/_Game/Models/Crops`, `Models/Tools`, `Models/Farm`, made in Blender because the pack has none |
+| Bed and square behaviour | `FarmPlot` on each `Planting plot` (shared settings), `FarmTile` on each `Tiles/Tile NN` |
+| Tools | `PlayerTools` on the Player; `ToolPickup` on the stump tools; `WaterSource` on `River water` |
 
-Carrots take 60 seconds and tomatoes 90; a harvest gives 3 of the crop. `FarmPlot.GrowthSpeed` scales growing for later upgrades. `Rushed Crops > Farming > Set up farm plots` rebuilds the spots, triggers and FarmPlot settings, and `Rebuild map` runs it for new beds.
+`FarmPlot.GrowthSpeed` scales growing for later upgrades. The river's collider is on the Water layer and touches nothing, so the player still wades through; water can be aimed at from up to 6 m because it lies below the bank.
+
+The farm parts have editor tools, and `Rebuild map` runs all three:
+
+- `Rushed Crops > Farming > Set up farm plots` rebuilds every bed's squares and settings.
+- `Rushed Crops > Farming > Place tool stump` puts the stump, hoe and watering can back by the gate.
+- `Rushed Crops > Farming > Set up river water` gives the river its collider and `WaterSource`.
 
 ## Editing the map
 
@@ -36,7 +60,7 @@ Carrots take 60 seconds and tomatoes 90; a harvest gives 3 of the crop. `FarmPlo
 - The original `Ground` object is inactive and retained. The new terrain and bridge deck colliders use the controller's existing Ground layer.
 - Generated mesh/material assets are under `Assets/_Game/World/`. They are saved assets; the map is not generated each time the game starts.
 - `Rushed Crops > World > Rebuild map` recreates the world from the current layout settings after a confirmation dialog. Rebuilding replaces hand edits to the map. Normal adjustments can be made directly to the saved scene.
-- `Rushed Crops > World > Validate saved map` checks landmark groups, collision mesh, player, Inventory/HUD, farm plots, missing scripts/materials, and lighting references.
+- `Rushed Crops > World > Validate saved map` checks landmark groups, collision mesh, player, Inventory/HUD, farm plots and squares, the tool stump, the river water, missing scripts/materials, and lighting references.
 - `Rushed Crops > World > Clear farming plots` restores bare soil beds without editing the imported pack.
 - `Rushed Crops > World > Apply low poly cartoon style` rebuilds the faceted tree/plant visuals and flat prop palette while retaining the layout. `Align scenery to ground` checks each visible footprint against the terrain and distant hills: loose props rest on flat pads, while trees, rocks, and vegetation have embedded bases. Display produce, hanging lanterns, and the chopping-block axe use their own supports.
 
