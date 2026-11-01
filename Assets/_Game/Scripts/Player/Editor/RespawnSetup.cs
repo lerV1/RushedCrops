@@ -14,7 +14,7 @@ namespace RushedCrops.Editor
     {
         public const string RootName = "GAMEPLAY_Respawn";
         public const string StartCheckpointName = "Farm checkpoint";
-        private const string PlayerPrefabPath = "Assets/_Game/Prefabs/PFB_Player.prefab";
+        private const string PlayerPrefabPath = "Assets/_Game/Prefabs/Player/PFB_Player.prefab";
         private const int GroundLayer = 6;
         // The player's look ray skips this layer, so the trigger boxes never block aiming at plots or tools.
         private const int IgnoreRaycastLayer = 2;

@@ -15,8 +15,8 @@ namespace RushedCrops.Editor
     public static class HealthHudSetup
     {
         public const string CanvasName = "HUD_Health";
-        private const string PlayerPrefabPath = "Assets/_Game/Prefabs/PFB_Player.prefab";
-        private const string VignettePath = "Assets/_Game/Textures/T_DamageVignette.png";
+        private const string PlayerPrefabPath = "Assets/_Game/Prefabs/Player/PFB_Player.prefab";
+        private const string VignettePath = "Assets/_Game/Textures/UI/T_DamageVignette.png";
 
         private static readonly Color PanelColor = new Color(0.08f, 0.07f, 0.05f, 0.72f);
         private static readonly Color TrackColor = new Color(0f, 0f, 0f, 0.55f);

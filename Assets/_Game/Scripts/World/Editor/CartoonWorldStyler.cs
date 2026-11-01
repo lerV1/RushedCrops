@@ -10,7 +10,8 @@ namespace RushedCrops.Editor
     // Keeps the Holotna layout/prefab links while giving the map solid, faceted silhouettes.
     public static class CartoonWorldStyler
     {
-        private const string Folder = "Assets/_Game/World/Cartoon";
+        private const string MaterialFolder = "Assets/_Game/Materials/Cartoon";
+        private const string MeshFolder = "Assets/_Game/Models/Cartoon";
         private static readonly Dictionary<string, Mesh> Meshes = new Dictionary<string, Mesh>();
         private static readonly Dictionary<string, Material> Palette = new Dictionary<string, Material>();
 
@@ -20,7 +21,8 @@ namespace RushedCrops.Editor
             if (Application.isPlaying) throw new InvalidOperationException("Style the saved map outside Play.");
             var root = GameObject.Find(FarmWorldBuilder.RootName);
             if (root == null) throw new InvalidOperationException("Build the farm map first.");
-            if (!AssetDatabase.IsValidFolder(Folder)) AssetDatabase.CreateFolder("Assets/_Game/World", "Cartoon");
+            if (!AssetDatabase.IsValidFolder(MaterialFolder)) AssetDatabase.CreateFolder("Assets/_Game/Materials", "Cartoon");
+            if (!AssetDatabase.IsValidFolder(MeshFolder)) AssetDatabase.CreateFolder("Assets/_Game/Models", "Cartoon");
             Meshes.Clear(); Palette.Clear();
             CreatePalette();
             CreateMeshes();
@@ -84,7 +86,8 @@ namespace RushedCrops.Editor
 
         private static void StyleImported(GameObject imported)
         {
-            string name = imported.name;
+            // The game's own copies of pack prefabs carry a PFB_ prefix; style them like the originals.
+            string name = imported.name.StartsWith("PFB_") ? imported.name.Substring(4) : imported.name;
             bool tree = name.StartsWith("Oak0") || name.StartsWith("Pine0") || name.StartsWith("Spruce0") || name.StartsWith("Willow0");
             bool shrub = name.StartsWith("Bush") || name.StartsWith("Fern");
             bool grass = name.StartsWith("Grass") || name.StartsWith("Cattail");
@@ -105,7 +108,7 @@ namespace RushedCrops.Editor
                         if (materials[i] != null) materials[i] = ForMaterial(materials[i].name);
                     renderer.sharedMaterials = materials;
                     var filter = renderer.GetComponent<MeshFilter>();
-                    if (filter != null && filter.sharedMesh != null && !AssetDatabase.GetAssetPath(filter.sharedMesh).StartsWith(Folder + "/"))
+                    if (filter != null && filter.sharedMesh != null && !AssetDatabase.GetAssetPath(filter.sharedMesh).StartsWith(MeshFolder + "/"))
                     {
                         string key = AssetDatabase.GetAssetPath(filter.sharedMesh) + "/" + filter.sharedMesh.name;
                         if (!Meshes.TryGetValue(key, out Mesh flat))
@@ -225,12 +228,12 @@ namespace RushedCrops.Editor
         }
         private static void Ground(string name,Color color)
         {
-            var material=AssetDatabase.LoadAssetAtPath<Material>("Assets/_Game/World/Materials/"+name+".mat");
+            var material=AssetDatabase.LoadAssetAtPath<Material>("Assets/_Game/Materials/World/"+name+".mat");
             material.SetTexture("_BaseMap",null);material.SetTexture("_BumpMap",null);material.color=color;EditorUtility.SetDirty(material);
         }
         private static void Colour(string name,float r,float g,float b)
         {
-            string path=Folder+"/"+name+".mat";var material=AssetDatabase.LoadAssetAtPath<Material>(path);
+            string path=MaterialFolder+"/"+name+".mat";var material=AssetDatabase.LoadAssetAtPath<Material>(path);
             if(material==null){material=new Material(Shader.Find("Universal Render Pipeline/Lit"));AssetDatabase.CreateAsset(material,path);}
             material.color=new Color(r,g,b);material.SetFloat("_Smoothness",0);material.enableInstancing=true;Palette[name]=material;EditorUtility.SetDirty(material);
         }
@@ -240,7 +243,7 @@ namespace RushedCrops.Editor
         }
         private static Mesh SaveMesh(Mesh mesh,string name)
         {
-            mesh.name=name;string path=Folder+"/"+name+".asset";var existing=AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            mesh.name=name;string path=MeshFolder+"/"+name+".asset";var existing=AssetDatabase.LoadAssetAtPath<Mesh>(path);
             if(existing==null)AssetDatabase.CreateAsset(mesh,path);else{EditorUtility.CopySerialized(mesh,existing);Object.DestroyImmediate(mesh);mesh=existing;}
             return mesh;
         }

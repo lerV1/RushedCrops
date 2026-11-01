@@ -58,7 +58,8 @@ public class CropTests
             Assert.GreaterOrEqual(crop.StageCount, 2, crop.name);
             for (int stage = 0; stage < crop.StageCount; stage++)
             {
-                Assert.IsNotNull(crop.GetStageModel(stage), crop.name + " stage " + (stage + 1));
+                // A broken reference is a Unity "fake null" that NUnit's IsNotNull accepts, so compare with Unity's != null.
+                Assert.IsTrue(crop.GetStageModel(stage) != null, crop.name + " is missing the model for stage " + (stage + 1));
             }
             Assert.Greater(crop.HarvestAmount, 0, crop.name);
             Assert.Greater(crop.WaterNeeded, 0, crop.name);
