@@ -405,6 +405,7 @@ namespace RushedCrops.Editor
             Prefab("Containers/Crate01", parent, V(Garden.x - 2.6f, max.y + 1.1f), 10f, 1.6f);
             Lantern(parent, V(Garden.x + 1.6f, max.y + 0.6f), 180f);
             ToolStumpSetup.Place(parent);
+            SeedCrateSetup.Place(parent);
         }
 
         [MenuItem("Rushed Crops/World/Clear farming plots")]

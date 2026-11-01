@@ -16,7 +16,15 @@ public enum ResourceType
     Wood,
     Stone,
     Hoe,
-    WateringCan
+    WateringCan,
+    BeetSeeds,
+    CabbageSeeds,
+    OnionSeeds,
+    WheatSeeds,
+    Beets,
+    Cabbages,
+    Onions,
+    Wheat
 }
 
 // Small helpers for questions about an item that don't depend on any one inventory.

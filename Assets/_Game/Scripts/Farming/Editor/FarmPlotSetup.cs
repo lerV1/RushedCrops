@@ -16,6 +16,10 @@ namespace RushedCrops.Editor
         {
             "Assets/_Game/Data/DA_Carrot.asset",
             "Assets/_Game/Data/DA_Tomato.asset",
+            "Assets/_Game/Data/DA_Beet.asset",
+            "Assets/_Game/Data/DA_Cabbage.asset",
+            "Assets/_Game/Data/DA_Onion.asset",
+            "Assets/_Game/Data/DA_Wheat.asset",
         };
         private const string SoilModel = "Assets/_Game/Models/Farm/SoilMound.fbx";
         private const string FrameModel = "Assets/_Game/Models/Farm/TileFrame.fbx";
@@ -62,10 +66,40 @@ namespace RushedCrops.Editor
             if (inventory == null) Debug.LogWarning("No Inventory in the scene yet. Assign it to each FarmPlot.", plot);
             settings.FindProperty("inventory").objectReferenceValue = inventory;
             settings.FindProperty("wetSoil").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>(WetSoilMaterial);
+            settings.ApplyModifiedProperties();
+            AssignCrops(farmPlot);
+        }
+
+        // Gives every bed the full crop list without rebuilding its squares, so crops in the
+        // ground and hand edits stay. Run this after adding a crop to CropAssets.
+        [MenuItem("Rushed Crops/Farming/Update crops in farm plots")]
+        public static void UpdateCropsInAllPlots()
+        {
+            if (Application.isPlaying) throw new InvalidOperationException("Update the plots outside Play.");
+            var garden = GameObject.Find(FarmWorldBuilder.RootName)?.transform.Find(FarmWorldBuilder.FarmGroup);
+            if (garden == null) throw new InvalidOperationException("Open SC_Farm with the farm map built first.");
+
+            int count = 0;
+            foreach (FarmPlot plot in garden.GetComponentsInChildren<FarmPlot>(true))
+            {
+                AssignCrops(plot);
+                count++;
+            }
+            EditorSceneManager.MarkSceneDirty(garden.gameObject.scene);
+            Debug.Log($"Gave {count} farm plots all {CropAssets.Length} crops.");
+        }
+
+        public static void AssignCrops(FarmPlot farmPlot)
+        {
+            var settings = new SerializedObject(farmPlot);
             SerializedProperty crops = settings.FindProperty("crops");
             crops.arraySize = CropAssets.Length;
             for (int i = 0; i < CropAssets.Length; i++)
-                crops.GetArrayElementAtIndex(i).objectReferenceValue = AssetDatabase.LoadAssetAtPath<CropData>(CropAssets[i]);
+            {
+                var crop = AssetDatabase.LoadAssetAtPath<CropData>(CropAssets[i]);
+                if (crop == null) throw new InvalidOperationException("Missing crop asset: " + CropAssets[i]);
+                crops.GetArrayElementAtIndex(i).objectReferenceValue = crop;
+            }
             settings.ApplyModifiedProperties();
         }
 

@@ -105,6 +105,22 @@ namespace RushedCrops.Editor
                 Require(found, "The " + tool + " is missing from the tool stump. Run Rushed Crops > Farming > Place tool stump.");
             }
 
+            // Seeds come from the crates by the gate until the market sells them: one crate per crop.
+            Transform crates = garden.Find(SeedCrateSetup.RootName);
+            Require(crates != null, "The seed crates are missing. Run Rushed Crops > Farming > Place seed crates.");
+            foreach (string path in FarmPlotSetup.CropAssets)
+            {
+                var crop = AssetDatabase.LoadAssetAtPath<CropData>(path);
+                bool found = false;
+                foreach (SeedCrate crate in crates.GetComponentsInChildren<SeedCrate>(true))
+                {
+                    var crateSettings = new SerializedObject(crate);
+                    if (crate.Crop == crop && crateSettings.FindProperty("inventory").objectReferenceValue != null && crate.GetComponent<Collider>() != null)
+                        found = true;
+                }
+                Require(found, "There is no working seed crate for " + path + ". Run Rushed Crops > Farming > Place seed crates.");
+            }
+
             Transform water = world.Find(RiverWaterSetup.WaterPath);
             var waterCollider = water != null ? water.GetComponent<MeshCollider>() : null;
             Require(water != null && water.GetComponent<WaterSource>() != null && waterCollider != null && waterCollider.sharedMesh != null,
@@ -123,7 +139,7 @@ namespace RushedCrops.Editor
             Require(settings.FindProperty("wetSoil").objectReferenceValue != null, plot.name + " needs its wet soil material assigned.");
 
             SerializedProperty crops = settings.FindProperty("crops");
-            Require(crops.arraySize > 0, plot.name + " has no crops to grow.");
+            Require(crops.arraySize == FarmPlotSetup.CropAssets.Length, plot.name + " can't grow every crop. Run Rushed Crops > Farming > Update crops in farm plots.");
             for (int i = 0; i < crops.arraySize; i++)
             {
                 var crop = crops.GetArrayElementAtIndex(i).objectReferenceValue as CropData;
