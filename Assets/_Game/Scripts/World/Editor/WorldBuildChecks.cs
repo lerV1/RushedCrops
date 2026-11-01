@@ -23,7 +23,7 @@ namespace RushedCrops.Editor
                 scene = EditorSceneManager.OpenScene(FarmWorldBuilder.ScenePath);
             }
             Validate(scene);
-            Debug.Log("World validation passed: landmarks, player, farm plots, colliders, materials and environment references.");
+            Debug.Log("World validation passed: landmarks, player, farm plots, tools, river water, colliders, materials and environment references.");
         }
 
         private static void Validate(Scene scene)
@@ -54,6 +54,7 @@ namespace RushedCrops.Editor
             Require(player.GetComponent<PlayerInteractor>() != null, "The player can't use things: PlayerInteractor is missing.");
             Require(player.GetComponent<SeedSelector>() != null, "The player can't switch seeds: SeedSelector is missing.");
             Require(UnityEngine.Object.FindAnyObjectByType<SelectedSeedHud>() != null, "The selected seed display is missing.");
+            ValidateTools(player, garden, root.transform);
 
             var cycle = UnityEngine.Object.FindFirstObjectByType<EnvironmentCycle>();
             Require(cycle != null, "The day/night cycle is missing.");
@@ -75,6 +76,35 @@ namespace RushedCrops.Editor
                 Require(material != null && material.shader != null && material.shader.name != "Hidden/InternalErrorShader", "Missing material or shader on " + renderer.name);
         }
 
+        // The player starts empty-handed, so the hoe and the watering can must be waiting on the
+        // stump, both tools must be in the hand for when they are picked up, and the river must fill the can.
+        private static void ValidateTools(GameObject player, Transform garden, Transform world)
+        {
+            Require(player.GetComponent<PlayerTools>() != null, "The player can't hold tools: PlayerTools is missing.");
+            var hands = player.GetComponentInChildren<HandAnimator>(true);
+            Require(hands != null, "The arms are missing their HandAnimator.");
+            SerializedProperty models = new SerializedObject(hands).FindProperty("toolModels");
+            foreach (ToolType tool in new[] { ToolType.Hoe, ToolType.WateringCan })
+                Require(models.arraySize > (int)tool && models.GetArrayElementAtIndex((int)tool).objectReferenceValue != null,
+                    "The " + tool + " model in the player's hand is not assigned in HandAnimator.");
+
+            Transform stump = garden.Find(ToolStumpSetup.RootName);
+            Require(stump != null, "The tool stump is missing. Run Rushed Crops > Farming > Place tool stump.");
+            foreach (ToolType tool in new[] { ToolType.Hoe, ToolType.WateringCan })
+            {
+                bool found = false;
+                foreach (ToolPickup pickup in stump.GetComponentsInChildren<ToolPickup>(true))
+                    if (pickup.Tool == tool && pickup.GetComponent<Collider>() != null) found = true;
+                Require(found, "The " + tool + " is missing from the tool stump. Run Rushed Crops > Farming > Place tool stump.");
+            }
+
+            Transform water = world.Find(RiverWaterSetup.WaterPath);
+            var waterCollider = water != null ? water.GetComponent<MeshCollider>() : null;
+            Require(water != null && water.GetComponent<WaterSource>() != null && waterCollider != null && waterCollider.sharedMesh != null,
+                "The river can't fill the watering can. Run Rushed Crops > Farming > Set up river water.");
+            Require(waterCollider.excludeLayers.value == ~0, "The river's collider must touch nothing, or it would block the player.");
+        }
+
         // Each soil bed must be ready to farm: a FarmPlot with the Inventory, crops that have
         // every growth model, and squares (FarmTile) the player can aim at, each with its soil and outline.
         private static void ValidateFarmPlot(Transform plot)
@@ -83,6 +113,7 @@ namespace RushedCrops.Editor
             Require(farmPlot != null, plot.name + " is missing its FarmPlot. Run Rushed Crops > Farming > Set up farm plots.");
             var settings = new SerializedObject(farmPlot);
             Require(settings.FindProperty("inventory").objectReferenceValue != null, plot.name + " needs the Inventory assigned.");
+            Require(settings.FindProperty("wetSoil").objectReferenceValue != null, plot.name + " needs its wet soil material assigned.");
 
             SerializedProperty crops = settings.FindProperty("crops");
             Require(crops.arraySize > 0, plot.name + " has no crops to grow.");
