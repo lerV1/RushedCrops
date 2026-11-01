@@ -2,7 +2,7 @@ using UnityEngine;
 
 // Everything that makes one crop different: which seed plants it, how long it grows,
 // what it looks like at each stage and what a harvest gives. There is one asset per crop
-// (DA_Carrot, DA_Tomato). A new kind of seed is a new asset, not new code.
+// (DA_Carrot, DA_Tomato, DA_Beet, ...). A new kind of seed is a new asset, not new code.
 // Create one with Assets > Create > Rushed Crops > Crop Data.
 [CreateAssetMenu(fileName = "DA_NewCrop", menuName = "Rushed Crops/Crop Data")]
 public class CropData : ScriptableObject

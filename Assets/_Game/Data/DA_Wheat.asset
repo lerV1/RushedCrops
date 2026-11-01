@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72c27e150e7b3854cb3c910ec5ffb8fd, type: 3}
+  m_Name: DA_Wheat
+  m_EditorClassIdentifier: Assembly-CSharp::CropData
+  cropType: 5
+  displayName: Wheat
+  seedResource: 12
+  harvestResource: 16
+  harvestAmount: 4
+  growSeconds: 100
+  stageModels:
+  - {fileID: 430942717309779298, guid: 18a943a3bb0c12d479828019aedca522, type: 3}
+  - {fileID: 8029744194721718558, guid: 060eeb4f9c02a0f44803dcfadc257120, type: 3}
+  - {fileID: 2758885396372900109, guid: 7c19a8b0dc45a4b4489ff85396b553fc, type: 3}
+  waterNeeded: 2

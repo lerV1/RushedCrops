@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72c27e150e7b3854cb3c910ec5ffb8fd, type: 3}
+  m_Name: DA_Beet
+  m_EditorClassIdentifier: Assembly-CSharp::CropData
+  cropType: 2
+  displayName: Beet
+  seedResource: 9
+  harvestResource: 13
+  harvestAmount: 2
+  growSeconds: 45
+  stageModels:
+  - {fileID: 1418304413413709219, guid: 51cdc20ff703a0e4987ae76f21d28e22, type: 3}
+  - {fileID: 8743508034258847691, guid: 07a61c7b898ed7e448e69a9d2c07dc57, type: 3}
+  - {fileID: 578510480881933451, guid: e3be1eab97ad1e447b00772b9b1080d4, type: 3}
+  waterNeeded: 1

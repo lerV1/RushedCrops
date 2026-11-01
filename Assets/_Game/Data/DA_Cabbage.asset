@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72c27e150e7b3854cb3c910ec5ffb8fd, type: 3}
+  m_Name: DA_Cabbage
+  m_EditorClassIdentifier: Assembly-CSharp::CropData
+  cropType: 3
+  displayName: Cabbage
+  seedResource: 10
+  harvestResource: 14
+  harvestAmount: 2
+  growSeconds: 120
+  stageModels:
+  - {fileID: 3693210722745183438, guid: 01932852f095c2a48a8e036c3dc312ee, type: 3}
+  - {fileID: 1402844091361379, guid: 7ff3b0fd4bf9d5443b8fac1e75615f15, type: 3}
+  - {fileID: 3143822469506141702, guid: 838aee8812a42194abd2624d4188abe9, type: 3}
+  waterNeeded: 2
