@@ -3,10 +3,14 @@
 // Put the component on the object that has the collider, or on one of its parents.
 public interface IInteractable
 {
-    // What pressing Interact would do right now, such as "Plant carrot seed".
-    // Return null or an empty string when there is nothing to do, and no prompt is shown.
+    // What the player sees while looking at this, such as "Plant carrot seed".
+    // Return null or an empty string to show nothing.
     string GetPrompt();
 
-    // Called once when the player presses Interact while looking at this object.
+    // True when pressing Interact does something right now. When false the prompt is only
+    // information (like "Carrots growing: 40%") and is shown without the key.
+    bool CanInteract { get; }
+
+    // Called once when the player presses Interact while looking at this and CanInteract is true.
     void Interact(PlayerInteractor player);
 }

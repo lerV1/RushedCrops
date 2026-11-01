@@ -77,10 +77,14 @@ public class PlayerInteractor : MonoBehaviour
         {
             prompt.Hide();
         }
-        else
+        else if (Target.CanInteract)
         {
             // GetBindingDisplayString(0) is the first binding, the E key.
             prompt.Show($"[{interactAction.action.GetBindingDisplayString(0)}] {text}");
+        }
+        else
+        {
+            prompt.Show(text);
         }
     }
 
@@ -88,7 +92,7 @@ public class PlayerInteractor : MonoBehaviour
     {
         // Look again so the press always uses what is under the crosshair right now.
         Target = FindTarget();
-        if (Target != null && !string.IsNullOrEmpty(Target.GetPrompt()))
+        if (Target != null && Target.CanInteract)
         {
             Target.Interact(this);
             UpdatePrompt();
