@@ -3,15 +3,16 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 // Plays the first-person arm animations. Each arm has its own Animator:
-//   right arm (AC_HandRight): holds the tool. Attack swings it, or punches when the tool is put away.
+//   right arm (AC_HandRight): holds the tool in hand, swings it, or punches with empty hands.
 //   left arm  (AC_HandLeft):  reaches out and grabs when the player presses Interact.
-// Toggle Tool (F / Button North) puts the tool away or takes it out again. The arm drops below the
-// screen, the tool is shown or hidden while it's out of view, and the arm comes back up.
-// Gameplay scripts can also call PlayAttack, PlayInteract or SetEquipped directly.
+// PlayerTools decides what the right arm does; this script only animates and shows the right tool.
+// Changing tools drops the arm below the screen, swaps the tool model while it's out of view,
+// and brings the arm back up.
 public class HandAnimator : MonoBehaviour
 {
     private static readonly int EquippedParam = Animator.StringToHash("Equipped");
     private static readonly int AttackTrigger = Animator.StringToHash("Attack");
+    private static readonly int SwapTrigger = Animator.StringToHash("Swap");
     private static readonly int InteractTrigger = Animator.StringToHash("Interact");
     private static readonly int IdleState = Animator.StringToHash("Idle");
     private static readonly int GripIdleState = Animator.StringToHash("GripIdle");
@@ -20,98 +21,122 @@ public class HandAnimator : MonoBehaviour
     [SerializeField] private Animator rightArm;
     [SerializeField] private Animator leftArm;
 
-    [Header("Tool")]
-    [Tooltip("The tool in the right hand.")]
-    [SerializeField] private GameObject tool;
-    [SerializeField] private bool startEquipped = true;
-    [Tooltip("Seconds into the equip and unequip animations when the arm is below the screen.")]
+    [Header("Tools")]
+    [Tooltip("The tool models in the right hand, in ToolType order. Leave element 0 (None) empty.")]
+    [SerializeField] private GameObject[] toolModels = new GameObject[3];
+    [Tooltip("Seconds into the equip, unequip and swap animations when the arm is below the screen.")]
     [SerializeField, Min(0f)] private float toolSwapDelay = 0.3f;
 
     [Header("Input")]
-    [SerializeField] private InputActionReference attackAction;
     [SerializeField] private InputActionReference interactAction;
-    [SerializeField] private InputActionReference toggleToolAction;
 
+    private ToolType shownTool = ToolType.None;
     private Coroutine toolSwap;
 
-    // True while the right hand holds the tool (or is taking it out).
-    public bool IsEquipped { get; private set; }
+    public bool IsRightArmResting => IsResting(rightArm);
 
     private void Awake()
     {
-        if (rightArm == null || leftArm == null || tool == null)
+        if (rightArm == null || leftArm == null)
         {
-            Debug.LogError("HandAnimator needs both arm Animators and the tool assigned.", this);
+            Debug.LogError("HandAnimator needs both arm Animators assigned.", this);
             enabled = false;
         }
     }
 
     private void Start()
     {
-        // Begin already holding (or not holding) the tool, without playing the equip animation.
-        IsEquipped = startEquipped;
-        rightArm.SetBool(EquippedParam, startEquipped);
-        rightArm.Play(startEquipped ? GripIdleState : IdleState, 0, 0f);
-        tool.SetActive(startEquipped);
+        // Start with empty hands.
+        rightArm.SetBool(EquippedParam, false);
+        rightArm.Play(IdleState, 0, 0f);
+        ShowTool(ToolType.None);
     }
 
     private void OnEnable()
     {
-        Subscribe(attackAction, OnAttack);
-        Subscribe(interactAction, OnInteract);
-        Subscribe(toggleToolAction, OnToggleTool);
+        if (interactAction != null)
+        {
+            interactAction.action.Enable();
+            interactAction.action.performed += OnInteract;
+        }
     }
 
     private void OnDisable()
     {
-        // Only unsubscribe. Interact is shared with PlayerInteractor, so the actions stay enabled.
-        Unsubscribe(attackAction, OnAttack);
-        Unsubscribe(interactAction, OnInteract);
-        Unsubscribe(toggleToolAction, OnToggleTool);
+        // Only unsubscribe. Interact is shared with PlayerInteractor, so the action stays enabled.
+        if (interactAction != null)
+        {
+            interactAction.action.performed -= OnInteract;
+        }
     }
 
-    public void PlayAttack()
-    {
-        // One swing at a time, so mashing the button doesn't stack animations.
-        if (!IsResting(rightArm))
-        {
-            return;
-        }
-        rightArm.SetTrigger(AttackTrigger);
-    }
+    // Swings the tool in hand (the arm's state picks the swing), or punches with empty hands.
+    public void PlaySwing() => PlayRight(AttackTrigger);
+
+    public void PlayPunch() => PlayRight(AttackTrigger);
 
     public void PlayInteract()
     {
-        if (!IsResting(leftArm))
+        if (IsResting(leftArm))
         {
-            return;
+            leftArm.SetTrigger(InteractTrigger);
         }
-        leftArm.SetTrigger(InteractTrigger);
     }
 
-    public void ToggleTool() => SetEquipped(!IsEquipped);
-
-    public void SetEquipped(bool equipped)
+    // Starts the animation for changing what is in the right hand. Returns false if the arm is busy.
+    public bool SwitchTool(ToolType next)
     {
-        if (equipped == IsEquipped || !IsResting(rightArm))
+        if (next == shownTool || !IsResting(rightArm))
         {
-            return;
+            return false;
         }
 
-        IsEquipped = equipped;
-        rightArm.SetBool(EquippedParam, equipped);
+        if (shownTool == ToolType.None)
+        {
+            rightArm.SetBool(EquippedParam, true);      // open hand -> gripping
+        }
+        else if (next == ToolType.None)
+        {
+            rightArm.SetBool(EquippedParam, false);     // gripping -> open hand
+        }
+        else
+        {
+            rightArm.SetTrigger(SwapTrigger);           // one tool for another
+        }
+
+        shownTool = next;
         if (toolSwap != null)
         {
             StopCoroutine(toolSwap);
         }
-        toolSwap = StartCoroutine(SwapToolWhileHidden(equipped));
+        toolSwap = StartCoroutine(ShowToolWhileHidden(next));
+        return true;
     }
 
-    private IEnumerator SwapToolWhileHidden(bool show)
+    private IEnumerator ShowToolWhileHidden(ToolType tool)
     {
         yield return new WaitForSeconds(toolSwapDelay);
-        tool.SetActive(show);
+        ShowTool(tool);
         toolSwap = null;
+    }
+
+    private void ShowTool(ToolType tool)
+    {
+        for (int i = 0; i < toolModels.Length; i++)
+        {
+            if (toolModels[i] != null)
+            {
+                toolModels[i].SetActive(i == (int)tool);
+            }
+        }
+    }
+
+    private void PlayRight(int trigger)
+    {
+        if (IsResting(rightArm))
+        {
+            rightArm.SetTrigger(trigger);
+        }
     }
 
     // True when the arm is standing still in its idle loop (open hand or gripping).
@@ -125,27 +150,5 @@ public class HandAnimator : MonoBehaviour
         return state == IdleState || state == GripIdleState;
     }
 
-    private void OnAttack(InputAction.CallbackContext context) => PlayAttack();
-
     private void OnInteract(InputAction.CallbackContext context) => PlayInteract();
-
-    private void OnToggleTool(InputAction.CallbackContext context) => ToggleTool();
-
-    private static void Subscribe(InputActionReference reference, System.Action<InputAction.CallbackContext> handler)
-    {
-        if (reference == null)
-        {
-            return;
-        }
-        reference.action.Enable();
-        reference.action.performed += handler;
-    }
-
-    private static void Unsubscribe(InputActionReference reference, System.Action<InputAction.CallbackContext> handler)
-    {
-        if (reference != null)
-        {
-            reference.action.performed -= handler;
-        }
-    }
 }
