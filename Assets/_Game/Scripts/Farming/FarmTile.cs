@@ -2,7 +2,7 @@ using UnityEngine;
 
 // One square of a farm bed. Each square is farmed on its own:
 //   1. Till it with the hoe (Use Tool).            Untilled -> Tilled
-//   2. Plant the selected seed (Interact).          Tilled   -> Growing
+//   2. Plant the seeds in hand (Interact).          Tilled   -> Growing
 //   3. Water it with the watering can (Use Tool).   A dry crop doesn't grow.
 //      A crop that needs water twice grows half way, dries out and waits for the second watering.
 //   4. Harvest it when ripe (Interact). The soil stays tilled, ready for the next seed.
@@ -99,7 +99,7 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget, IHighlightabl
         {
             if (State == TileState.Ripe)
             {
-                return true;
+                return plot.Inventory.CanAdd(Crop.HarvestResource, Crop.HarvestAmount);
             }
             if (State != TileState.Tilled)
             {
@@ -120,7 +120,7 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget, IHighlightabl
                 CropData selected = plot.SelectedCrop();
                 if (selected == null)
                 {
-                    return null;
+                    return "Hold seeds to plant (keys 1-5)";
                 }
                 int seeds = plot.Inventory.GetCount(selected.SeedResource);
                 string crop = selected.DisplayName.ToLower();
@@ -130,7 +130,9 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget, IHighlightabl
                     ? $"{Crop.DisplayName} growing: {Mathf.FloorToInt(Progress * 100f)}%"
                     : $"{Crop.DisplayName} needs water";
             default:
-                return $"Harvest {Crop.DisplayName.ToLower()}";
+                return plot.Inventory.CanAdd(Crop.HarvestResource, Crop.HarvestAmount)
+                    ? $"Harvest {Crop.DisplayName.ToLower()}"
+                    : "Hotbar is full";
         }
     }
 
@@ -242,15 +244,15 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget, IHighlightabl
         return true;
     }
 
-    // Picks a ripe crop into the Inventory. The soil stays tilled. Returns false if nothing is ripe.
+    // Picks a ripe crop into the Inventory. The soil stays tilled. Returns false and leaves
+    // the crop in the ground if nothing is ripe or the hotbar has no room for the harvest.
     public bool Harvest()
     {
-        if (State != TileState.Ripe)
+        if (State != TileState.Ripe || !plot.Inventory.Add(Crop.HarvestResource, Crop.HarvestAmount))
         {
             return false;
         }
 
-        plot.Inventory.Add(Crop.HarvestResource, Crop.HarvestAmount);
         RemovePlant();
         Crop = null;
         growTime = 0f;

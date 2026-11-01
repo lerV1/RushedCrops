@@ -1,8 +1,8 @@
 using System;
 using UnityEngine;
 
-// Holds the game progress the other systems share: the selected crop, barn repairs and
-// the boss. Resource counts (coins, seeds, crops, wood, stone) live in Inventory, and
+// Holds the game progress the other systems share: barn repairs and the boss.
+// Items and coins (and which hotbar slot is selected) live in Inventory, and
 // the player's health lives in their Health component (respawning is RespawnController's job).
 // Other scripts change this state through the methods below and listen to the events to update the HUD.
 //
@@ -16,14 +16,12 @@ public class GameManager : MonoBehaviour
     [Header("Barn")]
     [SerializeField, Min(1)] private int barnRepairStages = 3;
 
-    public CropType SelectedCrop { get; private set; }
     public int BarnRepairs { get; private set; }
     public int BarnRepairStages => barnRepairStages;
     public bool IsBarnRepaired => BarnRepairs >= barnRepairStages;
     public bool IsBossDefeated { get; private set; }
     public bool HasWon { get; private set; }
 
-    public event Action SelectedCropChanged;
     // Number of repairs finished so far.
     public event Action<int> BarnRepaired;
     public event Action BossDefeated;
@@ -53,18 +51,9 @@ public class GameManager : MonoBehaviour
     // Puts progress back to how a new game starts.
     public void ResetState()
     {
-        SelectedCrop = CropType.Carrot;
         BarnRepairs = 0;
         IsBossDefeated = false;
         HasWon = false;
-    }
-
-    // ---------- Crop selection ----------
-
-    public void SelectCrop(CropType type)
-    {
-        SelectedCrop = type;
-        SelectedCropChanged?.Invoke();
     }
 
     // ---------- Barn, boss and victory ----------
