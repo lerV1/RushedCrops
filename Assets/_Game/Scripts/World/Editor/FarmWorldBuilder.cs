@@ -390,6 +390,7 @@ namespace RushedCrops.Editor
                 var patch = Prefab("Patch02", parent, spot, 0f, 1f);
                 patch.name = "Planting plot " + (row * 3 + col + 1);
                 HideStockCrops(patch.transform);
+                FarmPlotSetup.SetUp(patch.transform);
             }
             Vector2 min = Garden - GardenHalfSize, max = Garden + GardenHalfSize;
             FenceLine(parent, V(min.x, min.y), V(max.x, min.y));
