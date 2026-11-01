@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Carrot
   seedResource: 1
   harvestResource: 3
-  harvestAmount: 3
+  harvestAmount: 2
   growSeconds: 60
   stageModels:
   - {fileID: 8274975428687645659, guid: 43a1448a6d9d3da44ae7ec15f0ca7bf0, type: 3}

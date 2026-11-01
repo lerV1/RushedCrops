@@ -358,12 +358,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInteractor
   interactAction: {fileID: -6264010307199074488, guid: f5efa458efab1e94091419e01d045740, type: 3}
+  useToolAction: {fileID: 4088291247242398431, guid: f5efa458efab1e94091419e01d045740, type: 3}
   viewPoint: {fileID: 5761688239629393836}
   reach: 3.5
   lookMask:
     serializedVersion: 2
     m_Bits: 4294967291
   prompt: {fileID: 5815421775030386145}
+  tools: {fileID: 1483791215367605487}
 --- !u!114 &3945848766185731773
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -393,6 +395,7 @@ MonoBehaviour:
   switchAction: {fileID: 8810937232054048883, guid: f5efa458efab1e94091419e01d045740, type: 3}
   interactor: {fileID: 2143054289736561575}
   hands: {fileID: 2305179911293612690}
+  hoeHitDelay: 0.3
 --- !u!1 &1775677701392528369
 GameObject:
   m_ObjectHideFlags: 0

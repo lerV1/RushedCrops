@@ -2,11 +2,16 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 // Finds what the player is looking at and uses it when Interact is pressed.
-// Sits on the Player. A ray goes out from the camera; the first collider it hits
-// counts if it (or a parent) has a component that implements IInteractable.
+// Sits on the Player. A ray goes out from the camera; the first collider it hits counts if it
+// (or a parent) has a component that implements IInteractable, IToolTarget or IHighlightable.
+// The prompt under the crosshair shows what the tool in hand would do there ("[LMB] Till soil"),
+// and otherwise what Interact would do ("[E] Plant carrot seed").
 public class PlayerInteractor : MonoBehaviour
 {
     [SerializeField] private InputActionReference interactAction;
+
+    [Tooltip("Only used to show the right key in tool prompts.")]
+    [SerializeField] private InputActionReference useToolAction;
 
     [Tooltip("The camera the player looks through. The look ray starts here.")]
     [SerializeField] private Transform viewPoint;
@@ -20,8 +25,14 @@ public class PlayerInteractor : MonoBehaviour
     [Tooltip("Shows the prompt under the crosshair. Optional.")]
     [SerializeField] private InteractionPromptHud prompt;
 
+    [Tooltip("The player's tools, for tool prompts. Optional.")]
+    [SerializeField] private PlayerTools tools;
+
+    private IHighlightable highlighted;
+
     // What the player is looking at this frame, or null.
     public IInteractable Target { get; private set; }
+    public IToolTarget ToolTarget { get; private set; }
 
     private void OnEnable()
     {
@@ -43,6 +54,8 @@ public class PlayerInteractor : MonoBehaviour
             interactAction.action.performed -= OnInteract;
         }
         Target = null;
+        ToolTarget = null;
+        SetHighlight(null);
         if (prompt != null)
         {
             prompt.Hide();
@@ -51,18 +64,44 @@ public class PlayerInteractor : MonoBehaviour
 
     private void Update()
     {
-        Target = FindTarget();
+        Look();
         UpdatePrompt();
     }
 
-    private IInteractable FindTarget()
+    // Looks again right now and returns what the tool in hand would be used on.
+    public IToolTarget FindToolTarget()
     {
+        Look();
+        return ToolTarget;
+    }
+
+    private void Look()
+    {
+        Collider hit = null;
         // Starting inside the player's own capsule is fine: a ray never hits the collider it starts in.
-        if (Physics.Raycast(viewPoint.position, viewPoint.forward, out RaycastHit hit, reach, lookMask, QueryTriggerInteraction.Collide))
+        if (Physics.Raycast(viewPoint.position, viewPoint.forward, out RaycastHit info, reach, lookMask, QueryTriggerInteraction.Collide))
         {
-            return hit.collider.GetComponentInParent<IInteractable>();
+            hit = info.collider;
         }
-        return null;
+
+        Target = hit != null ? hit.GetComponentInParent<IInteractable>() : null;
+        ToolTarget = hit != null ? hit.GetComponentInParent<IToolTarget>() : null;
+        SetHighlight(hit != null ? hit.GetComponentInParent<IHighlightable>() : null);
+    }
+
+    private void SetHighlight(IHighlightable next)
+    {
+        if (next == highlighted)
+        {
+            return;
+        }
+        // "as Object" catches a highlight that was destroyed while aimed at.
+        if (highlighted != null && highlighted as Object != null)
+        {
+            highlighted.SetHighlighted(false);
+        }
+        highlighted = next;
+        highlighted?.SetHighlighted(true);
     }
 
     private void UpdatePrompt()
@@ -72,26 +111,35 @@ public class PlayerInteractor : MonoBehaviour
             return;
         }
 
+        if (tools != null && tools.Equipped != ToolType.None && ToolTarget != null)
+        {
+            string toolText = ToolTarget.GetToolPrompt(tools);
+            if (!string.IsNullOrEmpty(toolText))
+            {
+                prompt.Show(ToolTarget.CanUseTool(tools) ? $"[{KeyName(useToolAction)}] {toolText}" : toolText);
+                return;
+            }
+        }
+
         string text = Target != null ? Target.GetPrompt() : null;
         if (string.IsNullOrEmpty(text))
         {
             prompt.Hide();
         }
-        else if (Target.CanInteract)
-        {
-            // GetBindingDisplayString(0) is the first binding, the E key.
-            prompt.Show($"[{interactAction.action.GetBindingDisplayString(0)}] {text}");
-        }
         else
         {
-            prompt.Show(text);
+            prompt.Show(Target.CanInteract ? $"[{KeyName(interactAction)}] {text}" : text);
         }
     }
+
+    // GetBindingDisplayString(0) is the first binding: E for Interact, LMB for Use Tool.
+    private static string KeyName(InputActionReference action) =>
+        action != null ? action.action.GetBindingDisplayString(0) : "?";
 
     private void OnInteract(InputAction.CallbackContext context)
     {
         // Look again so the press always uses what is under the crosshair right now.
-        Target = FindTarget();
+        Look();
         if (Target != null && Target.CanInteract)
         {
             Target.Interact(this);

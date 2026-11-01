@@ -76,7 +76,7 @@ namespace RushedCrops.Editor
         }
 
         // Each soil bed must be ready to farm: a FarmPlot with the Inventory, crops that have
-        // every growth model, places for the plants, and a trigger the player can aim at.
+        // every growth model, and squares (FarmTile) the player can aim at, each with its soil and outline.
         private static void ValidateFarmPlot(Transform plot)
         {
             var farmPlot = plot.GetComponent<FarmPlot>();
@@ -94,15 +94,18 @@ namespace RushedCrops.Editor
                     Require(crop.GetStageModel(stage) != null, crop.name + " is missing the model for growth stage " + (stage + 1) + ".");
             }
 
-            SerializedProperty spots = settings.FindProperty("spots");
-            Require(spots.arraySize > 0, plot.name + " has no crop spots.");
-            for (int i = 0; i < spots.arraySize; i++)
-                Require(spots.GetArrayElementAtIndex(i).objectReferenceValue != null, plot.name + " has a missing crop spot.");
-
-            bool aimable = false;
-            foreach (Collider collider in plot.GetComponentsInChildren<Collider>())
-                if (collider.isTrigger) aimable = true;
-            Require(aimable, plot.name + " needs its trigger so the player can aim at it.");
+            Transform tiles = plot.Find("Tiles");
+            Require(tiles != null && tiles.childCount > 0, plot.name + " has no farm squares. Run Rushed Crops > Farming > Set up farm plots.");
+            foreach (Transform tile in tiles)
+            {
+                var farmTile = tile.GetComponent<FarmTile>();
+                Require(farmTile != null, tile.name + " in " + plot.name + " is missing its FarmTile.");
+                var tileSettings = new SerializedObject(farmTile);
+                Require(tileSettings.FindProperty("soil").objectReferenceValue != null && tileSettings.FindProperty("highlight").objectReferenceValue != null,
+                    tile.name + " in " + plot.name + " needs its soil and highlight assigned.");
+                var trigger = tile.GetComponent<Collider>();
+                Require(trigger != null && trigger.isTrigger, tile.name + " in " + plot.name + " needs a trigger so the player can aim at it.");
+            }
         }
 
         // CI creates a downloadable Windows player only after the scene checks pass.

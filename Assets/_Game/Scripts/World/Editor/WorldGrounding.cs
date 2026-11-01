@@ -78,6 +78,8 @@ namespace RushedCrops.Editor
                 bool imported = PrefabUtility.IsOutermostPrefabInstanceRoot(child.gameObject);
                 if (!(imported || child.name == "Dusk lantern")) continue;
                 if (child.name.Contains("(on ") || child.name.Contains("(stacked)") || child.name.StartsWith("Lantern0")) continue;
+                // A farm square's soil and outline are placed by FarmPlotSetup, not aligned as scenery.
+                if (child.GetComponentInParent<FarmTile>(true) != null) continue;
                 items.Add(child);
             }
             return items;
