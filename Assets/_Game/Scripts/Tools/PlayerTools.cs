@@ -151,7 +151,10 @@ public class PlayerTools : MonoBehaviour
                 UseOnTarget(hoeHitDelay);
                 break;
             case ToolType.WateringCan:
-                hands.PlayPour();
+                // Water only runs out when it goes on something; filling at the river just dips the can.
+                IToolTarget target = interactor.FindToolTarget();
+                bool watering = WaterLeft > 0 && target != null && !(target is WaterSource) && target.CanUseTool(this);
+                hands.PlayPour(watering);
                 UseOnTarget(pourDelay);
                 break;
         }
