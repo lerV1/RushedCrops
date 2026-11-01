@@ -1,31 +1,21 @@
 using System;
 using UnityEngine;
 
-// Holds the game state the other systems share: health, the selected crop, barn repairs and
-// the boss. Resource counts (coins, seeds, crops, wood, stone) live in Inventory instead.
+// Holds the game progress the other systems share: the selected crop, barn repairs and
+// the boss. Resource counts (coins, seeds, crops, wood, stone) live in Inventory, and
+// the player's health lives in their Health component (respawning is RespawnController's job).
 // Other scripts change this state through the methods below and listen to the events to update the HUD.
 //
 // DefaultExecutionOrder(-100) makes Unity run this Awake before the farming and combat
-// scripts, so health and progress are already set when they first read them.
+// scripts, so progress is already set when they first read it.
 [DefaultExecutionOrder(-100)]
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [Header("Health and Respawn")]
-    [SerializeField, Min(1)] private int maxHealth = 5;
-    [Tooltip("The player's Rigidbody. It is moved back to the checkpoint on respawn.")]
-    [SerializeField] private Rigidbody player;
-    [Tooltip("First checkpoint. If empty, the player's starting position is used.")]
-    [SerializeField] private Transform respawnPoint;
-
     [Header("Barn")]
     [SerializeField, Min(1)] private int barnRepairStages = 3;
 
-    private Vector3 checkpoint;
-
-    public int Health { get; private set; }
-    public int MaxHealth => maxHealth;
     public CropType SelectedCrop { get; private set; }
     public int BarnRepairs { get; private set; }
     public int BarnRepairStages => barnRepairStages;
@@ -34,9 +24,6 @@ public class GameManager : MonoBehaviour
     public bool HasWon { get; private set; }
 
     public event Action SelectedCropChanged;
-    // Current health, then max health.
-    public event Action<int, int> HealthChanged;
-    public event Action PlayerRespawned;
     // Number of repairs finished so far.
     public event Action<int> BarnRepaired;
     public event Action BossDefeated;
@@ -63,25 +50,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Puts health and progress back to how a new game starts.
+    // Puts progress back to how a new game starts.
     public void ResetState()
     {
-        Health = maxHealth;
         SelectedCrop = CropType.Carrot;
         BarnRepairs = 0;
         IsBossDefeated = false;
         HasWon = false;
-
-        if (respawnPoint != null)
-        {
-            checkpoint = respawnPoint.position;
-        }
-        else if (player != null)
-        {
-            checkpoint = player.position;
-        }
-
-        Debug.Log($"Game ready: {Health} health.");
     }
 
     // ---------- Crop selection ----------
@@ -90,46 +65,6 @@ public class GameManager : MonoBehaviour
     {
         SelectedCrop = type;
         SelectedCropChanged?.Invoke();
-    }
-
-    // ---------- Health and respawn ----------
-
-    public void TakeDamage(int amount)
-    {
-        if (amount <= 0 || HasWon)
-        {
-            return;
-        }
-
-        Health = Mathf.Max(Health - amount, 0);
-        HealthChanged?.Invoke(Health, maxHealth);
-
-        if (Health == 0)
-        {
-            Respawn();
-        }
-    }
-
-    // Changes where the player comes back after losing all health.
-    public void SetCheckpoint(Vector3 position)
-    {
-        checkpoint = position;
-    }
-
-    public void Respawn()
-    {
-        Health = maxHealth;
-
-        if (player != null)
-        {
-            player.position = checkpoint;
-            player.linearVelocity = Vector3.zero;
-            player.angularVelocity = Vector3.zero;
-        }
-
-        HealthChanged?.Invoke(Health, maxHealth);
-        PlayerRespawned?.Invoke();
-        Debug.Log("Player respawned at the checkpoint.");
     }
 
     // ---------- Barn, boss and victory ----------

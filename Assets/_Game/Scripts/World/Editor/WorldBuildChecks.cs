@@ -54,6 +54,13 @@ namespace RushedCrops.Editor
             Require(player.GetComponent<PlayerInteractor>() != null, "The player can't use things: PlayerInteractor is missing.");
             Require(player.GetComponent<SeedSelector>() != null, "The player can't switch seeds: SeedSelector is missing.");
             Require(UnityEngine.Object.FindAnyObjectByType<SelectedSeedHud>() != null, "The selected seed display is missing.");
+            Require(player.GetComponent<Health>() != null, "The player has no Health. Run Rushed Crops > Player > Set up health and respawn.");
+            var respawn = player.GetComponent<RespawnController>();
+            Require(respawn != null, "The player has no RespawnController. Run Rushed Crops > Player > Set up health and respawn.");
+            Require(new SerializedObject(respawn).FindProperty("startingCheckpoint").objectReferenceValue != null, "Assign the player's starting checkpoint.");
+            Require(UnityEngine.Object.FindAnyObjectByType<Checkpoint>() != null, "The map has no checkpoint trigger.");
+            Require(player.GetComponentInChildren<HealthBarHud>(true) != null, "The health bar is missing. Run Rushed Crops > UI > Set up health HUD.");
+            Require(player.GetComponentInChildren<DamageIndicatorHud>(true) != null, "The damage indicator is missing. Run Rushed Crops > UI > Set up health HUD.");
             ValidateTools(player, garden, root.transform);
 
             var cycle = UnityEngine.Object.FindFirstObjectByType<EnvironmentCycle>();
