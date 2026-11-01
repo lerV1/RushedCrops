@@ -52,7 +52,7 @@ public class ToolHud : MonoBehaviour
             case ToolType.Hoe:
                 return "Hoe";
             case ToolType.WateringCan:
-                return "Watering can";
+                return $"Watering can ({tools.WaterLeft}/{tools.CanCapacity})";
             default:
                 return "Empty hands";
         }

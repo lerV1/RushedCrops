@@ -22,6 +22,12 @@ public class PlayerInteractor : MonoBehaviour
     [Tooltip("Layers the look ray can hit.")]
     [SerializeField] private LayerMask lookMask = ~0;
 
+    [Tooltip("Layers that can be used from further away, like the river lying below its bank.")]
+    [SerializeField] private LayerMask longReachLayers = 1 << 4;
+
+    [Tooltip("How far away, in metres, the long reach layers can be used.")]
+    [SerializeField, Min(0.5f)] private float longReach = 6f;
+
     [Tooltip("Shows the prompt under the crosshair. Optional.")]
     [SerializeField] private InteractionPromptHud prompt;
 
@@ -79,9 +85,15 @@ public class PlayerInteractor : MonoBehaviour
     {
         Collider hit = null;
         // Starting inside the player's own capsule is fine: a ray never hits the collider it starts in.
-        if (Physics.Raycast(viewPoint.position, viewPoint.forward, out RaycastHit info, reach, lookMask, QueryTriggerInteraction.Collide))
+        // The first thing hit always blocks what is behind it; it only counts if it is within reach.
+        float maxDistance = Mathf.Max(reach, longReach);
+        if (Physics.Raycast(viewPoint.position, viewPoint.forward, out RaycastHit info, maxDistance, lookMask, QueryTriggerInteraction.Collide))
         {
-            hit = info.collider;
+            bool longReachLayer = (longReachLayers.value & (1 << info.collider.gameObject.layer)) != 0;
+            if (info.distance <= reach || longReachLayer)
+            {
+                hit = info.collider;
+            }
         }
 
         Target = hit != null ? hit.GetComponentInParent<IInteractable>() : null;

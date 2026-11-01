@@ -19,6 +19,7 @@ namespace RushedCrops.Editor
         };
         private const string SoilModel = "Assets/_Game/Models/Farm/SoilMound.fbx";
         private const string FrameModel = "Assets/_Game/Models/Farm/TileFrame.fbx";
+        private const string WetSoilMaterial = "Assets/_Game/Materials/MAT_SoilWet.mat";
         private const int GroundLayer = 6;
 
         [MenuItem("Rushed Crops/Farming/Set up farm plots")]
@@ -60,6 +61,7 @@ namespace RushedCrops.Editor
             var inventory = UnityEngine.Object.FindAnyObjectByType<Inventory>();
             if (inventory == null) Debug.LogWarning("No Inventory in the scene yet. Assign it to each FarmPlot.", plot);
             settings.FindProperty("inventory").objectReferenceValue = inventory;
+            settings.FindProperty("wetSoil").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>(WetSoilMaterial);
             SerializedProperty crops = settings.FindProperty("crops");
             crops.arraySize = CropAssets.Length;
             for (int i = 0; i < CropAssets.Length; i++)

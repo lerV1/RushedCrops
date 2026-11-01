@@ -22,12 +22,22 @@ public class PlayerTools : MonoBehaviour
     [Header("Timing")]
     [Tooltip("Seconds into the hoe swing when the blade hits the ground.")]
     [SerializeField, Min(0f)] private float hoeHitDelay = 0.3f;
+    [Tooltip("Seconds into the pour when the water reaches the ground.")]
+    [SerializeField, Min(0f)] private float pourDelay = 0.4f;
+
+    [Header("Watering can")]
+    [Tooltip("How many squares one full can waters. It starts empty; fill it at the river.")]
+    [SerializeField, Min(1)] private int canCapacity = 6;
 
     private readonly bool[] owned = new bool[Enum.GetValues(typeof(ToolType)).Length];
 
     public ToolType Equipped { get; private set; } = ToolType.None;
 
-    // Raised when a tool is picked up or the tool in hand changes.
+    // Waterings left in the can.
+    public int WaterLeft { get; private set; }
+    public int CanCapacity => canCapacity;
+
+    // Raised when a tool is picked up, the tool in hand changes or the can's water changes.
     public event Action Changed;
 
     private void OnEnable()
@@ -103,6 +113,24 @@ public class PlayerTools : MonoBehaviour
         return true;
     }
 
+    // Takes one watering from the can. Returns false if it is empty.
+    public bool UseWater()
+    {
+        if (WaterLeft <= 0)
+        {
+            return false;
+        }
+        WaterLeft--;
+        Changed?.Invoke();
+        return true;
+    }
+
+    public void FillCan()
+    {
+        WaterLeft = canCapacity;
+        Changed?.Invoke();
+    }
+
     private void OnSwitch(InputAction.CallbackContext context) => CycleTool();
 
     private void OnUse(InputAction.CallbackContext context)
@@ -121,6 +149,10 @@ public class PlayerTools : MonoBehaviour
             case ToolType.Hoe:
                 hands.PlaySwing();
                 UseOnTarget(hoeHitDelay);
+                break;
+            case ToolType.WateringCan:
+                hands.PlayPour();
+                UseOnTarget(pourDelay);
                 break;
         }
     }

@@ -3,7 +3,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 // Plays the first-person arm animations. Each arm has its own Animator:
-//   right arm (AC_HandRight): holds the tool in hand, swings it, or punches with empty hands.
+//   right arm (AC_HandRight): holds the tool in hand, swings the hoe, pours the watering can,
+//                             or punches with empty hands.
 //   left arm  (AC_HandLeft):  reaches out and grabs when the player presses Interact.
 // PlayerTools decides what the right arm does; this script only animates and shows the right tool.
 // Changing tools drops the arm below the screen, swaps the tool model while it's out of view,
@@ -13,6 +14,7 @@ public class HandAnimator : MonoBehaviour
     private static readonly int EquippedParam = Animator.StringToHash("Equipped");
     private static readonly int AttackTrigger = Animator.StringToHash("Attack");
     private static readonly int SwapTrigger = Animator.StringToHash("Swap");
+    private static readonly int PourTrigger = Animator.StringToHash("Pour");
     private static readonly int InteractTrigger = Animator.StringToHash("Interact");
     private static readonly int IdleState = Animator.StringToHash("Idle");
     private static readonly int GripIdleState = Animator.StringToHash("GripIdle");
@@ -74,6 +76,9 @@ public class HandAnimator : MonoBehaviour
     public void PlaySwing() => PlayRight(AttackTrigger);
 
     public void PlayPunch() => PlayRight(AttackTrigger);
+
+    // Tips the watering can forward: watering a crop, or dipping it in the river to fill it.
+    public void PlayPour() => PlayRight(PourTrigger);
 
     public void PlayInteract()
     {

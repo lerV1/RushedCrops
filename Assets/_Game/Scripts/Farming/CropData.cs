@@ -22,6 +22,8 @@ public class CropData : ScriptableObject
     [SerializeField, Min(1f)] private float growSeconds = 60f;
     [Tooltip("One model per growth stage, smallest first. The last one is the ripe plant.")]
     [SerializeField] private GameObject[] stageModels = new GameObject[3];
+    [Tooltip("How many times the crop must be watered. Each watering lets it grow an equal share of the way.")]
+    [SerializeField, Min(1)] private int waterNeeded = 1;
 
     public CropType CropType => cropType;
     public string DisplayName => displayName;
@@ -30,6 +32,7 @@ public class CropData : ScriptableObject
     public int HarvestAmount => harvestAmount;
     public float GrowSeconds => growSeconds;
     public int StageCount => stageModels.Length;
+    public int WaterNeeded => waterNeeded;
 
     // The model for a growth stage, 0 being the first sprout.
     public GameObject GetStageModel(int stage)
