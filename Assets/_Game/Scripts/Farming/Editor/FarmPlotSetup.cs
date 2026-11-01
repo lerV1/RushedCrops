@@ -23,7 +23,7 @@ namespace RushedCrops.Editor
         };
         private const string SoilModel = "Assets/_Game/Models/Farm/SoilMound.fbx";
         private const string FrameModel = "Assets/_Game/Models/Farm/TileFrame.fbx";
-        private const string WetSoilMaterial = "Assets/_Game/Materials/MAT_SoilWet.mat";
+        private const string WetSoilMaterial = "Assets/_Game/Materials/Farm/MAT_SoilWet.mat";
         private const int GroundLayer = 6;
 
         [MenuItem("Rushed Crops/Farming/Set up farm plots")]

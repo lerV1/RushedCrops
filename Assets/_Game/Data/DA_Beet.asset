@@ -19,7 +19,7 @@ MonoBehaviour:
   harvestAmount: 2
   growSeconds: 45
   stageModels:
-  - {fileID: 1418304413413709219, guid: 51cdc20ff703a0e4987ae76f21d28e22, type: 3}
-  - {fileID: 8743508034258847691, guid: 07a61c7b898ed7e448e69a9d2c07dc57, type: 3}
-  - {fileID: 578510480881933451, guid: e3be1eab97ad1e447b00772b9b1080d4, type: 3}
+  - {fileID: 2265237532034311122, guid: 51cdc20ff703a0e4987ae76f21d28e22, type: 3}
+  - {fileID: 8473038821654067866, guid: 07a61c7b898ed7e448e69a9d2c07dc57, type: 3}
+  - {fileID: 343999695345150714, guid: e3be1eab97ad1e447b00772b9b1080d4, type: 3}
   waterNeeded: 1

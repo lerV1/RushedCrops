@@ -58,7 +58,7 @@ The farm parts have editor tools, and `Rebuild map` runs all three:
 
 - `WORLD_RushedCrops` contains named terrain, river, farm, market, quarry, logging, forest, and boundary groups. Paths, clearings, and tilled soil are painted into the terrain mesh. Holotna objects remain prefab instances with scene overrides. Source pack assets are not edited. There are no direction signs.
 - The original `Ground` object is inactive and retained. The new terrain and bridge deck colliders use the controller's existing Ground layer.
-- Generated mesh/material assets are under `Assets/_Game/World/`. They are saved assets; the map is not generated each time the game starts.
+- Generated meshes are under `Assets/_Game/Models/World/` and `Models/Cartoon/`, and their materials under `Assets/_Game/Materials/World/` and `Materials/Cartoon/`. They are saved assets; the map is not generated each time the game starts.
 - `Rushed Crops > World > Rebuild map` recreates the world from the current layout settings after a confirmation dialog. Rebuilding replaces hand edits to the map. Normal adjustments can be made directly to the saved scene.
 - `Rushed Crops > World > Validate saved map` checks landmark groups, collision mesh, player, Inventory/HUD, farm plots and squares, the tool stump, the river water, missing scripts/materials, and lighting references.
 - `Rushed Crops > World > Clear farming plots` restores bare soil beds without editing the imported pack.

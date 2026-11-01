@@ -29,7 +29,9 @@ namespace RushedCrops.Editor
         public static readonly string[] Groups = { "00_Terrain", "02_River", FarmGroup, "04_Market", "05_Quarry", "06_LoggingCamp", "07_Forest", "08_Boundary" };
 
         private const string Pack = "Assets/Holotna/Medieval Rural/Prefabs/";
-        private const string Generated = "Assets/_Game/World/";
+        // Generated map assets. The meshes folder is emptied on every rebuild, so it holds nothing else.
+        private const string MeshFolder = "Assets/_Game/Models/World";
+        private const string MaterialFolder = "Assets/_Game/Materials/World";
         private const int GroundLayer = 6;
         private const float HalfWidth = 80f, HalfDepth = 70f;
 
@@ -88,8 +90,8 @@ namespace RushedCrops.Editor
             random = new System.Random(451);
             Materials.Clear();
             Lanterns.Clear();
-            EnsureFolder(Generated + "Meshes");
-            EnsureFolder(Generated + "Materials");
+            EnsureFolder(MeshFolder);
+            EnsureFolder(MaterialFolder);
             world = new GameObject(RootName).transform;
 
             MakeMaterials();
@@ -146,7 +148,7 @@ namespace RushedCrops.Editor
 
         private static Material Mat(string name, Color colour, bool emissive = false)
         {
-            string path = Generated + "Materials/" + name + ".mat";
+            string path = MaterialFolder + "/" + name + ".mat";
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (material == null)
             {
@@ -157,7 +159,14 @@ namespace RushedCrops.Editor
             material.color = colour;
             material.SetFloat("_Smoothness", name == "Water" ? 0.65f : 0f);
             material.enableInstancing = true;
-            if (emissive) { material.EnableKeyword("_EMISSION"); material.SetColor("_EmissionColor", colour * 1.4f); }
+            if (emissive)
+            {
+                // URP keeps _EMISSION on only for materials marked as emissive for GI; otherwise it switches
+                // the glow off the next time it checks the material. Realtime costs nothing without realtime GI.
+                material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+                material.EnableKeyword("_EMISSION");
+                material.SetColor("_EmissionColor", colour * 1.4f);
+            }
             EditorUtility.SetDirty(material);
             Materials[name] = material;
             return material;
@@ -406,6 +415,7 @@ namespace RushedCrops.Editor
             Lantern(parent, V(Garden.x + 1.6f, max.y + 0.6f), 180f);
             ToolStumpSetup.Place(parent);
             SeedCrateSetup.Place(parent);
+            MeleeSetup.Place(parent);
         }
 
         [MenuItem("Rushed Crops/World/Clear farming plots")]
@@ -601,7 +611,8 @@ namespace RushedCrops.Editor
             Transform counter = market.Find("Stall counter");
             if (counter != null && Bounds(counter, out Bounds top))
             {
-                string[] produce = { "Crops/Carrot01", "Crops/Cabbage01", "Crops/Carrot01", "Crops/Beet01", "Crops/Cabbage01" };
+                const string crops = "Assets/_Game/Prefabs/Crops/";
+                string[] produce = { crops + "PFB_Carrot01", crops + "PFB_Cabbage01", crops + "PFB_Carrot01", crops + "PFB_Beet01", crops + "PFB_Cabbage01" };
                 for (int i = 0; i < produce.Length; i++)
                 {
                     var item = Prefab(produce[i], market, V(top.min.x + 0.3f + i * (top.size.x - 0.6f) / (produce.Length - 1), top.center.z), R(0f, 360f), 1.6f);
@@ -672,8 +683,10 @@ namespace RushedCrops.Editor
 
         private static GameObject Prefab(string relative, Transform parent, Vector2 position, float yaw, float scale, bool collision = true)
         {
-            var asset = AssetDatabase.LoadAssetAtPath<GameObject>(Pack + relative + ".prefab");
-            if (asset == null) throw new InvalidOperationException("Missing Holotna prefab: " + relative);
+            // A full "Assets/..." path is one of the game's own prefabs; anything else is relative to the Holotna pack.
+            string path = (relative.StartsWith("Assets/") ? relative : Pack + relative) + ".prefab";
+            var asset = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (asset == null) throw new InvalidOperationException("Missing prefab: " + path);
             var go = (GameObject)PrefabUtility.InstantiatePrefab(asset, parent);
             go.transform.position = At(position);
             go.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
@@ -684,8 +697,7 @@ namespace RushedCrops.Editor
                 for (int i = 0; i < mats.Length; i++)
                 {
                     if (mats[i] == null) continue;
-                    var coloured = AssetDatabase.LoadAssetAtPath<Material>("Assets/Holotna/Medieval Rural/Materials/Colored/" + mats[i].name + ".mat");
-                    if (coloured != null) mats[i] = coloured;
+                    mats[i] = ColouredVersion(mats[i]);
                 }
                 renderer.sharedMaterials = mats;
             }
@@ -736,12 +748,12 @@ namespace RushedCrops.Editor
             return go;
         }
 
-        private static void SaveMesh(Mesh mesh, string name) { AssetDatabase.CreateAsset(mesh, Generated + "Meshes/" + name + ".asset"); }
+        private static void SaveMesh(Mesh mesh, string name) { AssetDatabase.CreateAsset(mesh, MeshFolder + "/" + name + ".asset"); }
 
         private static void DeleteGeneratedMeshes()
         {
-            if (!AssetDatabase.IsValidFolder(Generated + "Meshes")) return;
-            foreach (string guid in AssetDatabase.FindAssets("", new[] { Generated + "Meshes" }))
+            if (!AssetDatabase.IsValidFolder(MeshFolder)) return;
+            foreach (string guid in AssetDatabase.FindAssets("", new[] { MeshFolder }))
                 AssetDatabase.DeleteAsset(AssetDatabase.GUIDToAssetPath(guid));
         }
 
@@ -859,6 +871,18 @@ namespace RushedCrops.Editor
             for (int i = 1; i < points.Length; i++)
                 if ((points[i] - p).sqrMagnitude < (points[best] - p).sqrMagnitude) best = i;
             return best;
+        }
+
+        // The flat "Colored" look of a pack material, or the material itself if there is none.
+        // Crop and tool materials keep theirs under _Game/Materials; everything else stays in the pack.
+        public static Material ColouredVersion(Material material)
+        {
+            foreach (string folder in new[] { "Assets/_Game/Materials/Crops/Colored/", "Assets/_Game/Materials/Tools/Colored/", "Assets/Holotna/Medieval Rural/Materials/Colored/" })
+            {
+                var coloured = AssetDatabase.LoadAssetAtPath<Material>(folder + material.name + ".mat");
+                if (coloured != null) return coloured;
+            }
+            return material;
         }
 
         private static void EnsureFolder(string path)

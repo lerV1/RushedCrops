@@ -35,8 +35,8 @@ namespace RushedCrops.Editor
 
             Require(GameObject.Find("Player")?.GetComponent<PlayerController>() != null, "Player movement is missing.");
             Require(Camera.main != null, "Main camera is missing.");
-            Require(UnityEngine.Object.FindFirstObjectByType<Inventory>() != null, "The shared Inventory is missing.");
-            Require(UnityEngine.Object.FindFirstObjectByType<InventoryHud>() != null, "The existing inventory HUD is missing.");
+            Require(UnityEngine.Object.FindAnyObjectByType<Inventory>() != null, "The shared Inventory is missing.");
+            Require(UnityEngine.Object.FindAnyObjectByType<InventoryHud>() != null, "The existing inventory HUD is missing.");
             var terrain = root.transform.Find(FarmWorldBuilder.TerrainPath);
             Require(terrain != null && terrain.GetComponent<MeshCollider>()?.sharedMesh != null, "Terrain must have a saved collision mesh.");
             Require(terrain.gameObject.layer == 6, "Terrain must use the player's existing Ground layer.");
@@ -62,8 +62,9 @@ namespace RushedCrops.Editor
             Require(player.GetComponentInChildren<HealthBarHud>(true) != null, "The health bar is missing. Run Rushed Crops > UI > Set up health HUD.");
             Require(player.GetComponentInChildren<DamageIndicatorHud>(true) != null, "The damage indicator is missing. Run Rushed Crops > UI > Set up health HUD.");
             ValidateTools(player, garden, root.transform);
+            ValidateMelee(player, garden);
 
-            var cycle = UnityEngine.Object.FindFirstObjectByType<EnvironmentCycle>();
+            var cycle = UnityEngine.Object.FindAnyObjectByType<EnvironmentCycle>();
             Require(cycle != null, "The day/night cycle is missing.");
             var settings = new SerializedObject(cycle);
             Require(settings.FindProperty("sun").objectReferenceValue != null, "Assign the sun.");
@@ -71,7 +72,7 @@ namespace RushedCrops.Editor
             Require(settings.FindProperty("lanterns").arraySize >= 8, "The night paths need their lantern references.");
             for (int i = 0; i < settings.FindProperty("lanterns").arraySize; i++)
                 Require(settings.FindProperty("lanterns").GetArrayElementAtIndex(i).objectReferenceValue != null, "A lantern reference is missing.");
-            Require(UnityEngine.Object.FindFirstObjectByType<EnvironmentClockHud>() != null, "The day/time display is missing.");
+            Require(UnityEngine.Object.FindAnyObjectByType<EnvironmentClockHud>() != null, "The day/time display is missing.");
             int misplaced = WorldGrounding.CountMisplaced(out string report);
             Require(misplaced == 0, misplaced + " scenery objects are not sitting on the ground. Run Align scenery to ground.\n" + report);
 
@@ -91,7 +92,7 @@ namespace RushedCrops.Editor
             var hands = player.GetComponentInChildren<HandAnimator>(true);
             Require(hands != null, "The arms are missing their HandAnimator.");
             SerializedProperty models = new SerializedObject(hands).FindProperty("toolModels");
-            foreach (ToolType tool in new[] { ToolType.Hoe, ToolType.WateringCan })
+            foreach (ToolType tool in new[] { ToolType.Hoe, ToolType.WateringCan, ToolType.Hatchet })
                 Require(models.arraySize > (int)tool && models.GetArrayElementAtIndex((int)tool).objectReferenceValue != null,
                     "The " + tool + " model in the player's hand is not assigned in HandAnimator.");
 
@@ -160,6 +161,29 @@ namespace RushedCrops.Editor
                 var trigger = tile.GetComponent<Collider>();
                 Require(trigger != null && trigger.isTrigger, tile.name + " in " + plot.name + " needs a trigger so the player can aim at it.");
             }
+        }
+
+        // The hatchet swing needs its MeleeAttack, and the practice dummy needs everything a hit uses:
+        // Health for damage, HitFlash, Knockback with a Rigidbody, and the hatchet waiting beside it.
+        private static void ValidateMelee(GameObject player, Transform garden)
+        {
+            var melee = player.GetComponent<MeleeAttack>();
+            Require(melee != null && new SerializedObject(melee).FindProperty("viewPoint").objectReferenceValue != null,
+                "The player can't swing the hatchet. Run Rushed Crops > Combat > Set up player melee.");
+            Require(new SerializedObject(player.GetComponent<PlayerTools>()).FindProperty("melee").objectReferenceValue == melee,
+                "PlayerTools needs the player's MeleeAttack assigned. Run Rushed Crops > Combat > Set up player melee.");
+
+            Transform group = garden.Find(MeleeSetup.RootName);
+            Require(group != null, "The practice dummy is missing. Run Rushed Crops > Combat > Place practice dummy.");
+            Transform dummy = group.Find(MeleeSetup.DummyName);
+            Require(dummy != null && dummy.GetComponent<PracticeDummy>() != null && dummy.GetComponent<HitFlash>() != null
+                && dummy.GetComponent<Knockback>() != null && !dummy.GetComponent<Rigidbody>().isKinematic
+                && dummy.GetComponentsInChildren<Collider>().Length > 1,
+                "The practice dummy is incomplete. Run Rushed Crops > Combat > Place practice dummy.");
+            bool hatchet = false;
+            foreach (ToolPickup pickup in group.GetComponentsInChildren<ToolPickup>(true))
+                if (pickup.Tool == ToolType.Hatchet && pickup.GetComponent<Collider>() != null) hatchet = true;
+            Require(hatchet, "The hatchet is missing beside the practice dummy. Run Rushed Crops > Combat > Place practice dummy.");
         }
 
         // CI creates a downloadable Windows player only after the scene checks pass.

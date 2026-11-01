@@ -24,7 +24,8 @@ public enum ResourceType
     Beets,
     Cabbages,
     Onions,
-    Wheat
+    Wheat,
+    Hatchet
 }
 
 // Small helpers for questions about an item that don't depend on any one inventory.
@@ -39,6 +40,8 @@ public static class ResourceTypes
                 return ToolType.Hoe;
             case ResourceType.WateringCan:
                 return ToolType.WateringCan;
+            case ResourceType.Hatchet:
+                return ToolType.Hatchet;
             default:
                 return ToolType.None;
         }
@@ -53,6 +56,8 @@ public static class ResourceTypes
                 return ResourceType.Hoe;
             case ToolType.WateringCan:
                 return ResourceType.WateringCan;
+            case ToolType.Hatchet:
+                return ResourceType.Hatchet;
             default:
                 throw new ArgumentException("Empty hands aren't an item.", nameof(tool));
         }

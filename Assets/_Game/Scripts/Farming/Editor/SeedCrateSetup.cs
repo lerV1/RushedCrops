@@ -14,6 +14,7 @@ namespace RushedCrops.Editor
         private const string Pack = "Assets/Holotna/Medieval Rural/Prefabs/";
         private const string CrateModel = Pack + "Containers/CrateOpen01.prefab";
         private const string TomatoModel = "Assets/_Game/Models/Crops/Tomato01.fbx";
+        private const string Crops = "Assets/_Game/Prefabs/Crops/";
         private const int GroundLayer = 6;
 
         // The first crate sits by the bucket east of the gate; the rest follow the fence eastwards.
@@ -63,11 +64,14 @@ namespace RushedCrops.Editor
             GameObject crate = Instantiate(CrateModel, holder.transform);
             crate.transform.localScale = Vector3.one * CrateScale;
             foreach (Collider c in crate.GetComponentsInChildren<Collider>(true)) c.gameObject.layer = GroundLayer;
+            // The crate's pivot is partway up the model, so lift it until its bottom rests on the ground.
+            crate.transform.position += Vector3.up * (position.y + 0.01f - BoundsOf(crate).min.y);
             float top = TopOf(crate);
 
             // The crop's vegetable resting on top of the crate, as a label.
             GameObject produce = Instantiate(ProduceModel(crop.CropType), holder.transform);
-            produce.name = crop.DisplayName + " on crate";
+            // "(on ...)" marks it as resting on something, so the ground check leaves it alone.
+            produce.name = crop.DisplayName + " (on crate)";
             produce.transform.localScale = Vector3.one * ProduceScale;
             produce.transform.localRotation = Quaternion.Euler(0f, 35f, 0f);
             foreach (Collider c in produce.GetComponentsInChildren<Collider>(true)) c.enabled = false;
@@ -93,11 +97,11 @@ namespace RushedCrops.Editor
             switch (crop)
             {
                 case CropType.Tomato: return TomatoModel;
-                case CropType.Beet: return Pack + "Crops/Beet01.prefab";
-                case CropType.Cabbage: return Pack + "Crops/Cabbage01.prefab";
-                case CropType.Onion: return Pack + "Crops/Onion01.prefab";
-                case CropType.Wheat: return Pack + "Crops/Wheat01.prefab";
-                default: return Pack + "Crops/Carrot01.prefab";
+                case CropType.Beet: return Crops + "PFB_Beet01.prefab";
+                case CropType.Cabbage: return Crops + "PFB_Cabbage01.prefab";
+                case CropType.Onion: return Crops + "PFB_Onion01.prefab";
+                case CropType.Wheat: return Crops + "PFB_Wheat01.prefab";
+                default: return Crops + "PFB_Carrot01.prefab";
             }
         }
 
@@ -115,8 +119,7 @@ namespace RushedCrops.Editor
                 for (int i = 0; i < materials.Length; i++)
                 {
                     if (materials[i] == null) continue;
-                    var coloured = AssetDatabase.LoadAssetAtPath<Material>("Assets/Holotna/Medieval Rural/Materials/Colored/" + materials[i].name + ".mat");
-                    if (coloured != null) materials[i] = coloured;
+                    materials[i] = FarmWorldBuilder.ColouredVersion(materials[i]);
                 }
                 renderer.sharedMaterials = materials;
             }

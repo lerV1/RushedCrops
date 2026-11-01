@@ -7,7 +7,7 @@ using UnityEngine.InputSystem;
 //   Keys 1-5 select a hotbar slot. A tool in that slot goes into the hand;
 //   anything else (seeds, crops, an empty slot) leaves the hand empty.
 //   Use Tool (left click / right trigger) uses the tool in hand on whatever is under the crosshair.
-//   With empty hands it throws a punch.
+//   With empty hands it throws a punch. With the hatchet it swings a melee attack (MeleeAttack).
 // Tools live in the Inventory's hotbar like every other item; this script only reads them.
 // Sits on the Player, next to PlayerInteractor.
 public class PlayerTools : MonoBehaviour
@@ -20,6 +20,8 @@ public class PlayerTools : MonoBehaviour
     [SerializeField] private Inventory inventory;
     [SerializeField] private PlayerInteractor interactor;
     [SerializeField] private HandAnimator hands;
+    [Tooltip("The swing used when the hatchet is in hand.")]
+    [SerializeField] private MeleeAttack melee;
 
     [Header("Timing")]
     [Tooltip("Seconds into the hoe swing when the blade hits the ground.")]
@@ -47,9 +49,9 @@ public class PlayerTools : MonoBehaviour
 
     private void OnEnable()
     {
-        if (useAction == null || inventory == null || interactor == null || hands == null)
+        if (useAction == null || inventory == null || interactor == null || hands == null || melee == null)
         {
-            Debug.LogError("PlayerTools needs the Use Tool action, the Inventory, the PlayerInteractor and the HandAnimator assigned.", this);
+            Debug.LogError("PlayerTools needs the Use Tool action, the Inventory, the PlayerInteractor, the HandAnimator and the MeleeAttack assigned.", this);
             enabled = false;
             return;
         }
@@ -94,6 +96,12 @@ public class PlayerTools : MonoBehaviour
     // the switch waits, and this tries again next frame.
     private void HoldSelectedTool()
     {
+        // Finish the whole swing, recovery included, before the weapon can be put away.
+        if (melee.IsBusy)
+        {
+            return;
+        }
+
         ToolType wanted = inventory.TryGetSelectedItem(out ResourceType item) ? ResourceTypes.ToTool(item) : ToolType.None;
         if (wanted != Equipped && hands.SwitchTool(wanted))
         {
@@ -156,6 +164,13 @@ public class PlayerTools : MonoBehaviour
                 bool watering = WaterLeft > 0 && target != null && !(target is WaterSource) && target.CanUseTool(this);
                 hands.PlayPour(watering);
                 UseOnTarget(pourDelay);
+                break;
+            case ToolType.Hatchet:
+                // MeleeAttack says no while the last swing is still recovering.
+                if (melee.TryAttack())
+                {
+                    hands.PlaySwing();
+                }
                 break;
         }
     }

@@ -46,7 +46,7 @@ namespace RushedCrops.Editor
             float top = TopOf(stump);
 
             // The hoe, blade down in the top of the stump with the handle leaning out.
-            var hoeSource = FirstLod0(AssetDatabase.LoadAssetAtPath<GameObject>(Pack + "Tools/Hoe01.prefab"));
+            var hoeSource = FirstLod0(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Prefabs/Tools/PFB_Hoe01.prefab"));
             var hoe = new GameObject("Hoe pickup", typeof(MeshFilter), typeof(MeshRenderer));
             hoe.transform.SetParent(root.transform, false);
             hoe.GetComponent<MeshFilter>().sharedMesh = hoeSource.sharedMesh;
@@ -65,7 +65,7 @@ namespace RushedCrops.Editor
             return root;
         }
 
-        private static void AddPickup(GameObject tool, ToolType type, string displayName)
+        internal static void AddPickup(GameObject tool, ToolType type, string displayName)
         {
             // A trigger box round the model so the look ray finds it; the player walks through it.
             Bounds local = new Bounds();
@@ -95,7 +95,7 @@ namespace RushedCrops.Editor
 
         private static void StyleStump(GameObject stump)
         {
-            var darkWood = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Game/World/Cartoon/DarkWood.mat");
+            var darkWood = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Game/Materials/Cartoon/DarkWood.mat");
             foreach (LODGroup lod in stump.GetComponentsInChildren<LODGroup>(true)) lod.enabled = false;
             foreach (MeshRenderer renderer in stump.GetComponentsInChildren<MeshRenderer>(true))
             {
@@ -135,7 +135,7 @@ namespace RushedCrops.Editor
             return mesh;
         }
 
-        private static MeshFilter FirstLod0(GameObject prefab)
+        internal static MeshFilter FirstLod0(GameObject prefab)
         {
             foreach (MeshFilter filter in prefab.GetComponentsInChildren<MeshFilter>(true))
                 if (filter.name.EndsWith("LOD0")) return filter;
@@ -150,7 +150,7 @@ namespace RushedCrops.Editor
             return top;
         }
 
-        private static Vector3 Ground(Vector3 at)
+        internal static Vector3 Ground(Vector3 at)
         {
             return Physics.Raycast(at + Vector3.up * 20f, Vector3.down, out RaycastHit hit, 40f, 1 << GroundLayer)
                 ? hit.point
