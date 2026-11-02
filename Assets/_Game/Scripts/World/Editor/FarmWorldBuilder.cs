@@ -471,6 +471,7 @@ namespace RushedCrops.Editor
             Prefab("Transport/Cart01", parent, Market + V(9f, 3f), -110f, 1.35f);
             Lantern(parent, Market + V(-6.5f, -2.5f), 90f);
             Lantern(parent, Market + V(6.5f, -2.5f), 270f);
+            MerchantSetup.PlaceMerchant(parent);
         }
 
         // ---------------------------------------------------------------- quarry

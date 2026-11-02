@@ -20,7 +20,8 @@ public enum TradeResult
 //   PriceToSell - what he pays the player for one.
 // Every trade goes through the shared Inventory and is all or nothing: coins are only taken if the
 // goods fit in the hotbar, and crops are only taken if he pays for them.
-public class Merchant : MonoBehaviour
+// Look at him and press Interact to open the trading window (MerchantShopUI).
+public class Merchant : MonoBehaviour, IInteractable
 {
     [Tooltip("The scene's shared Inventory. Coins and goods move in and out of it.")]
     [SerializeField] private Inventory inventory;
@@ -29,6 +30,9 @@ public class Merchant : MonoBehaviour
 
     [Tooltip("The day/night cycle. Prices change when a new day starts. Without it, every day is day 1.")]
     [SerializeField] private EnvironmentCycle dayCycle;
+
+    [Tooltip("The trading window. Talking to the merchant opens it.")]
+    [SerializeField] private MerchantShopUI shop;
 
     public Inventory Inventory => inventory;
     public MerchantPrices Prices => prices;
@@ -47,6 +51,16 @@ public class Merchant : MonoBehaviour
             enabled = false;
         }
     }
+
+    // ---------- Talking to him ----------
+
+    public bool CanInteract => shop != null && !shop.IsOpen;
+
+    public string GetPrompt() => shop != null ? "Trade with the merchant" : null;
+
+    public void Interact(PlayerInteractor player) => shop.Open(this);
+
+    // ---------- Trading ----------
 
     public int PriceToBuy(ResourceType item) => prices.ChargeFor(item, Day);
 
