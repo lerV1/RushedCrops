@@ -1,15 +1,15 @@
 using System;
-using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace RushedCrops.Editor
 {
-    // Turns the garden's soil beds into working FarmPlots: the pack's ridges are hidden so the bed
-    // starts as flat ground, and each bed gets a 5 x 5 grid of FarmTile squares. Every square has a
-    // trigger the player can aim at, a dug-soil mound (shown once tilled) and an outline (shown while aimed at).
-    // The map builder calls this for every new bed, and it can be run again from the menu.
+    // Builds the garden's crop field: one FarmField over the tilled soil inside the fence, with the
+    // shared FarmPlot settings (Inventory, crops, wet soil), the outline that follows the aimed square,
+    // and the square prefab (PFB_FarmTile) it copies wherever the player tills.
+    // The map builder calls this, and it can be run again from the menu. Running it also removes the
+    // old fixed planting beds from scenes made before the field existed.
     public static class FarmPlotSetup
     {
         public static readonly string[] CropAssets =
@@ -21,72 +21,78 @@ namespace RushedCrops.Editor
             "Assets/_Game/Data/DA_Onion.asset",
             "Assets/_Game/Data/DA_Wheat.asset",
         };
+        public const string FieldName = "Crop field";
+        private const string TilePrefab = "Assets/_Game/Prefabs/Farm/PFB_FarmTile.prefab";
         private const string SoilModel = "Assets/_Game/Models/Farm/SoilMound.fbx";
         private const string FrameModel = "Assets/_Game/Models/Farm/TileFrame.fbx";
         private const string WetSoilMaterial = "Assets/_Game/Materials/Farm/MAT_SoilWet.mat";
+        private const float Margin = 1f; // squares stay this far inside the fence
         private const int GroundLayer = 6;
 
-        [MenuItem("Rushed Crops/Farming/Set up farm plots")]
-        public static void SetUpAllPlots()
+        [MenuItem("Rushed Crops/Farming/Set up crop field")]
+        public static void SetUpInScene()
         {
-            if (Application.isPlaying) throw new InvalidOperationException("Set up the plots outside Play.");
+            if (Application.isPlaying) throw new InvalidOperationException("Set up the crop field outside Play.");
             var garden = GameObject.Find(FarmWorldBuilder.RootName)?.transform.Find(FarmWorldBuilder.FarmGroup);
             if (garden == null) throw new InvalidOperationException("Open SC_Farm with the farm map built first.");
-
-            int count = 0;
-            foreach (Transform child in garden)
-            {
-                if (!child.name.StartsWith("Planting plot")) continue;
-                SetUp(child);
-                count++;
-            }
+            SetUpField(garden, FarmWorldBuilder.Garden, FarmWorldBuilder.GardenHalfSize);
             EditorSceneManager.MarkSceneDirty(garden.gameObject.scene);
-            Debug.Log($"Set up {count} farm plots.");
+            Debug.Log("Crop field set up.");
         }
 
-        public static void SetUp(Transform plot)
+        // centre and halfSize describe the fenced garden on the ground (x, z), in metres.
+        public static GameObject SetUpField(Transform garden, Vector2 centre, Vector2 halfSize)
         {
-            foreach (string old in new[] { "Crop spots", "Interact area", "Tiles" })
+            for (int i = garden.childCount - 1; i >= 0; i--)
             {
-                Transform t = plot.Find(old);
-                if (t != null) Undo.DestroyObjectImmediate(t.gameObject);
+                Transform child = garden.GetChild(i);
+                if (child.name == FieldName || child.name.StartsWith("Planting plot")) Undo.DestroyObjectImmediate(child.gameObject);
             }
-            List<Vector3> squares = SquareCentres(plot);
-            HideRidges(plot);
 
-            var root = new GameObject("Tiles").transform;
-            Undo.RegisterCreatedObjectUndo(root.gameObject, "Set up farm plot");
-            root.SetParent(plot, false);
-            for (int i = 0; i < squares.Count; i++) MakeTile(root, i, squares[i], plot);
+            var field = new GameObject(FieldName);
+            Undo.RegisterCreatedObjectUndo(field, "Set up crop field");
+            field.transform.SetParent(garden, false);
+            field.transform.position = Ground(new Vector3(centre.x, 0f, centre.y));
 
-            var farmPlot = plot.GetComponent<FarmPlot>();
-            if (farmPlot == null) farmPlot = Undo.AddComponent<FarmPlot>(plot.gameObject);
-            var settings = new SerializedObject(farmPlot);
+            var plot = field.AddComponent<FarmPlot>();
+            var settings = new SerializedObject(plot);
             var inventory = UnityEngine.Object.FindAnyObjectByType<Inventory>();
-            if (inventory == null) Debug.LogWarning("No Inventory in the scene yet. Assign it to each FarmPlot.", plot);
+            if (inventory == null) Debug.LogWarning("No Inventory in the scene yet. Assign it to the crop field's FarmPlot.", field);
             settings.FindProperty("inventory").objectReferenceValue = inventory;
             settings.FindProperty("wetSoil").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>(WetSoilMaterial);
             settings.ApplyModifiedProperties();
-            AssignCrops(farmPlot);
+            AssignCrops(plot);
+
+            // The outline that follows the aimed square.
+            var cursor = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(FrameModel), field.transform);
+            cursor.name = "Cursor";
+            foreach (Renderer r in cursor.GetComponentsInChildren<Renderer>())
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            cursor.SetActive(false);
+
+            var farmField = field.AddComponent<FarmField>();
+            var fieldSettings = new SerializedObject(farmField);
+            fieldSettings.FindProperty("size").vector2Value = halfSize * 2f - Vector2.one * (2f * Margin);
+            fieldSettings.FindProperty("cellSize").floatValue = 1f;
+            fieldSettings.FindProperty("tilePrefab").objectReferenceValue = TilePrefabAsset();
+            fieldSettings.FindProperty("cursor").objectReferenceValue = cursor;
+            fieldSettings.FindProperty("groundLayers").intValue = 1 << GroundLayer;
+            fieldSettings.ApplyModifiedProperties();
+            return field;
         }
 
-        // Gives every bed the full crop list without rebuilding its squares, so crops in the
-        // ground and hand edits stay. Run this after adding a crop to CropAssets.
-        [MenuItem("Rushed Crops/Farming/Update crops in farm plots")]
-        public static void UpdateCropsInAllPlots()
+        // Gives the crop field the full crop list without rebuilding it, so hand edits stay.
+        // Run this after adding a crop to CropAssets.
+        [MenuItem("Rushed Crops/Farming/Update crops in crop field")]
+        public static void UpdateCropsInField()
         {
-            if (Application.isPlaying) throw new InvalidOperationException("Update the plots outside Play.");
+            if (Application.isPlaying) throw new InvalidOperationException("Update the crop field outside Play.");
             var garden = GameObject.Find(FarmWorldBuilder.RootName)?.transform.Find(FarmWorldBuilder.FarmGroup);
             if (garden == null) throw new InvalidOperationException("Open SC_Farm with the farm map built first.");
 
-            int count = 0;
-            foreach (FarmPlot plot in garden.GetComponentsInChildren<FarmPlot>(true))
-            {
-                AssignCrops(plot);
-                count++;
-            }
+            foreach (FarmPlot plot in garden.GetComponentsInChildren<FarmPlot>(true)) AssignCrops(plot);
             EditorSceneManager.MarkSceneDirty(garden.gameObject.scene);
-            Debug.Log($"Gave {count} farm plots all {CropAssets.Length} crops.");
+            Debug.Log($"Gave the crop field all {CropAssets.Length} crops.");
         }
 
         public static void AssignCrops(FarmPlot farmPlot)
@@ -103,75 +109,29 @@ namespace RushedCrops.Editor
             settings.ApplyModifiedProperties();
         }
 
-        // One square where each of the pack's (hidden) planted beets sat: a 5 x 5 grid, 1 m apart.
-        // Row by row, back to front, left to right, so "Tile 01" is always the same corner.
-        private static List<Vector3> SquareCentres(Transform plot)
+        // The square the field copies: a FarmTile with its dug-soil mound. Made once and reused.
+        private static FarmTile TilePrefabAsset()
         {
-            var beets = new List<Transform>();
-            foreach (LODGroup lod in plot.GetComponentsInChildren<LODGroup>(true))
-                if (lod.name.StartsWith("BeetPlant")) beets.Add(lod.transform);
-            beets.Sort((a, b) =>
-            {
-                int byRow = b.localPosition.z.CompareTo(a.localPosition.z);
-                return byRow != 0 ? byRow : a.localPosition.x.CompareTo(b.localPosition.x);
-            });
-            var centres = new List<Vector3>();
-            foreach (Transform beet in beets) centres.Add(GroundUnder(beet.position, plot));
-            return centres;
-        }
+            var existing = AssetDatabase.LoadAssetAtPath<FarmTile>(TilePrefab);
+            if (existing != null) return existing;
 
-        // The pack's soil ridges are replaced by per-square mounds, so the bed starts as flat ground.
-        private static void HideRidges(Transform plot)
-        {
-            foreach (LODGroup lod in plot.GetComponentsInChildren<LODGroup>(true))
-            {
-                if (!lod.name.StartsWith("Ridge")) continue;
-                Undo.RecordObject(lod.gameObject, "Hide ridge");
-                lod.gameObject.SetActive(false);
-            }
-        }
-
-        private static void MakeTile(Transform root, int index, Vector3 centre, Transform plot)
-        {
-            var tile = new GameObject("Tile " + (index + 1).ToString("00"), typeof(BoxCollider));
-            tile.layer = 0; // Default, not Ground: the trigger must never count as floor for jumping
-            tile.transform.SetParent(root, false);
-            tile.transform.position = centre;
-            var box = tile.GetComponent<BoxCollider>();
-            box.isTrigger = true;
-            box.center = new Vector3(0f, 0.2f, 0f);
-            box.size = new Vector3(0.98f, 0.4f, 0.98f);
-
-            GameObject soil = Child(tile.transform, SoilModel, "Soil");
-            GameObject highlight = Child(tile.transform, FrameModel, "Highlight");
-            foreach (Renderer r in highlight.GetComponentsInChildren<Renderer>())
-                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-
-            var farmTile = tile.AddComponent<FarmTile>();
-            var settings = new SerializedObject(farmTile);
+            if (!AssetDatabase.IsValidFolder("Assets/_Game/Prefabs/Farm")) AssetDatabase.CreateFolder("Assets/_Game/Prefabs", "Farm");
+            var root = new GameObject("PFB_FarmTile");
+            var soil = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(SoilModel), root.transform);
+            soil.name = "Soil";
+            soil.SetActive(false);
+            var tile = root.AddComponent<FarmTile>();
+            var settings = new SerializedObject(tile);
             settings.FindProperty("soil").objectReferenceValue = soil;
-            settings.FindProperty("highlight").objectReferenceValue = highlight;
             settings.ApplyModifiedPropertiesWithoutUndo();
+            var prefab = PrefabUtility.SaveAsPrefabAsset(root, TilePrefab);
+            UnityEngine.Object.DestroyImmediate(root);
+            return prefab.GetComponent<FarmTile>();
         }
 
-        private static GameObject Child(Transform parent, string model, string name)
+        private static Vector3 Ground(Vector3 at)
         {
-            var go = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(model), parent);
-            go.name = name;
-            go.transform.localPosition = Vector3.zero;
-            go.transform.localRotation = Quaternion.identity;
-            go.SetActive(false);
-            return go;
-        }
-
-        // The terrain height under a point, ignoring the bed's own ridges.
-        private static Vector3 GroundUnder(Vector3 at, Transform plot)
-        {
-            RaycastHit[] hits = Physics.RaycastAll(at + Vector3.up * 5f, Vector3.down, 20f, 1 << GroundLayer);
-            Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
-            foreach (RaycastHit hit in hits)
-                if (!hit.collider.transform.IsChildOf(plot)) return hit.point;
-            return new Vector3(at.x, plot.position.y, at.z);
+            return Physics.Raycast(at + Vector3.up * 20f, Vector3.down, out RaycastHit hit, 40f, 1 << GroundLayer) ? hit.point : at;
         }
     }
 }

@@ -38,8 +38,8 @@ namespace RushedCrops.Editor
         // Landmarks.
         private static readonly Vector2 BarnSpot = V(-41, -2);
         private static readonly Vector2 Yard = V(-36, -15);
-        private static readonly Vector2 Garden = V(-25, -31);
-        private static readonly Vector2 GardenHalfSize = V(11, 9); // whole metres, so the tilled soil edge follows the terrain grid
+        public static readonly Vector2 Garden = V(-25, -31);
+        public static readonly Vector2 GardenHalfSize = V(11, 9); // whole metres, so the tilled soil edge follows the terrain grid
         private static readonly Vector2 Market = V(4, -6);
         private static readonly Vector2 Logging = V(42, -22);
         private static readonly Vector2 Quarry = V(10, 49);
@@ -392,16 +392,8 @@ namespace RushedCrops.Editor
             Prefab("Transport/Wheelbarrow01", parent, V(BarnSpot.x - 4.6f, BarnSpot.y - 10.5f), 150f, 1.5f);
             Lantern(parent, V(Yard.x + 7f, Yard.y + 4f), 270f);
 
-            // Six empty planting plots in a fenced garden, gate facing the farmyard.
-            for (int row = 0; row < 2; row++)
-            for (int col = 0; col < 3; col++)
-            {
-                Vector2 spot = Garden + V((col - 1) * 6.6f, (0.5f - row) * 7.8f);
-                var patch = Prefab("Patch02", parent, spot, 0f, 1f);
-                patch.name = "Planting plot " + (row * 3 + col + 1);
-                HideStockCrops(patch.transform);
-                FarmPlotSetup.SetUp(patch.transform);
-            }
+            // The crop field fills the fenced garden: the player tills squares anywhere on its soil.
+            FarmPlotSetup.SetUpField(parent, Garden, GardenHalfSize);
             Vector2 min = Garden - GardenHalfSize, max = Garden + GardenHalfSize;
             FenceLine(parent, V(min.x, min.y), V(max.x, min.y));
             FenceLine(parent, V(min.x, min.y), V(min.x, max.y));
@@ -418,28 +410,6 @@ namespace RushedCrops.Editor
             MeleeSetup.Place(parent);
         }
 
-        [MenuItem("Rushed Crops/World/Clear farming plots")]
-        public static void ClearFarmingPlots()
-        {
-            if (Application.isPlaying) throw new InvalidOperationException("Clear the saved plots outside Play.");
-            var garden = GameObject.Find(RootName).transform.Find(FarmGroup);
-            foreach (Transform child in garden)
-                if (child.name.StartsWith("Planting plot")) HideStockCrops(child);
-            EditorSceneManager.MarkSceneDirty(garden.gameObject.scene);
-            Debug.Log("Cleared all six farming plots; only empty soil beds remain.");
-        }
-
-        private static void HideStockCrops(Transform plot)
-        {
-            // The imported patch includes planted beets. Disable only those nested crop roots,
-            // retaining the soil, original pack asset, and prefab connection.
-            foreach (LODGroup lod in plot.GetComponentsInChildren<LODGroup>(true))
-            {
-                if (!lod.name.Contains("Plant")) continue;
-                Undo.RecordObject(lod.gameObject, "Clear stock planting");
-                lod.gameObject.SetActive(false);
-            }
-        }
 
         // ---------------------------------------------------------------- market
 

@@ -98,7 +98,23 @@ public class PlayerInteractor : MonoBehaviour
 
         Target = hit != null ? hit.GetComponentInParent<IInteractable>() : null;
         ToolTarget = hit != null ? hit.GetComponentInParent<IToolTarget>() : null;
-        SetHighlight(hit != null ? hit.GetComponentInParent<IHighlightable>() : null);
+        IHighlightable highlight = hit != null ? hit.GetComponentInParent<IHighlightable>() : null;
+
+        // Plain ground (nothing usable was hit): it may lie inside an area like the crop field.
+        if (hit != null && Target == null && ToolTarget == null)
+        {
+            foreach (IAreaTarget area in AreaTargets.All)
+            {
+                if (area.TryAim(info.point))
+                {
+                    Target = area as IInteractable;
+                    ToolTarget = area as IToolTarget;
+                    highlight = area as IHighlightable;
+                    break;
+                }
+            }
+        }
+        SetHighlight(highlight);
     }
 
     private void SetHighlight(IHighlightable next)

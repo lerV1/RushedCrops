@@ -1,22 +1,19 @@
 using UnityEngine;
 
-// One square of a farm bed. Each square is farmed on its own:
-//   1. Till it with the hoe (Use Tool).            Untilled -> Tilled
+// One tilled square of the crop field. The FarmField creates it where the player tills with the
+// hoe and passes on what the player does while aiming at it. Each square is farmed on its own:
+//   1. Tilled by the hoe when it is created.        Untilled -> Tilled
 //   2. Plant the seeds in hand (Interact).          Tilled   -> Growing
 //   3. Water it with the watering can (Use Tool).   A dry crop doesn't grow.
 //      A crop that needs water twice grows half way, dries out and waits for the second watering.
 //   4. Harvest it when ripe (Interact). The soil stays tilled, ready for the next seed.
-// The bed it belongs to (FarmPlot on a parent) holds the Inventory, the crops and the growth speed.
-[RequireComponent(typeof(Collider))]
-public class FarmTile : MonoBehaviour, IInteractable, IToolTarget, IHighlightable
+// The field it belongs to (FarmPlot on a parent) holds the Inventory, the crops and the growth speed.
+public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
 {
     public enum TileState { Untilled, Tilled, Growing, Ripe }
 
     [Tooltip("The dug soil mound. Hidden until the square is tilled.")]
     [SerializeField] private GameObject soil;
-
-    [Tooltip("The outline shown while the player aims at this square.")]
-    [SerializeField] private GameObject highlight;
 
     [Tooltip("Height of the plant's base above the square, the top of the soil mound.")]
     [SerializeField] private float plantHeight = 0.06f;
@@ -46,16 +43,15 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget, IHighlightabl
     private void Awake()
     {
         plot = GetComponentInParent<FarmPlot>();
-        if (plot == null || soil == null || highlight == null)
+        if (plot == null || soil == null)
         {
-            Debug.LogError($"{name} needs a FarmPlot on a parent and its soil and highlight assigned.", this);
+            Debug.LogError($"{name} needs a FarmPlot on a parent and its soil assigned.", this);
             enabled = false;
             return;
         }
         soilRenderer = soil.GetComponentInChildren<Renderer>(true);
         drySoil = soilRenderer != null ? soilRenderer.sharedMaterial : null;
         soil.SetActive(false);
-        highlight.SetActive(false);
     }
 
     private void Update()
@@ -187,14 +183,6 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget, IHighlightabl
         else if (tools.Equipped == ToolType.WateringCan && NeedsWater && tools.UseWater())
         {
             Water();
-        }
-    }
-
-    public void SetHighlighted(bool on)
-    {
-        if (highlight != null)
-        {
-            highlight.SetActive(on);
         }
     }
 

@@ -42,13 +42,9 @@ namespace RushedCrops.Editor
             Require(terrain.gameObject.layer == 6, "Terrain must use the player's existing Ground layer.");
             Require(root.transform.Find(FarmWorldBuilder.BridgePath) != null, "The river bridge to the quarry is missing.");
             Transform garden = root.transform.Find(FarmWorldBuilder.FarmGroup);
-            int plots = 0;
-            foreach (Transform child in garden) if (child.name.StartsWith("Planting plot")) plots++;
-            Require(plots == 6, "Keep all six empty soil plots.");
             foreach (Transform child in garden.GetComponentsInChildren<Transform>())
-                Require(child == garden || !child.name.Contains("Plant") || child.name.StartsWith("Planting plot"), "The farming plots should remain unplanted.");
-            foreach (Transform child in garden)
-                if (child.name.StartsWith("Planting plot")) ValidateFarmPlot(child);
+                Require(child == garden || !child.name.Contains("Plant"), "The garden should be saved unplanted.");
+            ValidateCropField(garden);
 
             GameObject player = GameObject.Find("Player");
             Require(player.GetComponent<PlayerInteractor>() != null, "The player can't use things: PlayerInteractor is missing.");
@@ -162,38 +158,36 @@ namespace RushedCrops.Editor
                 "The scene has no EventSystem, so the trading window's buttons can't be clicked." + fix);
         }
 
-        // Each soil bed must be ready to farm: a FarmPlot with the Inventory, crops that have
-        // every growth model, and squares (FarmTile) the player can aim at, each with its soil and outline.
-        private static void ValidateFarmPlot(Transform plot)
+        // The crop field must cover the garden with the Inventory, every crop (each with all its growth
+        // models), the wet soil colour, the outline that follows the aim and the square it copies when tilling.
+        // It is saved with no tilled squares: those are made while playing.
+        private static void ValidateCropField(Transform garden)
         {
-            var farmPlot = plot.GetComponent<FarmPlot>();
-            Require(farmPlot != null, plot.name + " is missing its FarmPlot. Run Rushed Crops > Farming > Set up farm plots.");
-            var settings = new SerializedObject(farmPlot);
-            Require(settings.FindProperty("inventory").objectReferenceValue != null, plot.name + " needs the Inventory assigned.");
-            Require(settings.FindProperty("wetSoil").objectReferenceValue != null, plot.name + " needs its wet soil material assigned.");
+            const string fix = " Run Rushed Crops > Farming > Set up crop field.";
+            Transform fieldObject = garden.Find(FarmPlotSetup.FieldName);
+            var field = fieldObject != null ? fieldObject.GetComponent<FarmField>() : null;
+            Require(field != null, "The crop field is missing from the garden." + fix);
 
+            var settings = new SerializedObject(fieldObject.GetComponent<FarmPlot>());
+            Require(settings.FindProperty("inventory").objectReferenceValue != null, "The crop field needs the Inventory assigned." + fix);
+            Require(settings.FindProperty("wetSoil").objectReferenceValue != null, "The crop field needs its wet soil material assigned." + fix);
             SerializedProperty crops = settings.FindProperty("crops");
-            Require(crops.arraySize == FarmPlotSetup.CropAssets.Length, plot.name + " can't grow every crop. Run Rushed Crops > Farming > Update crops in farm plots.");
+            Require(crops.arraySize == FarmPlotSetup.CropAssets.Length, "The crop field can't grow every crop. Run Rushed Crops > Farming > Update crops in crop field.");
             for (int i = 0; i < crops.arraySize; i++)
             {
                 var crop = crops.GetArrayElementAtIndex(i).objectReferenceValue as CropData;
-                Require(crop != null, plot.name + " has an empty crop slot.");
+                Require(crop != null, "The crop field has an empty crop slot.");
                 for (int stage = 0; stage < crop.StageCount; stage++)
                     Require(crop.GetStageModel(stage) != null, crop.name + " is missing the model for growth stage " + (stage + 1) + ".");
             }
 
-            Transform tiles = plot.Find("Tiles");
-            Require(tiles != null && tiles.childCount > 0, plot.name + " has no farm squares. Run Rushed Crops > Farming > Set up farm plots.");
-            foreach (Transform tile in tiles)
-            {
-                var farmTile = tile.GetComponent<FarmTile>();
-                Require(farmTile != null, tile.name + " in " + plot.name + " is missing its FarmTile.");
-                var tileSettings = new SerializedObject(farmTile);
-                Require(tileSettings.FindProperty("soil").objectReferenceValue != null && tileSettings.FindProperty("highlight").objectReferenceValue != null,
-                    tile.name + " in " + plot.name + " needs its soil and highlight assigned.");
-                var trigger = tile.GetComponent<Collider>();
-                Require(trigger != null && trigger.isTrigger, tile.name + " in " + plot.name + " needs a trigger so the player can aim at it.");
-            }
+            var fieldSettings = new SerializedObject(field);
+            var tile = fieldSettings.FindProperty("tilePrefab").objectReferenceValue as FarmTile;
+            Require(tile != null && new SerializedObject(tile).FindProperty("soil").objectReferenceValue != null,
+                "The crop field needs its square prefab (PFB_FarmTile) with a soil mound." + fix);
+            Require(fieldSettings.FindProperty("cursor").objectReferenceValue != null, "The crop field needs the outline that follows the aim." + fix);
+            Require(field.GridSize.x > 0 && field.GridSize.y > 0, "The crop field has no room for squares." + fix);
+            Require(fieldObject.GetComponentsInChildren<FarmTile>(true).Length == 0, "The crop field should be saved with no tilled squares.");
         }
 
         // The hatchet swing needs its MeleeAttack, and the practice dummy needs everything a hit uses:
