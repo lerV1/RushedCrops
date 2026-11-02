@@ -22,10 +22,6 @@ namespace RushedCrops.Editor
         private static readonly Vector3 Spot = new Vector3(-34.5f, 0f, -17f); // open grass west of the tool stump
         private const float FacingYaw = 41f;                                  // looks toward the spawn point
 
-        // The hatchet held in the right hand, set by eye to match the hoe's grip.
-        private static readonly Vector3 HandPosition = new Vector3(-0.03f, 0.1f, 0.03f);
-        private static readonly Vector3 HandRotation = new Vector3(327f, 102f, 354f);
-
         [MenuItem("Rushed Crops/Combat/Set up player melee")]
         public static void SetUpPlayer()
         {
@@ -47,8 +43,6 @@ namespace RushedCrops.Editor
                 MeshFilter source = ToolStumpSetup.FirstLod0(AssetDatabase.LoadAssetAtPath<GameObject>(HatchetPrefab));
                 var model = new GameObject("Hatchet", typeof(MeshFilter), typeof(MeshRenderer));
                 model.transform.SetParent(hand, false);
-                model.transform.localPosition = HandPosition;
-                model.transform.localRotation = Quaternion.Euler(HandRotation);
                 model.GetComponent<MeshFilter>().sharedMesh = source.sharedMesh;
                 var renderer = model.GetComponent<MeshRenderer>();
                 renderer.sharedMaterial = source.GetComponent<MeshRenderer>().sharedMaterial;
@@ -62,6 +56,8 @@ namespace RushedCrops.Editor
                     renderer.receiveShadows = hoeRenderer.receiveShadows;
                 }
                 model.SetActive(false);
+                // Line the handle up through the fist, the same way as the hoe and the watering can.
+                HandToolFitter.Fit(root);
 
                 var handSettings = new SerializedObject(hands);
                 SerializedProperty models = handSettings.FindProperty("toolModels");
