@@ -43,6 +43,9 @@ public class Merchant : MonoBehaviour, IInteractable
     // Raised after every trade that went through: (item, amount, the player bought it).
     public event Action<ResourceType, int, bool> Traded;
 
+    // Raised when a trade didn't go through, with the reason.
+    public event Action<TradeResult> TradeRefused;
+
     private void Awake()
     {
         if (inventory == null || prices == null)
@@ -67,7 +70,21 @@ public class Merchant : MonoBehaviour, IInteractable
     public int PriceToSell(ResourceType item) => prices.PayFor(item, Day);
 
     // The player buys from the merchant.
-    public TradeResult TryBuy(ResourceType item, int amount)
+    public TradeResult TryBuy(ResourceType item, int amount) => Report(Buy(item, amount));
+
+    // The player sells to the merchant.
+    public TradeResult TrySell(ResourceType item, int amount) => Report(Sell(item, amount));
+
+    private TradeResult Report(TradeResult result)
+    {
+        if (result != TradeResult.Done)
+        {
+            TradeRefused?.Invoke(result);
+        }
+        return result;
+    }
+
+    private TradeResult Buy(ResourceType item, int amount)
     {
         if (amount <= 0)
         {
@@ -94,8 +111,7 @@ public class Merchant : MonoBehaviour, IInteractable
         return TradeResult.Done;
     }
 
-    // The player sells to the merchant.
-    public TradeResult TrySell(ResourceType item, int amount)
+    private TradeResult Sell(ResourceType item, int amount)
     {
         if (amount <= 0)
         {

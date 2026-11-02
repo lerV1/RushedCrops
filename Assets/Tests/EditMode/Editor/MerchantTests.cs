@@ -171,6 +171,20 @@ public class MerchantTests
         CollectionAssert.AreEqual(new[] { (ResourceType.CarrotSeeds, 1, true), (ResourceType.Carrots, 1, false) }, trades);
     }
 
+    [Test]
+    public void RefusedTradesSayWhy()
+    {
+        var reasons = new List<TradeResult>();
+        merchant.TradeRefused += reasons.Add;
+        inventory.Add(ResourceType.Coins, 1);
+
+        merchant.TryBuy(ResourceType.Wood, 1);      // costs 8
+        merchant.TrySell(ResourceType.Carrots, 1);  // has none
+        merchant.TryBuy(ResourceType.Hoe, 1);       // not for sale
+
+        CollectionAssert.AreEqual(new[] { TradeResult.NotEnoughCoins, TradeResult.NotEnoughItems, TradeResult.NotForSale }, reasons);
+    }
+
     // ---------- Daily prices ----------
 
     [Test]

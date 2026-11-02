@@ -53,8 +53,19 @@ namespace RushedCrops.Editor
             var settings = new SerializedObject(merchant.GetComponent<Merchant>());
             settings.FindProperty("inventory").objectReferenceValue = UnityEngine.Object.FindAnyObjectByType<Inventory>();
             settings.FindProperty("dayCycle").objectReferenceValue = UnityEngine.Object.FindAnyObjectByType<EnvironmentCycle>();
-            settings.FindProperty("shop").objectReferenceValue = UnityEngine.Object.FindAnyObjectByType<MerchantShopUI>(FindObjectsInactive.Include);
+            var shop = UnityEngine.Object.FindAnyObjectByType<MerchantShopUI>(FindObjectsInactive.Include);
+            settings.FindProperty("shop").objectReferenceValue = shop;
             settings.ApplyModifiedProperties();
+
+            // He watches and greets the player, and talks in the window while it is open.
+            var personality = merchant.GetComponent<MerchantPersonality>();
+            if (personality != null)
+            {
+                var mood = new SerializedObject(personality);
+                mood.FindProperty("player").objectReferenceValue = GameObject.Find("Player")?.transform;
+                mood.FindProperty("shop").objectReferenceValue = shop;
+                mood.ApplyModifiedProperties();
+            }
             return merchant;
         }
 
@@ -82,14 +93,16 @@ namespace RushedCrops.Editor
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.matchWidthOrHeight = 0.5f;
 
-            var panel = Box("Panel", root.transform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1180, 720), PanelColour);
+            var panel = Box("Panel", root.transform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1180, 760), PanelColour);
             var title = Label("Title", panel, new Vector2(0.5f, 1f), new Vector2(0, -44), new Vector2(1100, 56), 36, Gold, TextAnchor.MiddleCenter);
             title.fontStyle = FontStyle.Bold;
             var coins = Label("Coins", panel, new Vector2(1f, 1f), new Vector2(-170, -44), new Vector2(300, 40), 26, Gold, TextAnchor.MiddleRight);
-            Label("Sell header", panel, new Vector2(0.5f, 1f), new Vector2(-290, -112), new Vector2(540, 36), 26, Color.white, TextAnchor.MiddleLeft).text = "Sell your crops";
-            Label("Buy header", panel, new Vector2(0.5f, 1f), new Vector2(290, -112), new Vector2(540, 36), 26, Color.white, TextAnchor.MiddleLeft).text = "Buy seeds and supplies";
-            var sellList = List("Sell list", panel, new Vector2(-290, -140));
-            var buyList = List("Buy list", panel, new Vector2(290, -140));
+            var remark = Label("Remark", panel, new Vector2(0.5f, 1f), new Vector2(0, -88), new Vector2(1100, 32), 22, new Color(0.90f, 0.85f, 0.75f), TextAnchor.MiddleCenter);
+            remark.fontStyle = FontStyle.Italic;
+            Label("Sell header", panel, new Vector2(0.5f, 1f), new Vector2(-290, -128), new Vector2(540, 36), 26, Color.white, TextAnchor.MiddleLeft).text = "Sell your crops";
+            Label("Buy header", panel, new Vector2(0.5f, 1f), new Vector2(290, -128), new Vector2(540, 36), 26, Color.white, TextAnchor.MiddleLeft).text = "Buy seeds and supplies";
+            var sellList = List("Sell list", panel, new Vector2(-290, -156));
+            var buyList = List("Buy list", panel, new Vector2(290, -156));
             var message = Label("Message", panel, new Vector2(0.5f, 0f), new Vector2(0, 92), new Vector2(1100, 40), 24, Gold, TextAnchor.MiddleCenter);
             var close = MakeButton("Close", panel, new Vector2(1f, 0f), new Vector2(-130, 44), new Vector2(200, 50), "Close (Esc)");
             var template = Row(panel);
@@ -100,6 +113,7 @@ namespace RushedCrops.Editor
             settings.FindProperty("title").objectReferenceValue = title;
             settings.FindProperty("coins").objectReferenceValue = coins;
             settings.FindProperty("message").objectReferenceValue = message;
+            settings.FindProperty("remark").objectReferenceValue = remark;
             settings.FindProperty("closeButton").objectReferenceValue = close;
             settings.FindProperty("sellList").objectReferenceValue = sellList;
             settings.FindProperty("buyList").objectReferenceValue = buyList;

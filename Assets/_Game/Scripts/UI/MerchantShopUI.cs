@@ -17,6 +17,8 @@ public class MerchantShopUI : MonoBehaviour
     [SerializeField] private Text coins;
     [Tooltip("The result of the last click, like \"Sold 4 Carrots for 16 coins\".")]
     [SerializeField] private Text message;
+    [Tooltip("What the merchant says while the window is open. Optional.")]
+    [SerializeField] private Text remark;
     [SerializeField] private Button closeButton;
 
     [Header("Rows")]
@@ -38,6 +40,10 @@ public class MerchantShopUI : MonoBehaviour
 
     public bool IsOpen => panel != null && panel.activeSelf;
     public Merchant Merchant => merchant;
+
+    // Raised when the window opens (with the merchant) and when it closes.
+    public event System.Action<Merchant> Opened;
+    public event System.Action<Merchant> Closed;
 
     // One line of the window and the item it trades.
     private class Row
@@ -98,9 +104,11 @@ public class MerchantShopUI : MonoBehaviour
         BuildRows();
         merchant.Inventory.Changed += Refresh;
         message.text = "";
+        ShowRemark("");
         panel.SetActive(true);
         SetPlayerPaused(true);
         Refresh();
+        Opened?.Invoke(merchant);
 
         // Gamepad players start on the first button so they can move round the window.
         if (EventSystem.current != null && rows.Count > 0)
@@ -122,6 +130,16 @@ public class MerchantShopUI : MonoBehaviour
         if (EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
+        }
+        Closed?.Invoke(merchant);
+    }
+
+    // The merchant's own words, shown under the title while the window is open.
+    public void ShowRemark(string text)
+    {
+        if (remark != null)
+        {
+            remark.text = string.IsNullOrEmpty(text) ? "" : $"\"{text}\"";
         }
     }
 
