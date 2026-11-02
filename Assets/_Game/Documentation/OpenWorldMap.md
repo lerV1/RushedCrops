@@ -17,7 +17,7 @@ The current walkable valley is approximately 160 by 140 Unity units, with distan
 | Logging camp | 42, -22 |
 | River bridge | 6, 24 |
 
-The six farming plots start as flat soil beds; the pack's stock plants and ridges stay hidden. Each bed is a 5 x 5 grid of 1 m squares, farmed one square at a time. Trading, gathering, combat, and barn-repair interactions remain separate gameplay work. The shared inventory's resource types are unchanged.
+The six farming plots start as flat soil beds; the pack's stock plants and ridges stay hidden. Each bed is a 5 x 5 grid of 1 m squares, farmed one square at a time. Crops are sold to the merchant at the market stall (see Market). Gathering wood and stone, enemies, and barn repairs are still to come.
 
 ## Farming
 
@@ -26,9 +26,9 @@ The player starts with empty hands. The hoe and the watering can wait on the cut
 | Step | How |
 | --- | --- |
 | Pick up a tool | Look at it on the stump, press E. A tool picked up with empty hands goes straight into the hand. |
-| Switch tools | F (gamepad Y / Triangle) cycles empty hands, hoe, watering can. |
+| Switch tools | Keys 1-5 pick a hotbar slot. A tool in that slot goes into the hand. |
 | Till a square | Hold the hoe, aim at the square (it gets an outline), left click. |
-| Plant | Aim at a tilled square, press E. One seed per square; Q switches carrot / tomato seeds. |
+| Plant | Pick the seeds' hotbar slot, aim at a tilled square, press E. One seed per square. |
 | Water | Hold the watering can, left click a planted square. A dry crop doesn't grow. Wet soil is darker. |
 | Fill the can | Hold the can, aim at the river, left click. One fill waters 6 squares; the can starts empty. |
 | Harvest | Press E on a ripe square. The soil stays tilled for the next seed. |
@@ -54,13 +54,49 @@ The farm parts have editor tools, and `Rebuild map` runs all three:
 - `Rushed Crops > Farming > Place tool stump` puts the stump, hoe and watering can back by the gate.
 - `Rushed Crops > Farming > Set up river water` gives the river its collider and `WaterSource`.
 
+## Market
+
+The scheming merchant stands behind the stall counter at the market. Walk up and he waves and greets you; he turns to watch you while you are nearby.
+
+| Step | How |
+| --- | --- |
+| Trade | Look at him, press E. The trading window opens and your controls pause. |
+| Sell crops | Left column: how many you have and what he pays for one. Sell 1 or Sell all. |
+| Buy | Right column: seeds, wood and stone with his price for one. Buy 1 or Buy 5. |
+| Leave | Esc, E, the Close button, or the gamepad's East button. |
+
+Every price is shown before you click. A trade is all or nothing: coins are only taken if the goods fit in the hotbar. After a trade he rubs his hands and says something smug; he also grumbles when you can't afford something or your hotbar is full.
+
+Prices change every in-game day: what he pays for crops moves up to 30% up or down, and his own prices up to 20%. Usual prices:
+
+| Crop | Seed costs | He pays per crop |
+| --- | --- | --- |
+| Beet | 2 | 3 |
+| Carrot | 3 | 4 |
+| Onion | 3 | 3 |
+| Wheat | 3 | 3 |
+| Tomato | 4 | 5 |
+| Cabbage | 5 | 9 |
+
+He also sells Wood for 8 and Stone for 10 each, on purpose more than they should cost once they can be gathered.
+
+| Part | Where |
+| --- | --- |
+| Price list (items, usual prices, daily swing) | `Assets/_Game/Data/DA_MerchantPrices`. Change prices here, not in code. |
+| Trading rules | `Merchant` on the merchant; tested in `Assets/Tests/EditMode/Editor/MerchantTests.cs` |
+| Greetings, lines, facing the player | `MerchantPersonality` on the merchant. Every line can be edited in the Inspector. |
+| Trading window | `MerchantShopUI` on `HUD_Shop` |
+| Merchant model and animations (Idle, Greet, RubHands) | `Assets/_Game/Models/Characters/Merchant.fbx`, made in Blender |
+
+`Rushed Crops > Market > Set up merchant` puts the merchant back behind the counter, rebuilds the trading window and adds an EventSystem if the scene has none. `Rebuild map` places the merchant with the stall.
+
 ## Editing the map
 
 - `WORLD_RushedCrops` contains named terrain, river, farm, market, quarry, logging, forest, and boundary groups. Paths, clearings, and tilled soil are painted into the terrain mesh. Holotna objects remain prefab instances with scene overrides. Source pack assets are not edited. There are no direction signs.
 - The original `Ground` object is inactive and retained. The new terrain and bridge deck colliders use the controller's existing Ground layer.
 - Generated meshes are under `Assets/_Game/Models/World/` and `Models/Cartoon/`, and their materials under `Assets/_Game/Materials/World/` and `Materials/Cartoon/`. They are saved assets; the map is not generated each time the game starts.
 - `Rushed Crops > World > Rebuild map` recreates the world from the current layout settings after a confirmation dialog. Rebuilding replaces hand edits to the map. Normal adjustments can be made directly to the saved scene.
-- `Rushed Crops > World > Validate saved map` checks landmark groups, collision mesh, player, Inventory/HUD, farm plots and squares, the tool stump, the river water, missing scripts/materials, and lighting references.
+- `Rushed Crops > World > Validate saved map` checks landmark groups, collision mesh, player, Inventory/HUD, farm plots and squares, the tool stump, the river water, the merchant and his trading window, missing scripts/materials, and lighting references.
 - `Rushed Crops > World > Clear farming plots` restores bare soil beds without editing the imported pack.
 - `Rushed Crops > World > Apply low poly cartoon style` rebuilds the faceted tree/plant visuals and flat prop palette while retaining the layout. `Align scenery to ground` checks each visible footprint against the terrain and distant hills: loose props rest on flat pads, while trees, rocks, and vegetation have embedded bases. Display produce, hanging lanterns, and the chopping-block axe use their own supports.
 

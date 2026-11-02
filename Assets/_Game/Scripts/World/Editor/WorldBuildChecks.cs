@@ -23,7 +23,7 @@ namespace RushedCrops.Editor
                 scene = EditorSceneManager.OpenScene(FarmWorldBuilder.ScenePath);
             }
             Validate(scene);
-            Debug.Log("World validation passed: landmarks, player, farm plots, tools, river water, colliders, materials and environment references.");
+            Debug.Log("World validation passed: landmarks, player, farm plots, tools, river water, merchant, colliders, materials and environment references.");
         }
 
         private static void Validate(Scene scene)
@@ -62,6 +62,7 @@ namespace RushedCrops.Editor
             Require(player.GetComponentInChildren<HealthBarHud>(true) != null, "The health bar is missing. Run Rushed Crops > UI > Set up health HUD.");
             Require(player.GetComponentInChildren<DamageIndicatorHud>(true) != null, "The damage indicator is missing. Run Rushed Crops > UI > Set up health HUD.");
             ValidateTools(player, garden, root.transform);
+            ValidateMerchant(root.transform);
             ValidateMelee(player, garden);
 
             var cycle = UnityEngine.Object.FindAnyObjectByType<EnvironmentCycle>();
@@ -127,6 +128,38 @@ namespace RushedCrops.Editor
             Require(water != null && water.GetComponent<WaterSource>() != null && waterCollider != null && waterCollider.sharedMesh != null,
                 "The river can't fill the watering can. Run Rushed Crops > Farming > Set up river water.");
             Require(waterCollider.excludeLayers.value == ~0, "The river's collider must touch nothing, or it would block the player.");
+        }
+
+        // The merchant must stand at the stall with a price list, be linked to the Inventory and his
+        // trading window, and the scene needs an EventSystem or the window's buttons can't be clicked.
+        private static void ValidateMerchant(Transform world)
+        {
+            const string fix = " Run Rushed Crops > Market > Set up merchant.";
+            Transform placed = world.Find("04_Market/" + MerchantSetup.MerchantName);
+            var merchant = placed != null ? placed.GetComponent<Merchant>() : null;
+            Require(merchant != null, "The merchant is missing from the market stall." + fix);
+
+            var settings = new SerializedObject(merchant);
+            var prices = settings.FindProperty("prices").objectReferenceValue as MerchantPrices;
+            Require(prices != null && prices.ForSale.Count > 0 && prices.Wanted.Count > 0,
+                "The merchant needs a price list with things to sell and crops to buy (DA_MerchantPrices).");
+            Require(settings.FindProperty("inventory").objectReferenceValue != null, "The merchant isn't linked to the Inventory." + fix);
+            Require(settings.FindProperty("shop").objectReferenceValue != null, "The merchant isn't linked to his trading window." + fix);
+
+            var personality = placed.GetComponent<MerchantPersonality>();
+            Require(personality != null, "The merchant is missing his MerchantPersonality (greetings and reactions).");
+            var mood = new SerializedObject(personality);
+            Require(mood.FindProperty("player").objectReferenceValue != null && mood.FindProperty("animator").objectReferenceValue != null,
+                "The merchant's personality needs the player and his Animator assigned." + fix);
+
+            var shop = UnityEngine.Object.FindAnyObjectByType<MerchantShopUI>(FindObjectsInactive.Include);
+            Require(shop != null, "The trading window (HUD_Shop) is missing." + fix);
+            var window = new SerializedObject(shop);
+            foreach (string part in new[] { "panel", "title", "coins", "message", "sellList", "buyList", "rowTemplate" })
+                Require(window.FindProperty(part).objectReferenceValue != null, "The trading window is missing its " + part + "." + fix);
+            Require(window.FindProperty("pauseWhileOpen").arraySize > 0, "The trading window doesn't pause the player's controls." + fix);
+            Require(UnityEngine.Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() != null,
+                "The scene has no EventSystem, so the trading window's buttons can't be clicked." + fix);
         }
 
         // Each soil bed must be ready to farm: a FarmPlot with the Inventory, crops that have
