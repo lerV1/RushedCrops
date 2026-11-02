@@ -3,8 +3,9 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // The player's on-screen inventory: a coin counter and the 5-slot hotbar.
-// Each slot shows what is in the matching Inventory slot (name and count), or nothing
-// when it is empty. The selected slot lights up and its item's name shows above the hotbar.
+// Each slot shows a picture of what is in the matching Inventory slot and how many, or nothing
+// when it is empty. An item without a picture shows its name instead.
+// The selected slot lights up and its item's name shows above the hotbar.
 //
 // It only redraws when the Inventory raises Changed, instead of every frame.
 public class InventoryHud : MonoBehaviour
@@ -15,12 +16,16 @@ public class InventoryHud : MonoBehaviour
     private class HotbarSlot
     {
         public Image background;
+        public Image icon;
         public Text nameText;
         public Text countText;
     }
 
     [Tooltip("The scene's shared Inventory.")]
     [SerializeField] private Inventory inventory;
+
+    [Tooltip("The picture for each item (DA_ItemIcons).")]
+    [SerializeField] private ItemIcons icons;
 
     [Header("Coins")]
     [SerializeField] private Text coinsText;
@@ -89,9 +94,17 @@ public class InventoryHud : MonoBehaviour
             slot.background.color = index == inventory.SelectedSlot ? selectedColor : normalColor;
         }
 
+        Sprite picture = !empty && icons != null ? icons.Get(item) : null;
+        if (slot.icon != null)
+        {
+            slot.icon.sprite = picture;
+            slot.icon.enabled = picture != null;
+        }
+
         if (slot.nameText != null)
         {
-            slot.nameText.text = empty ? "" : ResourceTypes.DisplayName(item);
+            // The picture says what it is; the name is only for items without one.
+            slot.nameText.text = empty || (picture != null && slot.icon != null) ? "" : ResourceTypes.DisplayName(item);
         }
 
         if (slot.countText != null)
