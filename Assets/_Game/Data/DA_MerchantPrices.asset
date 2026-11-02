@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 840084572aaf86e4a80cc2acd6a15911, type: 3}
+  m_Name: DA_MerchantPrices
+  m_EditorClassIdentifier: Assembly-CSharp::MerchantPrices
+  forSale:
+  - item: 9
+    basePrice: 2
+  - item: 1
+    basePrice: 3
+  - item: 11
+    basePrice: 3
+  - item: 12
+    basePrice: 3
+  - item: 2
+    basePrice: 4
+  - item: 10
+    basePrice: 5
+  - item: 5
+    basePrice: 8
+  - item: 6
+    basePrice: 10
+  wanted:
+  - item: 13
+    basePrice: 3
+  - item: 3
+    basePrice: 4
+  - item: 15
+    basePrice: 3
+  - item: 16
+    basePrice: 3
+  - item: 4
+    basePrice: 5
+  - item: 14
+    basePrice: 9
+  forSaleSwing: 0.2
+  wantedSwing: 0.3
+  seed: 451
