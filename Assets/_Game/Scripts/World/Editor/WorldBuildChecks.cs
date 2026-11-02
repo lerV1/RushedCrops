@@ -23,7 +23,7 @@ namespace RushedCrops.Editor
                 scene = EditorSceneManager.OpenScene(FarmWorldBuilder.ScenePath);
             }
             Validate(scene);
-            Debug.Log("World validation passed: landmarks, player, farm plots, tools, river water, merchant, colliders, materials and environment references.");
+            Debug.Log("World validation passed: landmarks, player, crop field, tools, river water, merchant, hotbar pictures, colliders, materials and environment references.");
         }
 
         private static void Validate(Scene scene)
@@ -60,6 +60,7 @@ namespace RushedCrops.Editor
             ValidateTools(player, garden, root.transform);
             ValidateMerchant(root.transform);
             ValidateMelee(player, garden);
+            ValidateItemIcons(UnityEngine.Object.FindAnyObjectByType<InventoryHud>());
 
             var cycle = UnityEngine.Object.FindAnyObjectByType<EnvironmentCycle>();
             Require(cycle != null, "The day/night cycle is missing.");
@@ -188,6 +189,22 @@ namespace RushedCrops.Editor
             Require(fieldSettings.FindProperty("cursor").objectReferenceValue != null, "The crop field needs the outline that follows the aim." + fix);
             Require(field.GridSize.x > 0 && field.GridSize.y > 0, "The crop field has no room for squares." + fix);
             Require(fieldObject.GetComponentsInChildren<FarmTile>(true).Length == 0, "The crop field should be saved with no tilled squares.");
+        }
+
+        // Every hotbar slot needs its picture, and DA_ItemIcons needs a picture for everything the
+        // hotbar can hold. Coins are left out: they are counted at the top of the screen, not held.
+        private static void ValidateItemIcons(InventoryHud hud)
+        {
+            var settings = new SerializedObject(hud);
+            var icons = settings.FindProperty("icons").objectReferenceValue as ItemIcons;
+            Require(icons != null, "The hotbar has no item pictures. Run Rushed Crops > UI > Add item icons to the hotbar.");
+            SerializedProperty slots = settings.FindProperty("slots");
+            for (int i = 0; i < slots.arraySize; i++)
+                Require(slots.GetArrayElementAtIndex(i).FindPropertyRelative("icon").objectReferenceValue != null,
+                    "Hotbar slot " + (i + 1) + " has nowhere to show a picture. Run Rushed Crops > UI > Add item icons to the hotbar.");
+            foreach (ResourceType item in Enum.GetValues(typeof(ResourceType)))
+                Require(item == ResourceType.Coins || icons.Get(item) != null,
+                    ResourceTypes.DisplayName(item) + " has no picture. Run Rushed Crops > UI > Render item icons.");
         }
 
         // The hatchet swing needs its MeleeAttack, and the practice dummy needs everything a hit uses:
