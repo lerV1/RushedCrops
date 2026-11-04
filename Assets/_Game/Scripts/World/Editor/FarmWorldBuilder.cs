@@ -408,6 +408,7 @@ namespace RushedCrops.Editor
             ToolStumpSetup.Place(parent);
             SeedCrateSetup.Place(parent);
             MeleeSetup.Place(parent);
+            CropBossSetup.Place(parent);
         }
 
 
