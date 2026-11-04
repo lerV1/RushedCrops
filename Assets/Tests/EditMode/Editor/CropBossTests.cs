@@ -43,21 +43,4 @@ public class CropBossTests
         Assert.IsNotNull(placed.GetComponent<HitFlash>());
         Assert.IsNotNull(placed.GetComponent<Collider>(), "The hatchet needs a collider to hit.");
     }
-
-    [Test]
-    public void SeedBagGivesItsSeedsOnceLanded()
-    {
-        root = new GameObject("Test parent");
-        var inventory = root.AddComponent<Inventory>();
-        var crop = AssetDatabase.LoadAssetAtPath<CropData>(FarmPlotSetup.CropAssets[0]);
-        var prefab = AssetDatabase.LoadAssetAtPath<SeedDrop>(CropBossSetup.SeedBagPath);
-        Assert.IsNotNull(prefab, "Run Place crop boss to make the seed bag prefab.");
-
-        SeedDrop bag = Object.Instantiate(prefab, root.transform);
-        bag.Launch(inventory, crop, 3, Vector3.zero);
-        int before = inventory.GetCount(crop.SeedResource);
-
-        Assert.IsFalse(bag.TryCollect(), "A bag still in the air can't be taken.");
-        Assert.AreEqual(before, inventory.GetCount(crop.SeedResource));
-    }
 }

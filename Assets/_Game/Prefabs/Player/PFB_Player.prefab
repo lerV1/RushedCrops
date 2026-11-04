@@ -305,6 +305,7 @@ GameObject:
   - component: {fileID: 2543232108923715845}
   - component: {fileID: 6604316867291780407}
   - component: {fileID: 2537169197608287520}
+  - component: {fileID: 5622022556714788587}
   m_Layer: 0
   m_Name: PFB_Player
   m_TagString: Player
@@ -519,6 +520,25 @@ MonoBehaviour:
   windup: 0.3
   activeTime: 0.15
   recovery: 0.35
+--- !u!114 &5622022556714788587
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1346524222197468425}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fff41d51f14cf5343aaf2282382034b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ItemDropper
+  viewPoint: {fileID: 5761688239629393836}
+  dropPrefab: {fileID: 1567713493928193696, guid: b75aeef62b71c2a46a47192c542d474a, type: 3}
+  throwDistance: 1.8
+  walkPickupDelay: 1.5
+  blockingLayers:
+    serializedVersion: 2
+    m_Bits: 4294967291
 --- !u!1 &1775677701392528369
 GameObject:
   m_ObjectHideFlags: 0

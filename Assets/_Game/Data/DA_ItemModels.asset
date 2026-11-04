@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b0bfdfd66b4fe84db13576750e10662, type: 3}
+  m_Name: DA_ItemModels
+  m_EditorClassIdentifier: Assembly-CSharp::ItemModels
+  models:
+  - item: 3
+    model: {fileID: 7245615103894791200, guid: 3afd26d3e7a9eb84184529ca716fc91f, type: 3}
+    turn: {x: 0, y: 0, z: 0}
+  - item: 4
+    model: {fileID: 919132149155446097, guid: c506ac9f4cea15249b3e686f1c82a29a, type: 3}
+    turn: {x: 0, y: 0, z: 0}
+  - item: 13
+    model: {fileID: 1360479748253242751, guid: 5cd3fb496b7d3704897e389481967ab8, type: 3}
+    turn: {x: 0, y: 0, z: 0}
+  - item: 14
+    model: {fileID: 4066231631120255815, guid: 5488440d02f6fcf459ea7136fd484128, type: 3}
+    turn: {x: 0, y: 0, z: 0}
+  - item: 15
+    model: {fileID: 8742971788269639246, guid: 099d511e68310f34cbe0ac26c0777374, type: 3}
+    turn: {x: 0, y: 0, z: 0}
+  - item: 16
+    model: {fileID: 6124050995606118070, guid: c5ce977bd67e70b4592f39d3c5b373a1, type: 3}
+    turn: {x: 0, y: 0, z: 0}
+  - item: 5
+    model: {fileID: 3688301091840473916, guid: 9a94ba38c22732d4c94e5ad0959c3561, type: 3}
+    turn: {x: 0, y: 35, z: 0}
+  - item: 6
+    model: {fileID: 3156006603411092317, guid: 88ad5ff31aa0f614b9d2cb2451ad1950, type: 3}
+    turn: {x: 0, y: 0, z: 0}
+  - item: 7
+    model: {fileID: 8396514863030100815, guid: d4cfd1348c7e31b41960ac6738bf27b5, type: 3}
+    turn: {x: 0, y: 0, z: 90}
+  - item: 8
+    model: {fileID: 919132149155446097, guid: 70e9de590f01a484aaa52c34a14fdcfd, type: 3}
+    turn: {x: 0, y: 0, z: 0}
+  - item: 17
+    model: {fileID: 1289350146910500113, guid: 8e7f76a1e0161394cb0682c0def59ed7, type: 3}
+    turn: {x: 0, y: 0, z: 90}
+  - item: 1
+    model: {fileID: 919132149155446097, guid: 089ad7a74232cbb4eaa118029f6fdc42, type: 3}
+    turn: {x: 0, y: 0, z: 0}
+  - item: 2
+    model: {fileID: 919132149155446097, guid: 089ad7a74232cbb4eaa118029f6fdc42, type: 3}
+    turn: {x: 0, y: 0, z: 0}
+  - item: 9
+    model: {fileID: 919132149155446097, guid: 089ad7a74232cbb4eaa118029f6fdc42, type: 3}
+    turn: {x: 0, y: 0, z: 0}
+  - item: 10
+    model: {fileID: 919132149155446097, guid: 089ad7a74232cbb4eaa118029f6fdc42, type: 3}
+    turn: {x: 0, y: 0, z: 0}
+  - item: 11
+    model: {fileID: 919132149155446097, guid: 089ad7a74232cbb4eaa118029f6fdc42, type: 3}
+    turn: {x: 0, y: 0, z: 0}
+  - item: 12
+    model: {fileID: 919132149155446097, guid: 089ad7a74232cbb4eaa118029f6fdc42, type: 3}
+    turn: {x: 0, y: 0, z: 0}

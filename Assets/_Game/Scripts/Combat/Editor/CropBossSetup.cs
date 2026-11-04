@@ -9,13 +9,12 @@ namespace RushedCrops.Editor
     // Puts the crop boss (a giant angry carrot, modelled in Blender) just outside the east
     // fence of the crop field, looking at the soil. It stands still, and killing it throws
     // out a bag of seeds for every crop.
-    // Also makes its flat cartoon materials and the seed bag prefab it drops.
+    // Also makes its flat cartoon materials. Its seeds use the shared item drop (ItemDropSetup).
     // The map builder calls Place, and it can be run again from the menu.
     public static class CropBossSetup
     {
         public const string RootName = "Crop boss";
         public const string ModelPath = "Assets/_Game/Models/Boss/CropBoss.fbx";
-        public const string SeedBagPath = "Assets/_Game/Prefabs/Boss/PFB_SeedBag.prefab";
         private const string MaterialFolder = "Assets/_Game/Materials/Boss";
         private const string Cartoon = "Assets/_Game/Materials/Cartoon/";
 
@@ -56,7 +55,7 @@ namespace RushedCrops.Editor
             if (old != null) Undo.DestroyObjectImmediate(old.gameObject);
 
             SetUpModelMaterials();
-            SeedDrop bag = SeedBag();
+            ItemDrop bag = ItemDropSetup.DropPrefab();
             var inventory = UnityEngine.Object.FindAnyObjectByType<Inventory>();
             if (inventory == null) Debug.LogWarning("No Inventory in the scene yet. Assign it to the CropBoss.");
 
@@ -92,7 +91,7 @@ namespace RushedCrops.Editor
             var settings = new SerializedObject(boss);
             settings.FindProperty("model").objectReferenceValue = model.transform;
             settings.FindProperty("inventory").objectReferenceValue = inventory;
-            settings.FindProperty("seedBagPrefab").objectReferenceValue = bag;
+            settings.FindProperty("dropPrefab").objectReferenceValue = bag;
             SerializedProperty drops = settings.FindProperty("drops");
             drops.arraySize = FarmPlotSetup.CropAssets.Length;
             for (int i = 0; i < FarmPlotSetup.CropAssets.Length; i++)
@@ -147,48 +146,6 @@ namespace RushedCrops.Editor
             }
             if (changed) importer.SaveAndReimport();
             AssetDatabase.SaveAssets();
-        }
-
-        // A small tied sack. The bag's look ray target is a trigger, so it blocks nothing.
-        public static SeedDrop SeedBag()
-        {
-            EnsureFolder("Assets/_Game/Prefabs/Boss");
-            var root = new GameObject("PFB_SeedBag");
-            try
-            {
-                Material canvas = Load("Canvas"), darkWood = Load("DarkWood");
-                Part(root.transform, "Sack", PrimitiveType.Sphere, new Vector3(0f, 0.2f, 0f), new Vector3(0.45f, 0.4f, 0.45f), canvas);
-                Part(root.transform, "Tie", PrimitiveType.Cylinder, new Vector3(0f, 0.42f, 0f), new Vector3(0.14f, 0.03f, 0.14f), darkWood);
-                Part(root.transform, "Top", PrimitiveType.Sphere, new Vector3(0f, 0.5f, 0f), new Vector3(0.2f, 0.14f, 0.2f), canvas);
-                var trigger = root.AddComponent<SphereCollider>();
-                trigger.isTrigger = true;
-                trigger.center = new Vector3(0f, 0.28f, 0f);
-                trigger.radius = 0.4f;
-                root.AddComponent<SeedDrop>();
-                return PrefabUtility.SaveAsPrefabAsset(root, SeedBagPath).GetComponent<SeedDrop>();
-            }
-            finally
-            {
-                UnityEngine.Object.DestroyImmediate(root);
-            }
-        }
-
-        private static void Part(Transform parent, string name, PrimitiveType shape, Vector3 position, Vector3 scale, Material material)
-        {
-            GameObject part = GameObject.CreatePrimitive(shape);
-            part.name = name;
-            part.transform.SetParent(parent, false);
-            part.transform.localPosition = position;
-            part.transform.localScale = scale;
-            part.GetComponent<MeshRenderer>().sharedMaterial = material;
-            UnityEngine.Object.DestroyImmediate(part.GetComponent<Collider>());
-        }
-
-        private static Material Load(string name)
-        {
-            var material = AssetDatabase.LoadAssetAtPath<Material>(Cartoon + name + ".mat");
-            if (material == null) throw new InvalidOperationException("Missing material " + Cartoon + name + ".mat");
-            return material;
         }
 
         private static void EnsureFolder(string path)

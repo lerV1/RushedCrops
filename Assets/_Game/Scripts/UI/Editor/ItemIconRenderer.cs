@@ -18,14 +18,14 @@ namespace RushedCrops.Editor
     {
         private const string IconFolder = "Assets/_Game/Textures/UI/Icons";
         private const string IconsAsset = "Assets/_Game/Data/DA_ItemIcons.asset";
-        private const string SeedSack = "Assets/_Game/Models/Farm/SeedSack.fbx";
+        internal const string SeedSack = "Assets/_Game/Models/Farm/SeedSack.fbx";
         private const string Pack = "Assets/Holotna/Medieval Rural/Prefabs/";
         private const int Size = 128;
 
         // The model for each item, how to turn it so it reads well in a small square, and how much of
         // it to show: 1 fits the whole model, less zooms in on its top (the hoe's long handle would
         // otherwise shrink the blade to a few pixels).
-        private static readonly (ResourceType item, string model, Vector3 turn, float zoom)[] Models =
+        internal static readonly (ResourceType item, string model, Vector3 turn, float zoom)[] Models =
         {
             (ResourceType.Carrots, "Assets/_Game/Prefabs/Crops/PFB_Carrot01.prefab", new Vector3(0f, 60f, 25f), 1f),
             (ResourceType.Tomatoes, "Assets/_Game/Models/Crops/Tomato01.fbx", new Vector3(0f, 0f, 0f), 1f),
@@ -41,7 +41,7 @@ namespace RushedCrops.Editor
         };
 
         // Seeds show the sack with the crop they grow into.
-        private static readonly (ResourceType seeds, ResourceType crop)[] Seeds =
+        internal static readonly (ResourceType seeds, ResourceType crop)[] Seeds =
         {
             (ResourceType.CarrotSeeds, ResourceType.Carrots), (ResourceType.TomatoSeeds, ResourceType.Tomatoes),
             (ResourceType.BeetSeeds, ResourceType.Beets), (ResourceType.CabbageSeeds, ResourceType.Cabbages),

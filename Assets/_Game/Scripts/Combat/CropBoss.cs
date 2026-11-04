@@ -5,7 +5,7 @@ using UnityEngine;
 // A giant angry carrot planted beside the crop field. It never moves: it stands on its
 // dirt mound and takes hits from the hatchet. Its Health counts the damage and HitFlash
 // flashes it; this script wobbles it on each hit and, when it dies, sinks it into the
-// ground and throws out a bag of seeds for each entry in Drops.
+// ground and throws out seeds (an ItemDrop) for each entry in Drops.
 // Looking at it shows its name and health. Killing it tells GameManager the boss is beaten.
 [RequireComponent(typeof(Health))]
 public class CropBoss : MonoBehaviour, IInteractable
@@ -25,8 +25,8 @@ public class CropBoss : MonoBehaviour, IInteractable
     [Header("Loot")]
     [Tooltip("The scene's shared Inventory. Picked-up seeds go into it.")]
     [SerializeField] private Inventory inventory;
-    [Tooltip("The seed bag that is thrown out for each entry below.")]
-    [SerializeField] private SeedDrop seedBagPrefab;
+    [Tooltip("The drop that is thrown out for each entry below.")]
+    [SerializeField] private ItemDrop dropPrefab;
     [SerializeField] private SeedDropEntry[] drops = Array.Empty<SeedDropEntry>();
     [Tooltip("How far from the boss, in metres, the bags land.")]
     [SerializeField, Min(0.5f)] private float dropRadius = 2.2f;
@@ -110,9 +110,9 @@ public class CropBoss : MonoBehaviour, IInteractable
     // Throws one bag per entry, spread evenly round the boss.
     public void DropSeeds()
     {
-        if (seedBagPrefab == null || inventory == null)
+        if (dropPrefab == null || inventory == null)
         {
-            Debug.LogError($"{name} needs a seed bag prefab and the Inventory to drop seeds.", this);
+            Debug.LogError($"{name} needs a drop prefab and the Inventory to drop seeds.", this);
             return;
         }
 
@@ -125,8 +125,8 @@ public class CropBoss : MonoBehaviour, IInteractable
             }
             float angle = (start + 360f * i / drops.Length) * Mathf.Deg2Rad;
             Vector3 landing = transform.position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * dropRadius;
-            SeedDrop bag = Instantiate(seedBagPrefab, transform.position + Vector3.up * 2f, Quaternion.identity, transform.parent);
-            bag.Launch(inventory, drops[i].crop, drops[i].amount, landing);
+            ItemDrop bag = Instantiate(dropPrefab, transform.position + Vector3.up * 2f, Quaternion.identity, transform.parent);
+            bag.Launch(inventory, drops[i].crop.SeedResource, drops[i].amount, landing);
         }
     }
 
