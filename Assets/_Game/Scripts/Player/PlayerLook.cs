@@ -44,8 +44,10 @@ public class PlayerLook : MonoBehaviour
     private void OnEnable()
     {
         lookAction.action.Enable();
+#if !UNITY_WEBGL || UNITY_EDITOR
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+#endif
     }
 
     private void OnDisable()
@@ -57,6 +59,14 @@ public class PlayerLook : MonoBehaviour
 
     private void Update()
     {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        // Browsers release the pointer on Escape or when switching tabs.
+        if (Cursor.lockState != CursorLockMode.Locked)
+        {
+            LookDelta = Vector2.zero;
+            return;
+        }
+#endif
         Vector2 input = lookAction.action.ReadValue<Vector2>();
 
         // Mouse delta is already "per frame". The stick is a direction, so scale it by frame time.

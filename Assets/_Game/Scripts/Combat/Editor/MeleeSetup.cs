@@ -7,18 +7,16 @@ namespace RushedCrops.Editor
 {
     // Sets up melee combat:
     //   the player prefab gets a hatchet model in the right hand and a MeleeAttack,
-    //   and SC_Farm gets a straw practice dummy with a hatchet stuck in a chopping block beside it.
+    //   and SC_Farm gets a hatchet stuck in a chopping block for the player to pick up.
     // The map builder calls Place, and both steps can be run again from the menu.
     public static class MeleeSetup
     {
-        public const string RootName = "Practice dummy";
-        public const string DummyName = "Dummy";
+        public const string RootName = "Hatchet block";
         private const string PlayerPrefab = "Assets/_Game/Prefabs/Player/PFB_Player.prefab";
         private const string HatchetPrefab = "Assets/_Game/Prefabs/Tools/PFB_Hatchet01.prefab";
         private const string HandPath = "CameraRoot/Main Camera/HandsRoot/HandRight/Rig/Forearm/Hand";
         private const string CameraPath = "CameraRoot/Main Camera";
         private const string Pack = "Assets/Holotna/Medieval Rural/Prefabs/";
-        private const string Cartoon = "Assets/_Game/Materials/Cartoon/";
         private static readonly Vector3 Spot = new Vector3(-34.5f, 0f, -17f); // open grass west of the tool stump
         private const float FacingYaw = 41f;                                  // looks toward the spawn point
 
@@ -85,10 +83,10 @@ namespace RushedCrops.Editor
             Debug.Log("The player can now swing the hatchet.");
         }
 
-        [MenuItem("Rushed Crops/Combat/Place practice dummy")]
+        [MenuItem("Rushed Crops/Combat/Place hatchet block")]
         public static void PlaceInScene()
         {
-            if (Application.isPlaying) throw new InvalidOperationException("Place the dummy outside Play.");
+            if (Application.isPlaying) throw new InvalidOperationException("Place the hatchet block outside Play.");
             var farm = GameObject.Find(FarmWorldBuilder.RootName)?.transform.Find(FarmWorldBuilder.FarmGroup);
             if (farm == null) throw new InvalidOperationException("Open SC_Farm with the farm map built first.");
             Place(farm);
@@ -101,14 +99,12 @@ namespace RushedCrops.Editor
             if (old != null) Undo.DestroyObjectImmediate(old.gameObject);
 
             var root = new GameObject(RootName);
-            Undo.RegisterCreatedObjectUndo(root, "Place practice dummy");
+            Undo.RegisterCreatedObjectUndo(root, "Place hatchet block");
             root.transform.SetParent(parent, false);
             root.transform.position = ToolStumpSetup.Ground(Spot);
             root.transform.rotation = Quaternion.Euler(0f, FacingYaw, 0f);
 
-            BuildDummy(root.transform);
-
-            // The hatchet, blade down in a chopping block beside the dummy.
+            // The hatchet, blade down in a chopping block.
             var block = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Pack + "Wood/ChoppingBlock01.prefab"), root.transform);
             block.transform.position = ToolStumpSetup.Ground(root.transform.TransformPoint(new Vector3(1.4f, 0f, 0.2f)));
             block.transform.localRotation = Quaternion.Euler(0f, 30f, 0f);
@@ -125,65 +121,6 @@ namespace RushedCrops.Editor
             hatchet.transform.position = blockTop - lean * new Vector3(0f, 0.2f, 0f);
             ToolStumpSetup.AddPickup(hatchet, ToolType.Hatchet, "hatchet");
             return root;
-        }
-
-        // A straw dummy on a post: health, a hit flash, knockback, and a reset on Interact.
-        // Its body, arms, head and base are separate colliders on one Health, so a swing that
-        // touches several of them must still count as one hit.
-        private static void BuildDummy(Transform parent)
-        {
-            var dummy = new GameObject(DummyName);
-            dummy.transform.SetParent(parent, false);
-            dummy.transform.localPosition = Vector3.up * 0.02f;
-
-            var body = dummy.AddComponent<Rigidbody>();
-            body.mass = 20f;
-            body.linearDamping = 0f;
-            body.constraints = RigidbodyConstraints.FreezeRotation; // pushed across the ground, never tipped over
-            body.interpolation = RigidbodyInterpolation.Interpolate;
-            body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-
-            var health = dummy.AddComponent<Health>();
-            var healthSettings = new SerializedObject(health);
-            healthSettings.FindProperty("maxHealth").intValue = 100;
-            healthSettings.ApplyModifiedPropertiesWithoutUndo();
-            dummy.AddComponent<Knockback>();
-            dummy.AddComponent<HitFlash>();
-            dummy.AddComponent<PracticeDummy>();
-
-            Material straw = Load("Straw"), canvas = Load("Canvas"), lightWood = Load("LightWood"), darkWood = Load("DarkWood");
-            Part(dummy.transform, "Base", PrimitiveType.Cylinder, new Vector3(0f, 0.05f, 0f), new Vector3(0.7f, 0.05f, 0.7f), darkWood, Collision.Box);
-            Part(dummy.transform, "Post", PrimitiveType.Cylinder, new Vector3(0f, 0.6f, 0f), new Vector3(0.09f, 0.55f, 0.09f), lightWood, Collision.None);
-            Part(dummy.transform, "Body", PrimitiveType.Capsule, new Vector3(0f, 1.2f, 0f), new Vector3(0.5f, 0.45f, 0.4f), straw, Collision.Keep);
-            Part(dummy.transform, "Arms", PrimitiveType.Cube, new Vector3(0f, 1.42f, 0f), new Vector3(1.15f, 0.13f, 0.13f), straw, Collision.Keep);
-            Part(dummy.transform, "Head", PrimitiveType.Sphere, new Vector3(0f, 1.86f, 0f), Vector3.one * 0.4f, canvas, Collision.Keep);
-            Part(dummy.transform, "Left eye", PrimitiveType.Sphere, new Vector3(-0.07f, 1.9f, 0.18f), Vector3.one * 0.06f, darkWood, Collision.None);
-            Part(dummy.transform, "Right eye", PrimitiveType.Sphere, new Vector3(0.07f, 1.9f, 0.18f), Vector3.one * 0.06f, darkWood, Collision.None);
-        }
-
-        private enum Collision { None, Keep, Box }
-
-        private static void Part(Transform parent, string name, PrimitiveType shape, Vector3 position, Vector3 scale, Material material, Collision collision)
-        {
-            GameObject part = GameObject.CreatePrimitive(shape);
-            part.name = name;
-            part.transform.SetParent(parent, false);
-            part.transform.localPosition = position;
-            part.transform.localScale = scale;
-            part.GetComponent<MeshRenderer>().sharedMaterial = material;
-            if (collision != Collision.Keep)
-            {
-                // A flat cylinder's capsule collider is rounded underneath, so the base gets a box to stand on.
-                UnityEngine.Object.DestroyImmediate(part.GetComponent<Collider>());
-                if (collision == Collision.Box) part.AddComponent<BoxCollider>();
-            }
-        }
-
-        private static Material Load(string name)
-        {
-            var material = AssetDatabase.LoadAssetAtPath<Material>(Cartoon + name + ".mat");
-            if (material == null) throw new InvalidOperationException("Missing material " + Cartoon + name + ".mat");
-            return material;
         }
 
         private static float TopOf(GameObject go)

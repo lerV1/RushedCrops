@@ -7,7 +7,6 @@ using UnityEngine;
 // A movement script on the same object must leave the velocity alone until IsActive
 // is false again, or it would overwrite the push on the next physics step:
 //   if (knockback.IsActive) return;   // at the top of the mover's FixedUpdate
-// PracticeDummy does this.
 [RequireComponent(typeof(Rigidbody))]
 public class Knockback : MonoBehaviour
 {

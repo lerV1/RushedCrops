@@ -207,8 +207,7 @@ namespace RushedCrops.Editor
                     ResourceTypes.DisplayName(item) + " has no picture. Run Rushed Crops > UI > Render item icons.");
         }
 
-        // The hatchet swing needs its MeleeAttack, and the practice dummy needs everything a hit uses:
-        // Health for damage, HitFlash, Knockback with a Rigidbody, and the hatchet waiting beside it.
+        // The hatchet swing needs its MeleeAttack, and the hatchet must be waiting in its chopping block.
         private static void ValidateMelee(GameObject player, Transform garden)
         {
             var melee = player.GetComponent<MeleeAttack>();
@@ -218,16 +217,11 @@ namespace RushedCrops.Editor
                 "PlayerTools needs the player's MeleeAttack assigned. Run Rushed Crops > Combat > Set up player melee.");
 
             Transform group = garden.Find(MeleeSetup.RootName);
-            Require(group != null, "The practice dummy is missing. Run Rushed Crops > Combat > Place practice dummy.");
-            Transform dummy = group.Find(MeleeSetup.DummyName);
-            Require(dummy != null && dummy.GetComponent<PracticeDummy>() != null && dummy.GetComponent<HitFlash>() != null
-                && dummy.GetComponent<Knockback>() != null && !dummy.GetComponent<Rigidbody>().isKinematic
-                && dummy.GetComponentsInChildren<Collider>().Length > 1,
-                "The practice dummy is incomplete. Run Rushed Crops > Combat > Place practice dummy.");
+            Require(group != null, "The hatchet block is missing. Run Rushed Crops > Combat > Place hatchet block.");
             bool hatchet = false;
             foreach (ToolPickup pickup in group.GetComponentsInChildren<ToolPickup>(true))
                 if (pickup.Tool == ToolType.Hatchet && pickup.GetComponent<Collider>() != null) hatchet = true;
-            Require(hatchet, "The hatchet is missing beside the practice dummy. Run Rushed Crops > Combat > Place practice dummy.");
+            Require(hatchet, "The hatchet is missing from its chopping block. Run Rushed Crops > Combat > Place hatchet block.");
         }
 
         // CI creates a downloadable Windows player only after the scene checks pass.
