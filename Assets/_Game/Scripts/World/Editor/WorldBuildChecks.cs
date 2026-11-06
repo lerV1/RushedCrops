@@ -23,7 +23,7 @@ namespace RushedCrops.Editor
                 scene = EditorSceneManager.OpenScene(FarmWorldBuilder.ScenePath);
             }
             Validate(scene);
-            Debug.Log("World validation passed: landmarks, player, crop field, tools, river water, merchant, hotbar pictures, colliders, materials and environment references.");
+            Debug.Log("World validation passed: landmarks, player, crop field, tools, river water, merchant, hotbar pictures, barn repairs, colliders, materials and environment references.");
         }
 
         private static void Validate(Scene scene)
@@ -61,6 +61,7 @@ namespace RushedCrops.Editor
             ValidateMerchant(root.transform);
             ValidateMelee(player, garden);
             ValidateItemIcons(UnityEngine.Object.FindAnyObjectByType<InventoryHud>());
+            ValidateBarn(garden);
 
             var cycle = UnityEngine.Object.FindAnyObjectByType<EnvironmentCycle>();
             Require(cycle != null, "The day/night cycle is missing.");
@@ -193,6 +194,38 @@ namespace RushedCrops.Editor
 
         // Every hotbar slot needs its picture, and DA_ItemIcons needs a picture for everything the
         // hotbar can hold. Coins are left out: they are counted at the top of the screen, not held.
+        // The barn must be saved unrepaired, with one job for each repair GameManager counts.
+        // Every job costs coins (the player pays to unlock and fix the barn), and the last one waits for the boss.
+        private static void ValidateBarn(Transform garden)
+        {
+            const string fix = " Run Rushed Crops > Farming > Set up barn repair.";
+            Transform barn = garden.Find(BarnRepairSetup.BarnName);
+            var repair = barn != null ? barn.GetComponent<BarnRepair>() : null;
+            Require(repair != null, "The barn can't be repaired: BarnRepair is missing." + fix);
+            Require(new SerializedObject(repair).FindProperty("inventory").objectReferenceValue != null, "The barn needs the Inventory assigned." + fix);
+            var manager = UnityEngine.Object.FindAnyObjectByType<GameManager>();
+            Require(manager != null, "The GameManager is missing, so barn repairs can't be counted.");
+            Require(repair.Jobs.Count == manager.BarnRepairStages,
+                "The barn has " + repair.Jobs.Count + " repair jobs but GameManager expects " + manager.BarnRepairStages + ".");
+            Require(repair.Jobs[repair.Jobs.Count - 1].needsBossBeaten, "The last barn repair should wait for the carrot boss." + fix);
+
+            foreach (BarnRepair.Job job in repair.Jobs)
+            {
+                bool costsCoins = false;
+                foreach (ResourceAmount line in job.cost)
+                    costsCoins |= line.type == ResourceType.Coins && line.amount > 0;
+                Require(!string.IsNullOrEmpty(job.name) && costsCoins, "Every barn repair must cost coins: " + job.name + "." + fix);
+                foreach (BarnRepair.Part part in job.parts)
+                {
+                    Require(part.part != null, job.name + " has a missing part." + fix);
+                    bool looksBroken = part.part.gameObject.activeSelf == part.shownBroken
+                        && Vector3.Distance(part.part.localPosition, part.brokenPosition) < 0.01f
+                        && Quaternion.Angle(part.part.localRotation, Quaternion.Euler(part.brokenRotation)) < 0.5f;
+                    Require(looksBroken, "The barn should be saved unrepaired, but " + part.part.name + " looks fixed." + fix);
+                }
+            }
+        }
+
         private static void ValidateItemIcons(InventoryHud hud)
         {
             var settings = new SerializedObject(hud);
