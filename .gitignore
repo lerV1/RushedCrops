@@ -115,5 +115,3 @@ InitTestScene*.unity*
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
 
-# CodeGraph indexes and WAL files are generated separately on each machine.
-/.codegraph/
