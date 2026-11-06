@@ -1,6 +1,7 @@
 # Keep only the Unity project folders and this ignore file in the repository.
 /*
 !/.gitignore
+!/HOW-TO-PLAY.md
 !/Assets/
 !/Packages/
 !/ProjectSettings/
