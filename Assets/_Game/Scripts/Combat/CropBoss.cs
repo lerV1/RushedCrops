@@ -2,11 +2,8 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-// A giant angry carrot planted beside the crop field. It never moves: it stands on its
-// dirt mound and takes hits from the hatchet. Its Health counts the damage and HitFlash
-// flashes it; this script wobbles it on each hit and, when it dies, sinks it into the
-// ground and throws out seeds (an ItemDrop) for each entry in Drops.
-// Looking at it shows its name and health. Killing it tells GameManager the boss is beaten.
+// A giant angry carrot beside the crop field. The hatchet hurts it; when it dies it sinks, throws out
+// seeds (ItemDrop) and GameManager records the boss as beaten.
 [RequireComponent(typeof(Health))]
 public class CropBoss : MonoBehaviour, IInteractable
 {
@@ -66,15 +63,11 @@ public class CropBoss : MonoBehaviour, IInteractable
         health.Died -= OnDied;
     }
 
-    // ---------- Look prompt: information only ----------
-
     public bool CanInteract => false;
 
     public string GetPrompt() => health.IsDead ? null : $"{displayName} ({health.CurrentHealth}/{health.MaxHealth} HP)";
 
     public void Interact(PlayerInteractor player) { }
-
-    // ---------- Hits and death ----------
 
     private void OnDamaged(int amount) => wobbleLeft = WobbleTime;
 
@@ -107,7 +100,6 @@ public class CropBoss : MonoBehaviour, IInteractable
         StartCoroutine(Sink());
     }
 
-    // Throws one bag per entry, spread evenly round the boss.
     public void DropSeeds()
     {
         if (dropPrefab == null || inventory == null)

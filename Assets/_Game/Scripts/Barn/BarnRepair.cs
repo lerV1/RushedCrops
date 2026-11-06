@@ -3,21 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// The inherited barn and the work it needs. Look at any part of the barn and press Interact to pay
-// for the next job, one at a time:
-//   1. Unlock the barn: coins only. The boards come off the door and it swings open.
-//   2. Patch the roof: coins and wood. The missing roof boards drop into place.
-//   3. Straighten the east wall: coins, wood and stone, and only after the carrot boss is beaten.
-// Every job costs money. Wood and stone come from the merchant.
-//
-// GameManager counts the finished jobs. This script spends the cost, tells GameManager, and moves
-// the barn's parts from their broken look to their fixed look when GameManager says a job is done.
-// Rushed Crops > Farming > Set up barn repair builds it; the costs can be changed in the Inspector.
+// The inherited barn. Press Interact on it to pay for the next job: unlock it (coins), patch the roof
+// (coins, wood), then straighten the east wall (coins, wood, stone, after the boss). GameManager counts jobs.
 public class BarnRepair : MonoBehaviour, IInteractable
 {
-    // One piece of the barn that changes when its job is done: boards that come off,
-    // a door that swings open, roof boards that drop into place, a wall pushed upright.
-    // Positions and rotations are local to the piece's parent.
+    // A barn piece that changes when its job is done. Positions and rotations are local to its parent.
     [Serializable]
     public class Part
     {
@@ -110,8 +100,6 @@ public class BarnRepair : MonoBehaviour, IInteractable
         }
     }
 
-    // ---------- Interact (E) ----------
-
     public bool CanInteract
     {
         get
@@ -157,11 +145,9 @@ public class BarnRepair : MonoBehaviour, IInteractable
 
         message = $"{job.doneMessage}! Barn repairs {JobsDone + 1}/{jobs.Length}";
         messageUntil = Time.time + messageSeconds;
-        // GameManager raises BarnRepaired, and OnBarnRepaired moves the parts.
         GameManager.Instance.RecordBarnRepair();
     }
 
-    // "25 coins, 4 wood"
     private static string CostText(IReadOnlyList<ResourceAmount> cost)
     {
         var lines = new List<string>();
@@ -172,7 +158,6 @@ public class BarnRepair : MonoBehaviour, IInteractable
         return string.Join(", ", lines);
     }
 
-    // "15 more coins and 2 more wood", or null when the player has everything.
     private string MissingText(IReadOnlyList<ResourceAmount> cost)
     {
         var lines = new List<string>();
@@ -187,8 +172,6 @@ public class BarnRepair : MonoBehaviour, IInteractable
         return lines.Count == 0 ? null : string.Join(" and ", lines);
     }
 
-    // ---------- How the barn looks ----------
-
     private void OnBarnRepaired(int repairsDone)
     {
         int index = repairsDone - 1;
@@ -198,8 +181,7 @@ public class BarnRepair : MonoBehaviour, IInteractable
         }
     }
 
-    // Puts every part straight into place: jobs before `done` look fixed, the rest look broken.
-    // The setup menu also calls this to save the barn in its broken state.
+    // Jobs before `done` look fixed, the rest broken. The setup menu uses this to save the barn broken.
     public void ShowRepairs(int done)
     {
         for (int i = 0; i < jobs.Length; i++)
@@ -229,7 +211,6 @@ public class BarnRepair : MonoBehaviour, IInteractable
 
         for (float t = 0f; t < 1f; t += Time.deltaTime / moveSeconds)
         {
-            // Fast at first, then settling into place.
             float eased = 1f - (1f - t) * (1f - t) * (1f - t);
             foreach (Part part in job.parts)
             {

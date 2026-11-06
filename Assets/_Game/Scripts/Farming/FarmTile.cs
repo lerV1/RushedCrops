@@ -1,13 +1,7 @@
 using UnityEngine;
 
-// One tilled square of the crop field. The FarmField creates it where the player tills with the
-// hoe and passes on what the player does while aiming at it. Each square is farmed on its own:
-//   1. Tilled by the hoe when it is created.        Untilled -> Tilled
-//   2. Plant the seeds in hand (Interact).          Tilled   -> Growing
-//   3. Water it with the watering can (Use Tool).   A dry crop doesn't grow.
-//      A crop that needs water twice grows half way, dries out and waits for the second watering.
-//   4. Harvest it when ripe (Interact). The soil stays tilled, ready for the next seed.
-// The field it belongs to (FarmPlot on a parent) holds the Inventory, the crops and the growth speed.
+// One tilled square of the crop field: plant it (Interact), water it (Use Tool) and harvest it when ripe.
+// A crop that needs two waterings grows half way, dries out and waits for the second.
 public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
 {
     public enum TileState { Untilled, Tilled, Growing, Ripe }
@@ -28,16 +22,13 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
 
     public TileState State { get; private set; } = TileState.Untilled;
 
-    // The crop in the square, or null when nothing is planted.
     public CropData Crop { get; private set; }
 
     // 0 just planted, 1 ripe.
     public float Progress => Crop == null ? 0f : Mathf.Clamp01(growTime / Crop.GrowSeconds);
 
-    // True while the soil is watered and the crop is growing.
     public bool IsWet { get; private set; }
 
-    // A planted crop waiting for the watering can.
     public bool NeedsWater => State == TileState.Growing && !IsWet;
 
     private void Awake()
@@ -71,7 +62,6 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
             SetWet(false);
         }
 
-        // Split the grow time evenly between the stages; the last stage is the ripe plant.
         int lastStage = Crop.StageCount - 1;
         if (Progress >= 1f)
         {
@@ -86,8 +76,6 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
             ShowStage(stage);
         }
     }
-
-    // ---------- Interact (E): plant and harvest ----------
 
     public bool CanInteract
     {
@@ -144,8 +132,6 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
         }
     }
 
-    // ---------- Use Tool (left click): till and water ----------
-
     public string GetToolPrompt(PlayerTools tools)
     {
         if (tools.Equipped == ToolType.Hoe && State == TileState.Untilled)
@@ -186,9 +172,6 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
         }
     }
 
-    // ---------- Farming ----------
-
-    // Digs the square so it can be planted. Returns false if it is already tilled.
     public bool Till()
     {
         if (State != TileState.Untilled)
@@ -201,8 +184,6 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
         return true;
     }
 
-    // Plants one seed of this crop. Returns false and changes nothing if the square isn't
-    // tilled and empty, the bed can't grow that crop or the player has no seeds.
     public bool TryPlant(CropData crop)
     {
         if (State != TileState.Tilled || !plot.CanGrow(crop) || !plot.Inventory.TrySpend(crop.SeedResource, 1))
@@ -219,7 +200,6 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
         return true;
     }
 
-    // Waters a dry crop so it grows its next share. Returns false if nothing here needs water.
     public bool Water()
     {
         if (!NeedsWater)
@@ -232,8 +212,6 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
         return true;
     }
 
-    // Picks a ripe crop into the Inventory. The soil stays tilled. Returns false and leaves
-    // the crop in the ground if nothing is ripe or the hotbar has no room for the harvest.
     public bool Harvest()
     {
         if (State != TileState.Ripe || !plot.Inventory.Add(Crop.HarvestResource, Crop.HarvestAmount))
@@ -250,7 +228,6 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
         return true;
     }
 
-    // Darker soil while watered.
     private void SetWet(bool wet)
     {
         IsWet = wet;

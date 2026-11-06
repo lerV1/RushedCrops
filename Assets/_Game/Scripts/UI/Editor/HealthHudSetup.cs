@@ -7,11 +7,8 @@ using Object = UnityEngine.Object;
 
 namespace RushedCrops.Editor
 {
-    // Builds the player's health HUD inside the player prefab, as its own canvas "HUD_Health":
-    //   top-left   a health panel in the same style as the coin counter: heart icon, bar, "5 / 5"
-    //   whole view a red screen-edge flash and a floating "-2" when the player is hurt
-    // The canvas sorts below the other HUDs, so the flash never covers their text.
-    // Safe to run again: it replaces HUD_Health and keeps the rest of the prefab.
+    // Builds the player's health HUD (HUD_Health) in the player prefab: a bar top-left, and a red screen-edge
+    // flash with a floating "-2" when hurt. Safe to run again.
     public static class HealthHudSetup
     {
         public const string CanvasName = "HUD_Health";
@@ -68,7 +65,6 @@ namespace RushedCrops.Editor
             Stretch(flash.rectTransform, Vector2.zero, Vector2.zero);
             flash.enabled = false;
 
-            // Health panel, top-left, matching the coin counter in the top-right.
             Image panel = MakeImage("Health", root, BuiltinSprite("UISprite"), PanelColor);
             panel.type = Image.Type.Sliced;
             Place(panel.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(32f, -32f), new Vector2(400f, 72f));

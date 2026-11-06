@@ -2,8 +2,6 @@ using System;
 using UnityEngine;
 
 // Brings the player back at the latest checkpoint when their Health runs out.
-// Health does the counting; this component only decides what happens on death.
-// Checkpoint triggers call SetCheckpoint as the player walks through them.
 [RequireComponent(typeof(Health))]
 [RequireComponent(typeof(Rigidbody))]
 public class RespawnController : MonoBehaviour
@@ -37,7 +35,6 @@ public class RespawnController : MonoBehaviour
         health.Died -= OnDied;
     }
 
-    // The next respawn happens here.
     public void SetCheckpoint(Transform checkpoint)
     {
         if (checkpoint == null)
@@ -53,7 +50,6 @@ public class RespawnController : MonoBehaviour
     {
         Vector3 position = CurrentCheckpoint != null ? CurrentCheckpoint.position : startPosition;
 
-        // Stop all movement so the player doesn't keep falling or sliding after the move.
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
         // Move both the body and the transform, so the camera snaps there this frame

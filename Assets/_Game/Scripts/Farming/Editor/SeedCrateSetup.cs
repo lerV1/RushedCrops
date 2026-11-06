@@ -5,9 +5,7 @@ using UnityEngine;
 
 namespace RushedCrops.Editor
 {
-    // Places a row of open crates outside the garden fence, just east of the gate: one crate per crop,
-    // with that crop's vegetable on top so the player can tell them apart. Each crate gives seeds
-    // (see SeedCrate). The map builder calls this, and it can be run again from the menu.
+    // Places one open crate of seeds per crop east of the garden gate, each with its vegetable on top.
     public static class SeedCrateSetup
     {
         public const string RootName = "Seed crates";
@@ -68,7 +66,6 @@ namespace RushedCrops.Editor
             crate.transform.position += Vector3.up * (position.y + 0.01f - BoundsOf(crate).min.y);
             float top = TopOf(crate);
 
-            // The crop's vegetable resting on top of the crate, as a label.
             GameObject produce = Instantiate(ProduceModel(crop.CropType), holder.transform);
             // "(on ...)" marks it as resting on something, so the ground check leaves it alone.
             produce.name = crop.DisplayName + " (on crate)";

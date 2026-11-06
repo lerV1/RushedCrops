@@ -1,12 +1,7 @@
 using UnityEngine;
 
-// Lets hits push this object away. MeleeAttack calls Push with a velocity.
-// The push starts at full speed and slows to nothing over Duration.
-//
-// While IsActive is true, this component sets the Rigidbody's sideways velocity.
-// A movement script on the same object must leave the velocity alone until IsActive
-// is false again, or it would overwrite the push on the next physics step:
-//   if (knockback.IsActive) return;   // at the top of the mover's FixedUpdate
+// Lets hits push this object away; the push slows to nothing over Duration.
+// A mover on the same object must leave the velocity alone while IsActive is true.
 [RequireComponent(typeof(Rigidbody))]
 public class Knockback : MonoBehaviour
 {
@@ -17,10 +12,8 @@ public class Knockback : MonoBehaviour
     private Vector3 pushVelocity;
     private float timeLeft;
 
-    // True while a push is moving this object.
     public bool IsActive => timeLeft > 0f;
 
-    // The push's speed right now: full speed at the start, zero at the end.
     public Vector3 CurrentVelocity => IsActive ? pushVelocity * (timeLeft / duration) : Vector3.zero;
 
     private void Awake()
@@ -32,15 +25,13 @@ public class Knockback : MonoBehaviour
         }
     }
 
-    // Starts a push. Only the sideways part is used, so a hit never launches the object into the air.
-    // A new push replaces one that is still going.
+    // Only the sideways part is used, so a hit never launches the object into the air.
     public void Push(Vector3 velocity)
     {
         pushVelocity = new Vector3(velocity.x, 0f, velocity.z);
         timeLeft = duration;
     }
 
-    // Ends the push straight away, for example when the object is reset.
     public void Stop()
     {
         timeLeft = 0f;

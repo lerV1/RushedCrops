@@ -1,11 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-// The player's health bar: a fill that shrinks the moment they are hurt, and a lighter
-// "recent damage" strip behind it that waits a moment and then drains down to match,
-// so a big hit is easy to read. Health owns the numbers; this only draws them.
-//
-// The fill and the strip are stretched by their right anchor, so they need no special sprite.
+// The player's health bar: the fill shrinks at once, and a lighter strip behind it drains down after a moment.
 public class HealthBarHud : MonoBehaviour
 {
     [Tooltip("The Health to show, usually the player's.")]

@@ -1,11 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// Finds what the player is looking at and uses it when Interact is pressed.
-// Sits on the Player. A ray goes out from the camera; the first collider it hits counts if it
-// (or a parent) has a component that implements IInteractable, IToolTarget or IHighlightable.
-// The prompt under the crosshair shows what the tool in hand would do there ("[LMB] Till soil"),
-// and otherwise what Interact would do ("[E] Plant carrot seed").
+// Finds what the player is looking at, shows its prompt under the crosshair and uses it on Interact.
 public class PlayerInteractor : MonoBehaviour
 {
     [SerializeField] private InputActionReference interactAction;
@@ -36,7 +32,6 @@ public class PlayerInteractor : MonoBehaviour
 
     private IHighlightable highlighted;
 
-    // What the player is looking at this frame, or null.
     public IInteractable Target { get; private set; }
     public IToolTarget ToolTarget { get; private set; }
 
@@ -74,7 +69,6 @@ public class PlayerInteractor : MonoBehaviour
         UpdatePrompt();
     }
 
-    // Looks again right now and returns what the tool in hand would be used on.
     public IToolTarget FindToolTarget()
     {
         Look();
@@ -84,7 +78,6 @@ public class PlayerInteractor : MonoBehaviour
     private void Look()
     {
         Collider hit = null;
-        // Starting inside the player's own capsule is fine: a ray never hits the collider it starts in.
         // The first thing hit always blocks what is behind it; it only counts if it is within reach.
         float maxDistance = Mathf.Max(reach, longReach);
         if (Physics.Raycast(viewPoint.position, viewPoint.forward, out RaycastHit info, maxDistance, lookMask, QueryTriggerInteraction.Collide))
@@ -160,7 +153,6 @@ public class PlayerInteractor : MonoBehaviour
         }
     }
 
-    // GetBindingDisplayString(0) is the first binding: E for Interact, LMB for Use Tool.
     private static string KeyName(InputActionReference action) =>
         action != null ? action.action.GetBindingDisplayString(0) : "?";
 

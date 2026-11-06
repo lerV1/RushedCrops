@@ -1,14 +1,8 @@
 using System;
 using UnityEngine;
 
-// Hit points for anything that can be hurt: the player, enemies, animals or bosses.
-// It only counts health. What happens on death (respawning, dropping loot, playing an
-// animation) belongs in another component that listens to the Died event.
-//
-// Example:
-//   health.HealthChanged += (current, max) => Debug.Log($"{current}/{max}");
-//   health.Died += OnDied;
-//   health.TakeDamage(20);
+// Hit points for anything that can be hurt. What happens on death belongs in a component
+// that listens to Died.
 public class Health : MonoBehaviour
 {
     [SerializeField, Min(1)] private int maxHealth = 100;
@@ -23,7 +17,6 @@ public class Health : MonoBehaviour
     public event Action<int, int> HealthChanged;
     // How much health a hit actually removed (a 5 damage hit on 2 health reports 2).
     public event Action<int> Damaged;
-    // Raised once when health reaches zero. RestoreFullHealth brings the object back.
     public event Action Died;
 
     private void Awake()
@@ -33,7 +26,6 @@ public class Health : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
-        // Zero or negative damage would do nothing or heal, so it is ignored.
         // A dead object can't be hurt again, which also stops Died firing twice.
         if (amount <= 0 || IsDead)
         {

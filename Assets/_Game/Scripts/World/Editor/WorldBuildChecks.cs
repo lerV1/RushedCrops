@@ -83,8 +83,7 @@ namespace RushedCrops.Editor
                 Require(material != null && material.shader != null && material.shader.name != "Hidden/InternalErrorShader", "Missing material or shader on " + renderer.name);
         }
 
-        // The player starts empty-handed, so the hoe and the watering can must be waiting on the
-        // stump, both tools must be in the hand for when they are picked up, and the river must fill the can.
+        // The hoe and watering can wait on the stump, and the river fills the can.
         private static void ValidateTools(GameObject player, Transform garden, Transform world)
         {
             Require(player.GetComponent<PlayerTools>() != null, "The player can't hold tools: PlayerTools is missing.");
@@ -105,7 +104,7 @@ namespace RushedCrops.Editor
                 Require(found, "The " + tool + " is missing from the tool stump. Run Rushed Crops > Farming > Place tool stump.");
             }
 
-            // Seeds come from the crates by the gate until the market sells them: one crate per crop.
+            // One seed crate per crop.
             Transform crates = garden.Find(SeedCrateSetup.RootName);
             Require(crates != null, "The seed crates are missing. Run Rushed Crops > Farming > Place seed crates.");
             foreach (string path in FarmPlotSetup.CropAssets)
@@ -128,8 +127,7 @@ namespace RushedCrops.Editor
             Require(waterCollider.excludeLayers.value == ~0, "The river's collider must touch nothing, or it would block the player.");
         }
 
-        // The merchant must stand at the stall with a price list, be linked to the Inventory and his
-        // trading window, and the scene needs an EventSystem or the window's buttons can't be clicked.
+        // The merchant needs his price list and trading window, and an EventSystem so its buttons work.
         private static void ValidateMerchant(Transform world)
         {
             const string fix = " Run Rushed Crops > Market > Set up merchant.";
@@ -160,9 +158,7 @@ namespace RushedCrops.Editor
                 "The scene has no EventSystem, so the trading window's buttons can't be clicked." + fix);
         }
 
-        // The crop field must cover the garden with the Inventory, every crop (each with all its growth
-        // models), the wet soil colour, the outline that follows the aim and the square it copies when tilling.
-        // It is saved with no tilled squares: those are made while playing.
+        // The crop field needs its settings and models, and is saved with no tilled squares.
         private static void ValidateCropField(Transform garden)
         {
             const string fix = " Run Rushed Crops > Farming > Set up crop field.";
@@ -192,10 +188,7 @@ namespace RushedCrops.Editor
             Require(fieldObject.GetComponentsInChildren<FarmTile>(true).Length == 0, "The crop field should be saved with no tilled squares.");
         }
 
-        // Every hotbar slot needs its picture, and DA_ItemIcons needs a picture for everything the
-        // hotbar can hold. Coins are left out: they are counted at the top of the screen, not held.
-        // The barn must be saved unrepaired, with one job for each repair GameManager counts.
-        // Every job costs coins (the player pays to unlock and fix the barn), and the last one waits for the boss.
+        // The barn is saved unrepaired, with one job per repair GameManager counts. Every job costs coins.
         private static void ValidateBarn(Transform garden)
         {
             const string fix = " Run Rushed Crops > Farming > Set up barn repair.";
@@ -226,6 +219,7 @@ namespace RushedCrops.Editor
             }
         }
 
+        // Every hotbar slot needs its picture, and every item but coins needs one in DA_ItemIcons.
         private static void ValidateItemIcons(InventoryHud hud)
         {
             var settings = new SerializedObject(hud);

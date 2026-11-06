@@ -2,16 +2,11 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-// The player's on-screen inventory: a coin counter and the 5-slot hotbar.
-// Each slot shows a picture of what is in the matching Inventory slot and how many, or nothing
-// when it is empty. An item without a picture shows its name instead.
-// The selected slot lights up and its item's name shows above the hotbar.
-//
-// It only redraws when the Inventory raises Changed, instead of every frame.
+// The coin counter and the 5-slot hotbar. Each slot shows its item's picture (or name) and count.
+// It redraws only when the Inventory changes.
 public class InventoryHud : MonoBehaviour
 {
-    // The UI for one hotbar slot. Slot 1 in the list shows Inventory slot 1, and so on.
-    // [Serializable] makes each slot appear as a foldout in the Inspector.
+    // The UI for one hotbar slot.
     [Serializable]
     private class HotbarSlot
     {
@@ -46,14 +41,12 @@ public class InventoryHud : MonoBehaviour
             return;
         }
 
-        // Listen for changes, then draw once so the HUD is right from the first frame.
         inventory.Changed += Refresh;
         Refresh();
     }
 
     private void OnDisable()
     {
-        // Always unsubscribe what you subscribed, or the Inventory keeps calling a disabled HUD.
         if (inventory != null)
         {
             inventory.Changed -= Refresh;

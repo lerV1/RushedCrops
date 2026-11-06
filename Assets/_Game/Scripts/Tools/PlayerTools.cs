@@ -3,13 +3,8 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// What the player holds, chosen from the hotbar.
-//   Keys 1-5 select a hotbar slot. A tool in that slot goes into the hand;
-//   anything else (seeds, crops, an empty slot) leaves the hand empty.
-//   Use Tool (left click / right trigger) uses the tool in hand on whatever is under the crosshair.
-//   With empty hands it throws a punch. With the hatchet it swings a melee attack (MeleeAttack).
-// Tools live in the Inventory's hotbar like every other item; this script only reads them.
-// Sits on the Player, next to PlayerInteractor.
+// What the player holds: the tool in the selected hotbar slot, used with Use Tool on whatever is aimed at.
+// Empty hands punch, and the hatchet swings a melee attack.
 public class PlayerTools : MonoBehaviour
 {
     [Header("Input")]
@@ -33,18 +28,15 @@ public class PlayerTools : MonoBehaviour
     [Tooltip("How many squares one full can waters. It starts empty; fill it at the river.")]
     [SerializeField, Min(1)] private int canCapacity = 6;
 
-    // Keys 1-5 pick hotbar slots 0-4.
     private static readonly Key[] SlotKeys = { Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5 };
 
     public ToolType Equipped { get; private set; } = ToolType.None;
 
     public Inventory Inventory => inventory;
 
-    // Waterings left in the can.
     public int WaterLeft { get; private set; }
     public int CanCapacity => canCapacity;
 
-    // Raised when the tool in hand changes or the can's water changes.
     public event Action Changed;
 
     private void OnEnable()
@@ -76,7 +68,6 @@ public class PlayerTools : MonoBehaviour
 
     private void ReadSlotKeys()
     {
-        // Keyboard.current is null when no keyboard is connected.
         Keyboard keyboard = Keyboard.current;
         if (keyboard == null)
         {
@@ -92,8 +83,7 @@ public class PlayerTools : MonoBehaviour
         }
     }
 
-    // Keeps the hand matching the selected slot. While the arm is busy (mid-swing)
-    // the switch waits, and this tries again next frame.
+    // While the arm is mid-swing the switch waits for the next frame.
     private void HoldSelectedTool()
     {
         // Finish the whole swing, recovery included, before the weapon can be put away.
@@ -112,8 +102,6 @@ public class PlayerTools : MonoBehaviour
 
     public bool Has(ToolType tool) => tool == ToolType.None || inventory.GetCount(ResourceTypes.FromTool(tool)) > 0;
 
-    // Called by a ToolPickup. The tool goes into the hotbar like any other item.
-    // Returns false if the player already has it or the hotbar is full.
     public bool GiveTool(ToolType tool)
     {
         if (Has(tool))
@@ -123,7 +111,6 @@ public class PlayerTools : MonoBehaviour
         return inventory.Add(ResourceTypes.FromTool(tool), 1);
     }
 
-    // Takes one watering from the can. Returns false if it is empty.
     public bool UseWater()
     {
         if (WaterLeft <= 0)
@@ -166,7 +153,6 @@ public class PlayerTools : MonoBehaviour
                 UseOnTarget(pourDelay);
                 break;
             case ToolType.Hatchet:
-                // MeleeAttack says no while the last swing is still recovering.
                 if (melee.TryAttack())
                 {
                     hands.PlaySwing();
@@ -175,7 +161,6 @@ public class PlayerTools : MonoBehaviour
         }
     }
 
-    // If the crosshair is on something this tool works on, use it when the tool gets there.
     private void UseOnTarget(float delay)
     {
         IToolTarget target = interactor.FindToolTarget();

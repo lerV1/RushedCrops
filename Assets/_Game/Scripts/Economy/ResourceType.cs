@@ -1,11 +1,8 @@
 using System;
 using System.Text;
 
-// Every kind of item the shared inventory can hold.
-// Coins are kept in a wallet; everything else takes up hotbar slots.
-// Seeds and harvested crops are counted separately for each crop in CropType.
-// New items go at the end of the list: Unity saves these as numbers, so inserting
-// one in the middle would change what existing crop assets point to.
+// Every kind of item the inventory holds. Coins go in the wallet; everything else takes hotbar slots.
+// Add new items at the end: Unity saves these as numbers.
 public enum ResourceType
 {
     Coins,
@@ -28,10 +25,8 @@ public enum ResourceType
     Hatchet
 }
 
-// Small helpers for questions about an item that don't depend on any one inventory.
 public static class ResourceTypes
 {
-    // The tool an item puts in the player's hand, or ToolType.None for things like seeds.
     public static ToolType ToTool(ResourceType item)
     {
         switch (item)
@@ -83,8 +78,6 @@ public static class ResourceTypes
 }
 
 // One line of a price or cost, such as "10 Wood".
-// [Serializable] lets Unity show lists of these in the Inspector,
-// so shop prices and repair costs can be edited without changing code.
 [Serializable]
 public struct ResourceAmount
 {

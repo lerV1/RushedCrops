@@ -4,12 +4,8 @@ using UnityEngine;
 
 namespace RushedCrops.Editor
 {
-    // Puts every tool model in the right hand so its handle runs through the closed fist.
-    // The hand is posed in its grip (the GripIdle clip), the middle of the fist is found from the
-    // curl of the fingers, and each tool is lined up along the knuckles:
-    //   Hoe, Hatchet   - handle through the fist on a slight diagonal, blade facing away from the player.
-    //   WateringCan    - held by its back handle (the model's origin), upright, spout towards the middle.
-    // Run it again after changing the grip pose or a tool model.
+    // Puts each tool model in the right hand with its handle through the closed fist (found from the finger
+    // curl in the GripIdle pose). Run it again after changing the grip pose or a tool model.
     public static class HandToolFitter
     {
         public const string PlayerPrefab = "Assets/_Game/Prefabs/Player/PFB_Player.prefab";
@@ -77,7 +73,6 @@ namespace RushedCrops.Editor
             }
         }
 
-        // Tips a direction towards another by some degrees, keeping it in the plane they share.
         private static Vector3 Lean(Vector3 from, Vector3 towards, float degrees)
         {
             Vector3 axis = Vector3.Cross(from, towards).normalized;

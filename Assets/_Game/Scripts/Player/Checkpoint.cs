@@ -1,7 +1,6 @@
 using UnityEngine;
 
-// A trigger zone that becomes the player's respawn point when they walk through it.
-// Put it on an object with a collider marked Is Trigger.
+// A trigger that becomes the player's respawn point when they walk through it.
 [RequireComponent(typeof(Collider))]
 public class Checkpoint : MonoBehaviour
 {
@@ -12,7 +11,7 @@ public class Checkpoint : MonoBehaviour
 
     public Transform SpawnPoint => spawnPoint != null ? spawnPoint : transform;
 
-    // Unity calls Reset when the component is first added, so the collider starts as a trigger.
+    // Makes the collider a trigger when the component is added.
     private void Reset()
     {
         GetComponent<Collider>().isTrigger = true;

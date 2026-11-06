@@ -9,15 +9,8 @@ using Object = UnityEngine.Object;
 
 namespace RushedCrops.Editor
 {
-    // Editor-only authoring tool. The saved scene contains the map; nothing is spawned at runtime.
-    //
-    // Layout (X = east, Z = north):
-    //   Farm (spawn)   south-west  - inherited barn, farmyard and a fenced garden of six plots
-    //   Market         centre      - merchant stall where crops are sold and seeds bought
-    //   Logging camp   east        - wood source, surrounded by the densest forest
-    //   Quarry         north       - stone source, reached over the only river bridge
-    // Every building and prop stands on a flat pad; paths are painted into the terrain mesh,
-    // so nothing floats above or sinks below the ground.
+    // Builds the saved map (editor only). Farm and spawn south-west, market in the centre, logging camp east,
+    // quarry north over the only river bridge. X is east, Z is north.
     public static class FarmWorldBuilder
     {
         public const string ScenePath = "Assets/_Game/Scenes/SC_Farm.unity";
@@ -35,7 +28,6 @@ namespace RushedCrops.Editor
         private const int GroundLayer = 6;
         private const float HalfWidth = 80f, HalfDepth = 70f;
 
-        // Landmarks.
         private static readonly Vector2 BarnSpot = V(-41, -2);
         private static readonly Vector2 Yard = V(-36, -15);
         public static readonly Vector2 Garden = V(-25, -31);
@@ -297,7 +289,6 @@ namespace RushedCrops.Editor
             return shade < 0.35f ? Surface.MeadowShade : shade > 0.68f ? Surface.MeadowGold : shade > 0.52f ? Surface.MeadowLight : Surface.Meadow;
         }
 
-        // Gentle meadow undulation, hills along the map rim, flat pads/paths and a carved river channel.
         public static float Height(float x, float z)
         {
             Vector2 p = V(x, z);
@@ -323,7 +314,6 @@ namespace RushedCrops.Editor
             Ribbon("River water", River, 7.6f, parent, Materials["Water"], -0.65f);
             RiverWaterSetup.SetUp(parent.Find("River water").gameObject);
 
-            // A few smooth stones along the banks, never near the bridge or a path.
             for (int i = 4; i < River.Length - 1; i += 7)
             {
                 if (Mathf.Abs(River[i].x) > 70f) continue;
@@ -369,12 +359,11 @@ namespace RushedCrops.Editor
 
         private static void BuildFarm(Transform parent)
         {
-            // The inherited barn, saved broken: the player pays to unlock it and repair it (see BarnRepair).
+            // The inherited barn, saved broken until the player pays to repair it (see BarnRepair).
             var barn = Prefab("Barn01", parent, BarnSpot, 0f, 1.5f);
             barn.name = BarnRepairSetup.BarnName;
             BarnRepairSetup.SetUp(barn);
 
-            // Repair materials stacked neatly by the east wall, ladder against the wall.
             float eastWall = BarnSpot.x + 3.5f * 1.5f;
             Prefab("Other/Ladder01", parent, V(eastWall + 0.12f, BarnSpot.y + 1f), 90f, 1.6f);
             Transform planks = new GameObject("Repair plank stack").transform;
@@ -390,7 +379,6 @@ namespace RushedCrops.Editor
             Prefab("Transport/Wheelbarrow01", parent, V(BarnSpot.x - 4.6f, BarnSpot.y - 10.5f), 150f, 1.5f);
             Lantern(parent, V(Yard.x + 7f, Yard.y + 4f), 270f);
 
-            // The crop field fills the fenced garden: the player tills squares anywhere on its soil.
             FarmPlotSetup.SetUpField(parent, Garden, GardenHalfSize);
             Vector2 min = Garden - GardenHalfSize, max = Garden + GardenHalfSize;
             FenceLine(parent, V(min.x, min.y), V(max.x, min.y));
@@ -414,7 +402,6 @@ namespace RushedCrops.Editor
 
         private static void BuildMarket(Transform parent)
         {
-            // Stall on the south edge of the plaza, facing the paths that meet here.
             Transform stall = new GameObject("Merchant stall").transform;
             stall.SetParent(parent, false);
             stall.position = At(Market + V(0, -6.5f));
@@ -434,7 +421,6 @@ namespace RushedCrops.Editor
             Prefab("Containers/Barrel01", parent, Market + V(3.9f, -5.2f), 0f, 1.5f);
             Prefab("Containers/Crate01", parent, Market + V(-3.9f, -5.4f), 15f, 1.6f);
 
-            // Merchant's storehouse, door towards the plaza.
             Vector2 store = Market + V(-9f, 6.5f);
             Prefab("Storage01", parent, store, YawTowards(store, Market), 1.2f);
             Prefab("Transport/Cart01", parent, Market + V(9f, 3f), -110f, 1.35f);
@@ -447,14 +433,12 @@ namespace RushedCrops.Editor
 
         private static void BuildQuarry(Transform parent)
         {
-            // A horseshoe of cliff faces open to the south, backed into the rim hills.
             for (int i = 0; i < 7; i++)
             {
                 float angle = Mathf.Lerp(15f, 165f, i / 6f) * Mathf.Deg2Rad;
                 Vector2 spot = Quarry + V(Mathf.Cos(angle) * 13.5f, Mathf.Sin(angle) * 11.5f + 2f);
                 Prefab("Rocks/QuarryFace01", parent, spot, YawTowards(spot, Quarry) + 180f, R(1.6f, 2.0f));
             }
-            // Loose boulders at the cliff foot, cut blocks stacked by the cart.
             for (int i = 0; i < 8; i++)
             {
                 float angle = R(25f, 155f) * Mathf.Deg2Rad;
@@ -488,7 +472,6 @@ namespace RushedCrops.Editor
             Prefab("Wood/ChoppingBlock01", parent, Logging + V(4.5f, -2.5f), 0f, 2f);
             Prefab("Wood/FirewoodPile03", parent, shed + V(-3.6f, 0f), 0f, 2.2f);
             Prefab("Transport/Cart01", parent, Logging + V(-4f, 6f), 80f, 1.5f);
-            // Stumps where trees have already been felled, at the edge of the clearing.
             for (int i = 0; i < 8; i++)
             {
                 float angle = (i * 45f + R(-12f, 12f)) * Mathf.Deg2Rad;
@@ -520,7 +503,6 @@ namespace RushedCrops.Editor
                 string tree = pine ? conifer[random.Next(conifer.Length)] : broadleaf[random.Next(broadleaf.Length)];
                 Prefab("Vegetation/" + tree, parent, p, R(0f, 360f), R(1.3f, 2.0f));
             }
-            // Willows along the river.
             for (int i = 2; i < River.Length - 1; i += 9)
             {
                 if (Mathf.Abs(River[i].x) > 70f) continue;
@@ -528,7 +510,6 @@ namespace RushedCrops.Editor
                 Vector2 bank = River[i] + V(-direction.y, direction.x) * (i % 2 == 0 ? 9.5f : -9.5f);
                 if (!Blocked(bank, 3f, 6f, 8.5f)) Prefab("Vegetation/Willow0" + random.Next(1, 3), parent, bank, R(0f, 360f), R(1.2f, 1.5f));
             }
-            // A handful of rock groups in the open meadow.
             for (int group = 0; group < 10; group++)
             {
                 Vector2 centre = V(R(-70f, 70f), R(-60f, 60f));
@@ -536,7 +517,6 @@ namespace RushedCrops.Editor
                 for (int i = 0; i < 3; i++)
                     Prefab("Rocks/Stone0" + random.Next(1, 4), parent, centre + V(R(-1.6f, 1.6f), R(-1.6f, 1.6f)), R(0f, 360f), R(1.2f, 2.6f) / (i + 1));
             }
-            // Low grass and bushes in the meadows; flowers framing the farm and market.
             string[] small = { "Grass01", "Grass02", "Fern01", "Bush01" };
             for (int i = 0; i < 520; i++)
             {

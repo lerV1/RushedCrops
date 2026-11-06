@@ -5,9 +5,7 @@ using UnityEngine;
 
 namespace RushedCrops.Editor
 {
-    // Lets the player fill the watering can from the river. The water surface gets a collider the
-    // look ray can hit, which touches nothing, so the player still wades through, and a WaterSource.
-    // The map builder calls this after making the river, and it can be run again from the menu.
+    // Gives the river a WaterSource and a collider the look ray can hit but the player wades through.
     public static class RiverWaterSetup
     {
         public const string WaterPath = "02_River/River water";

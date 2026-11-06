@@ -4,11 +4,8 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-// The trading window that opens when the player talks to the merchant.
-// Left column: crops he buys, with how many the player has and today's price.
-// Right column: what he sells, with today's price. Every price is shown before the player clicks.
-// While it is open the player can't walk, look round or swing, and the mouse cursor is free.
-// Esc, E or the gamepad's East button closes it.
+// The merchant's trading window: crops he buys on the left, what he sells on the right, with today's prices.
+// While it is open the player can't move and the cursor is free. Esc, E or the gamepad's East button closes it.
 public class MerchantShopUI : MonoBehaviour
 {
     [Header("Window")]
@@ -41,11 +38,9 @@ public class MerchantShopUI : MonoBehaviour
     public bool IsOpen => panel != null && panel.activeSelf;
     public Merchant Merchant => merchant;
 
-    // Raised when the window opens (with the merchant) and when it closes.
     public event System.Action<Merchant> Opened;
     public event System.Action<Merchant> Closed;
 
-    // One line of the window and the item it trades.
     private class Row
     {
         public ResourceType item;
@@ -134,7 +129,6 @@ public class MerchantShopUI : MonoBehaviour
         Closed?.Invoke(merchant);
     }
 
-    // The merchant's own words, shown under the title while the window is open.
     public void ShowRemark(string text)
     {
         if (remark != null)
@@ -143,7 +137,6 @@ public class MerchantShopUI : MonoBehaviour
         }
     }
 
-    // Shows what happened after a trade. The merchant can also put his own words here.
     public void ShowMessage(string text)
     {
         if (message != null)
@@ -171,8 +164,6 @@ public class MerchantShopUI : MonoBehaviour
         return (keyboard != null && (keyboard.escapeKey.wasPressedThisFrame || keyboard.eKey.wasPressedThisFrame))
             || (gamepad != null && gamepad.buttonEast.wasPressedThisFrame);
     }
-
-    // ---------- Rows ----------
 
     private void BuildRows()
     {

@@ -1,11 +1,7 @@
 using UnityEngine;
 
-// Briefly colours this object when its Health takes damage, then puts its look back.
-// It only changes how the object looks; Health does the counting.
-// The colour goes on with a MaterialPropertyBlock, so the shared materials, and every
-// other object that uses them, are never changed.
-//
-// Example: call flash.Flash() to flash without any damage.
+// Briefly colours this object when its Health takes damage. It uses a MaterialPropertyBlock,
+// so shared materials are never changed.
 public class HitFlash : MonoBehaviour
 {
     // Colour property names: URP's Lit shader uses _BaseColor, most other shaders use _Color.
@@ -20,7 +16,6 @@ public class HitFlash : MonoBehaviour
     [Tooltip("How long, in seconds, the flash lasts.")]
     [SerializeField, Min(0.01f)] private float flashDuration = 0.12f;
 
-    // Each renderer's own property block from before the flash, put back when it ends.
     private MaterialPropertyBlock[] originals;
     private MaterialPropertyBlock flashBlock;
     private float timeLeft;
@@ -66,8 +61,6 @@ public class HitFlash : MonoBehaviour
 
     private void Update() => Advance(Time.deltaTime);
 
-    // Moves the flash timer on by this many seconds and ends the flash when time is up.
-    // Update calls this every frame.
     public void Advance(float seconds)
     {
         if (!IsFlashing)
@@ -114,7 +107,6 @@ public class HitFlash : MonoBehaviour
         timeLeft = flashDuration;
     }
 
-    // Ends a flash now and restores the look from before it.
     public void StopFlash()
     {
         if (!IsFlashing)

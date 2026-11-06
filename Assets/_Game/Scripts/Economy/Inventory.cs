@@ -2,22 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-// The one shared store of the player's things: a coin wallet and a 5-slot hotbar.
-// Farming, the shop and barn repairs should all hold a reference to this component
-// (drag it into their Inspector field) and change counts only through the methods below.
-//
-// Hotbar rules:
-//   - Something picked up first tops up slots that already hold the same item,
-//     then goes into the first empty slot.
-//   - A slot holds up to 99 of one item (Max Stack). Tools don't stack: one per slot.
-//   - The selected slot (keys 1-5) is what the player holds.
-//
-// Every method that changes a count checks its input first and returns false
-// if the change is not allowed, so a count can never go below zero and
-// nothing is half added or half spent.
-//
-// DefaultExecutionOrder(-100) runs this Awake before other scripts,
-// so the inventory is ready when they first read it.
+// The coin wallet and 5-slot hotbar shared by farming, the merchant and the barn.
+// Every change goes through these methods, which refuse bad amounts, so nothing is half added or spent.
 [DefaultExecutionOrder(-100)]
 public class Inventory : MonoBehaviour
 {
@@ -34,12 +20,11 @@ public class Inventory : MonoBehaviour
     private readonly int[] slotCounts = new int[SlotCount];
     private int coins;
 
-    /// <summary>The hotbar slot the player is holding, 0 to 4.</summary>
     public int SelectedSlot { get; private set; }
 
     public int MaxStack => maxStack;
 
-    // Raised after any count or the selected slot changes. A HUD can listen to this instead of checking every frame.
+    // Raised after any change, so the HUD only redraws then.
     public event Action Changed;
 
     private void Awake()
@@ -47,7 +32,6 @@ public class Inventory : MonoBehaviour
         ResetToStartingAmounts();
     }
 
-    /// <summary>Empties the hotbar, selects the first slot and sets coins back to the starting amount.</summary>
     public void ResetToStartingAmounts()
     {
         Array.Clear(slotCounts, 0, SlotCount);
@@ -56,9 +40,6 @@ public class Inventory : MonoBehaviour
         Changed?.Invoke();
     }
 
-    // ---------- Reading ----------
-
-    /// <summary>How many of this item the player has right now, across every slot.</summary>
     public int GetCount(ResourceType type)
     {
         if (type == ResourceType.Coins)
@@ -81,25 +62,17 @@ public class Inventory : MonoBehaviour
 
     public int GetSlotCount(int slot) => slotCounts[slot];
 
-    /// <summary>The item in a slot. Check IsSlotEmpty first: an empty slot has no item.</summary>
+    // Check IsSlotEmpty first: an empty slot has no item.
     public ResourceType GetSlotItem(int slot) => slotItems[slot];
 
-    /// <summary>
-    /// Gives the item in the selected slot. Returns false when that slot is empty.
-    /// Example: if (inventory.TryGetSelectedItem(out ResourceType item)) { ... }
-    /// </summary>
     public bool TryGetSelectedItem(out ResourceType item)
     {
         item = slotItems[SelectedSlot];
         return slotCounts[SelectedSlot] > 0;
     }
 
-    /// <summary>How many of this item fit in one slot. Tools don't stack.</summary>
     public int MaxStackFor(ResourceType type) => ResourceTypes.IsTool(type) ? 1 : maxStack;
 
-    // ---------- Selecting ----------
-
-    /// <summary>Selects a hotbar slot, 0 to 4. Returns false for a slot that doesn't exist.</summary>
     public bool SelectSlot(int slot)
     {
         if (slot < 0 || slot >= SlotCount)
@@ -117,9 +90,7 @@ public class Inventory : MonoBehaviour
         return true;
     }
 
-    // ---------- Adding ----------
-
-    /// <summary>True when this many fit right now. Coins always fit; other items need hotbar room.</summary>
+    // Coins always fit; other items need hotbar room.
     public bool CanAdd(ResourceType type, int amount)
     {
         if (!IsValidAmount(amount))
@@ -134,11 +105,7 @@ public class Inventory : MonoBehaviour
         return RoomFor(type) >= amount;
     }
 
-    /// <summary>
-    /// Adds a positive amount. All of it goes in or none of it does: returns false and
-    /// changes nothing if the hotbar is too full or the amount is invalid.
-    /// Example: inventory.Add(ResourceType.Wood, 3);
-    /// </summary>
+    // All of it goes in or none of it does.
     public bool Add(ResourceType type, int amount)
     {
         if (!CanAdd(type, amount))
@@ -183,7 +150,6 @@ public class Inventory : MonoBehaviour
         return true;
     }
 
-    // How many more of this item the hotbar can take.
     private int RoomFor(ResourceType type)
     {
         int stackLimit = MaxStackFor(type);
@@ -202,15 +168,11 @@ public class Inventory : MonoBehaviour
         return room;
     }
 
-    // ---------- Spending ----------
-
-    /// <summary>True when the player has at least this many. Invalid amounts return false.</summary>
     public bool CanAfford(ResourceType type, int amount)
     {
         return IsValidAmount(amount) && GetCount(type) >= amount;
     }
 
-    /// <summary>True when the player has everything in the cost list at once.</summary>
     public bool CanAfford(IReadOnlyList<ResourceAmount> cost)
     {
         Dictionary<ResourceType, long> totals = TotalCost(cost);
@@ -229,10 +191,6 @@ public class Inventory : MonoBehaviour
         return true;
     }
 
-    /// <summary>
-    /// Spends one item. Returns false and changes nothing if the amount is
-    /// invalid or the player has too few. Example: if (inventory.TrySpend(ResourceType.Coins, 5)) { ... }
-    /// </summary>
     public bool TrySpend(ResourceType type, int amount)
     {
         if (!CanAfford(type, amount))
@@ -245,20 +203,14 @@ public class Inventory : MonoBehaviour
         return true;
     }
 
-    /// <summary>
-    /// Spends a cost made of several items, such as 10 Wood and 5 Stone.
-    /// The whole cost is checked before anything is taken, so either every
-    /// item is spent or none of them are.
-    /// </summary>
+    // Either the whole cost is spent or none of it.
     public bool TrySpend(IReadOnlyList<ResourceAmount> cost)
     {
-        // Step 1: check everything. Nothing has been changed yet, so returning here is safe.
         if (!CanAfford(cost))
         {
             return false;
         }
 
-        // Step 2: we know the player can pay for all of it, so take every line.
         foreach (ResourceAmount line in cost)
         {
             Remove(line.type, line.amount);
@@ -267,9 +219,7 @@ public class Inventory : MonoBehaviour
         return true;
     }
 
-    // Takes items the caller has already checked are there.
-    // The selected slot goes first (planting uses the seeds in hand), then the last slots first,
-    // so the stacks near the start of the hotbar stay full.
+    // The selected slot pays first (planting uses the seeds in hand), then the last slots.
     private void Remove(ResourceType type, int amount)
     {
         if (type == ResourceType.Coins)
@@ -285,7 +235,6 @@ public class Inventory : MonoBehaviour
         }
     }
 
-    // Takes up to amount from one slot if it holds this item, and returns how many are still to take.
     private int TakeFromSlot(int slot, ResourceType type, int amount)
     {
         if (slotCounts[slot] == 0 || slotItems[slot] != type)
@@ -298,9 +247,7 @@ public class Inventory : MonoBehaviour
         return amount - taken;
     }
 
-    // Adds up a cost list per item, so "3 Wood" listed twice counts as 6 Wood.
-    // Returns null when the list is empty or any line has an invalid amount.
-    // long (a bigger whole number) is used so very large costs can't overflow while adding.
+    // Totals per item, so "3 Wood" listed twice is 6. Null when the list is empty or an amount is bad.
     private Dictionary<ResourceType, long> TotalCost(IReadOnlyList<ResourceAmount> cost)
     {
         if (cost == null || cost.Count == 0)
@@ -322,7 +269,6 @@ public class Inventory : MonoBehaviour
         return totals;
     }
 
-    // Amounts must be whole numbers above zero. Adding or spending 0 or -5 is a bug in the caller.
     private bool IsValidAmount(int amount)
     {
         if (amount > 0)

@@ -1,13 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// The garden's crop field: a stretch of soil the player can farm anywhere, on a grid of squares.
-// Aim at the soil and an outline snaps to the square under the crosshair. Hold the hoe and use it
-// to till that square; a tilled square (FarmTile) is then planted, watered and harvested on its own.
-//
-// The field has no collider: it is an IAreaTarget, so PlayerInteractor hands it the point the look
-// ray hit on the ground and the field works out the square. Squares only exist once tilled.
-// Shared settings (Inventory, crops, growth speed, wet soil) are on the FarmPlot next to this.
+// The garden's crop field: any square of its soil can be tilled, and an outline shows the aimed square.
+// It has no collider: PlayerInteractor hands it the ground point (IAreaTarget). Squares exist once tilled.
 [RequireComponent(typeof(FarmPlot))]
 public class FarmField : MonoBehaviour, IAreaTarget, IInteractable, IToolTarget, IHighlightable
 {
@@ -32,10 +27,8 @@ public class FarmField : MonoBehaviour, IAreaTarget, IInteractable, IToolTarget,
 
     public Vector2Int GridSize => new Vector2Int(Mathf.Max(1, Mathf.FloorToInt(size.x / cellSize)), Mathf.Max(1, Mathf.FloorToInt(size.y / cellSize)));
 
-    // The square the player is aiming at.
     public Vector2Int AimedSquare => aimed;
 
-    // The tilled square at a grid position, or null.
     public FarmTile TileAt(Vector2Int square) => tiles.TryGetValue(square, out FarmTile tile) ? tile : null;
 
     private void Awake()
@@ -52,8 +45,6 @@ public class FarmField : MonoBehaviour, IAreaTarget, IInteractable, IToolTarget,
     private void OnEnable() => AreaTargets.All.Add(this);
 
     private void OnDisable() => AreaTargets.All.Remove(this);
-
-    // ---------- Aiming ----------
 
     public bool TryAim(Vector3 point)
     {
@@ -89,7 +80,6 @@ public class FarmField : MonoBehaviour, IAreaTarget, IInteractable, IToolTarget,
         cursor.transform.SetPositionAndRotation(SquareCentre(aimed), transform.rotation);
     }
 
-    // The middle of a square, on the ground.
     public Vector3 SquareCentre(Vector2Int square)
     {
         Vector3 local = new Vector3(
@@ -100,8 +90,6 @@ public class FarmField : MonoBehaviour, IAreaTarget, IInteractable, IToolTarget,
             ? hit.point
             : centre;
     }
-
-    // ---------- Interact (E): handed to the tilled square ----------
 
     public bool CanInteract => TileAt(aimed) is FarmTile tile && tile.CanInteract;
 
@@ -115,8 +103,6 @@ public class FarmField : MonoBehaviour, IAreaTarget, IInteractable, IToolTarget,
     {
         TileAt(aimed)?.Interact(player);
     }
-
-    // ---------- Use Tool (left click): till here, or hand it to the tilled square ----------
 
     public string GetToolPrompt(PlayerTools tools)
     {
@@ -155,7 +141,6 @@ public class FarmField : MonoBehaviour, IAreaTarget, IInteractable, IToolTarget,
         }
     }
 
-    // Digs a new square. Returns the square, or null if it is already tilled or something stands on it.
     public FarmTile Till(Vector2Int square)
     {
         if (tiles.ContainsKey(square) || IsBlocked(square))

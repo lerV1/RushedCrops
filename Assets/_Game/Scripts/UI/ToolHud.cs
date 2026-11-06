@@ -1,9 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-// A line above the hotbar showing the watering can's water, like "Water 3 / 6".
-// Hidden unless the can is in hand. Redraws only when PlayerTools changes.
-// The name of whatever is held is shown by InventoryHud.
+// Shows the watering can's water above the hotbar, like "Water 3 / 6", while the can is in hand.
 public class ToolHud : MonoBehaviour
 {
     [SerializeField] private PlayerTools tools;

@@ -1,9 +1,6 @@
 using UnityEngine;
 
-// An open crate of one crop's seeds by the garden gate. Look at it and press Interact to
-// put a handful of seeds into the hotbar. The crate never runs out, so it stands in for
-// buying seeds until the market sells them.
-// With a full hotbar nothing is taken and the prompt says so.
+// A crate of free seeds by the garden gate. Press Interact to take a handful; it never runs out.
 public class SeedCrate : MonoBehaviour, IInteractable
 {
     [Tooltip("The scene's shared Inventory. The seeds go into it.")]

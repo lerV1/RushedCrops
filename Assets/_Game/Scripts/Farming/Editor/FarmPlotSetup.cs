@@ -5,11 +5,8 @@ using UnityEngine;
 
 namespace RushedCrops.Editor
 {
-    // Builds the garden's crop field: one FarmField over the tilled soil inside the fence, with the
-    // shared FarmPlot settings (Inventory, crops, wet soil), the outline that follows the aimed square,
-    // and the square prefab (PFB_FarmTile) it copies wherever the player tills.
-    // The map builder calls this, and it can be run again from the menu. Running it also removes the
-    // old fixed planting beds from scenes made before the field existed.
+    // Builds the crop field inside the garden fence: FarmField and FarmPlot, the aiming outline and the
+    // square prefab (PFB_FarmTile) it copies wherever the player tills.
     public static class FarmPlotSetup
     {
         public static readonly string[] CropAssets =
@@ -63,7 +60,6 @@ namespace RushedCrops.Editor
             settings.ApplyModifiedProperties();
             AssignCrops(plot);
 
-            // The outline that follows the aimed square.
             var cursor = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(FrameModel), field.transform);
             cursor.name = "Cursor";
             foreach (Renderer r in cursor.GetComponentsInChildren<Renderer>())
@@ -81,7 +77,6 @@ namespace RushedCrops.Editor
             return field;
         }
 
-        // Gives the crop field the full crop list without rebuilding it, so hand edits stay.
         // Run this after adding a crop to CropAssets.
         [MenuItem("Rushed Crops/Farming/Update crops in crop field")]
         public static void UpdateCropsInField()

@@ -1,13 +1,8 @@
 using System;
 using UnityEngine;
 
-// Holds the game progress the other systems share: barn repairs and the boss.
-// Items and coins (and which hotbar slot is selected) live in Inventory, and
-// the player's health lives in their Health component (respawning is RespawnController's job).
-// Other scripts change this state through the methods below and listen to the events to update the HUD.
-//
-// DefaultExecutionOrder(-100) makes Unity run this Awake before the farming and combat
-// scripts, so progress is already set when they first read it.
+// Shared game progress: barn repairs, the boss and victory. Items live in Inventory, health in Health.
+// Runs before other scripts so the progress is set when they first read it.
 [DefaultExecutionOrder(-100)]
 public class GameManager : MonoBehaviour
 {
@@ -22,7 +17,6 @@ public class GameManager : MonoBehaviour
     public bool IsBossDefeated { get; private set; }
     public bool HasWon { get; private set; }
 
-    // Number of repairs finished so far.
     public event Action<int> BarnRepaired;
     public event Action BossDefeated;
     public event Action VictoryReached;
@@ -48,15 +42,12 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Puts progress back to how a new game starts.
     public void ResetState()
     {
         BarnRepairs = 0;
         IsBossDefeated = false;
         HasWon = false;
     }
-
-    // ---------- Barn, boss and victory ----------
 
     public void RecordBarnRepair()
     {
@@ -84,8 +75,7 @@ public class GameManager : MonoBehaviour
         CheckForVictory();
     }
 
-    // The prototype ends once the boss is beaten and every barn repair is done.
-    // The final repair needs rare materials from the boss region, so the boss always comes first.
+    // The game is won once the boss is beaten and every barn repair is done.
     private void CheckForVictory()
     {
         if (!HasWon && IsBossDefeated && IsBarnRepaired)

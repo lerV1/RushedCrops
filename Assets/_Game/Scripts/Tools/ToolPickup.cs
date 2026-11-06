@@ -1,8 +1,6 @@
 using UnityEngine;
 
-// A tool lying in the world, like the hoe stuck in the stump by the garden gate.
-// Look at it and press Interact to pick it up. It goes into the first free hotbar slot
-// and disappears from the world. With a full hotbar it stays where it is.
+// A tool lying in the world, like the hoe in the stump. Press Interact to put it in the hotbar.
 public class ToolPickup : MonoBehaviour, IInteractable
 {
     [SerializeField] private ToolType tool = ToolType.Hoe;

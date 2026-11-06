@@ -2,13 +2,8 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// Plays the first-person arm animations. Each arm has its own Animator:
-//   right arm (AC_HandRight): holds the tool in hand, swings the hoe, pours the watering can,
-//                             or punches with empty hands.
-//   left arm  (AC_HandLeft):  reaches out and grabs when the player presses Interact.
-// PlayerTools decides what the right arm does; this script only animates and shows the right tool.
-// Changing tools drops the arm below the screen, swaps the tool model while it's out of view,
-// and brings the arm back up.
+// Plays the first-person arm animations: the right arm holds, swings and pours the tool in hand (or punches),
+// the left arm grabs on Interact. Changing tools drops the arm out of view to swap the model.
 public class HandAnimator : MonoBehaviour
 {
     private static readonly int EquippedParam = Animator.StringToHash("Equipped");
@@ -56,7 +51,6 @@ public class HandAnimator : MonoBehaviour
 
     private void Start()
     {
-        // Start with empty hands.
         rightArm.SetBool(EquippedParam, false);
         rightArm.Play(IdleState, 0, 0f);
         ShowTool(ToolType.None);
@@ -80,13 +74,10 @@ public class HandAnimator : MonoBehaviour
         }
     }
 
-    // Swings the tool in hand (the arm's state picks the swing), or punches with empty hands.
     public void PlaySwing() => PlayRight(AttackTrigger);
 
     public void PlayPunch() => PlayRight(AttackTrigger);
 
-    // Tips the watering can forward: watering a crop (withWater shows the stream of drops),
-    // or dipping it in the river to fill it.
     public void PlayPour(bool withWater)
     {
         if (!IsResting(rightArm))
@@ -116,7 +107,6 @@ public class HandAnimator : MonoBehaviour
         }
     }
 
-    // Starts the animation for changing what is in the right hand. Returns false if the arm is busy.
     public bool SwitchTool(ToolType next)
     {
         if (next == shownTool || !IsResting(rightArm))
@@ -172,7 +162,6 @@ public class HandAnimator : MonoBehaviour
         }
     }
 
-    // True when the arm is standing still in its idle loop (open hand or gripping).
     private static bool IsResting(Animator arm)
     {
         if (arm.IsInTransition(0))

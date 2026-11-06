@@ -6,9 +6,7 @@ using UnityEngine;
 
 namespace RushedCrops.Editor
 {
-    // Places the cut tree stump by the garden gate where the player finds their tools:
-    // the hoe stuck blade-down in the stump and the watering can on the ground beside it.
-    // The map builder calls this, and it can be run again from the menu.
+    // Places the tree stump by the garden gate with the hoe stuck in it and the watering can beside it.
     public static class ToolStumpSetup
     {
         public const string RootName = "Tool stump";
@@ -45,7 +43,6 @@ namespace RushedCrops.Editor
             StyleStump(stump);
             float top = TopOf(stump);
 
-            // The hoe, blade down in the top of the stump with the handle leaning out.
             var hoeSource = FirstLod0(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Prefabs/Tools/PFB_Hoe01.prefab"));
             var hoe = new GameObject("Hoe pickup", typeof(MeshFilter), typeof(MeshRenderer));
             hoe.transform.SetParent(root.transform, false);
@@ -56,7 +53,6 @@ namespace RushedCrops.Editor
             hoe.transform.position = new Vector3(root.transform.position.x, top, root.transform.position.z) - lean * new Vector3(0f, 0.46f, 0f);
             AddPickup(hoe, ToolType.Hoe, "hoe");
 
-            // The watering can on the ground beside the stump, spout pointing away from the gate.
             var can = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Models/Tools/WateringCan.fbx"), root.transform);
             can.name = "Watering can pickup";
             can.transform.position = Ground(root.transform.position + new Vector3(0.6f, 0f, 0.15f)) + Vector3.up * 0.125f;

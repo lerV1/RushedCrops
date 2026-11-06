@@ -1,9 +1,6 @@
 using UnityEngine;
 
-// Everything that makes one crop different: which seed plants it, how long it grows,
-// what it looks like at each stage and what a harvest gives. There is one asset per crop
-// (DA_Carrot, DA_Tomato, DA_Beet, ...). A new kind of seed is a new asset, not new code.
-// Create one with Assets > Create > Rushed Crops > Crop Data.
+// One crop's settings: its seed, grow time, stage models and harvest. One asset per crop (DA_Carrot, ...).
 [CreateAssetMenu(fileName = "DA_NewCrop", menuName = "Rushed Crops/Crop Data")]
 public class CropData : ScriptableObject
 {
@@ -34,7 +31,6 @@ public class CropData : ScriptableObject
     public int StageCount => stageModels.Length;
     public int WaterNeeded => waterNeeded;
 
-    // The model for a growth stage, 0 being the first sprout.
     public GameObject GetStageModel(int stage)
     {
         return stageModels[Mathf.Clamp(stage, 0, stageModels.Length - 1)];

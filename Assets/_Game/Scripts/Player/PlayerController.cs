@@ -49,7 +49,6 @@ public class PlayerController : MonoBehaviour
         jumpAction.action.Disable();
     }
 
-    // Update is called once per frame
     void Update()
     {
         moveInput = moveAction.action.ReadValue<Vector2>();

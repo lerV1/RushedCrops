@@ -1,7 +1,6 @@
 using UnityEngine;
 
-// Water the player can fill the watering can from, like the river.
-// Hold the can, aim at the water and press Use Tool. Needs a collider the look ray can hit.
+// Water the can can be filled from, like the river. Needs a collider the look ray can hit.
 public class WaterSource : MonoBehaviour, IToolTarget
 {
     public string GetToolPrompt(PlayerTools tools)

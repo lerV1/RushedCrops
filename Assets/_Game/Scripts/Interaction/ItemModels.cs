@@ -1,8 +1,7 @@
 using System;
 using UnityEngine;
 
-// The 3D model for each item, shown when the item lies on the ground (ItemDrop).
-// One asset (DA_ItemModels) holds them all. Rushed Crops > Items > Set up item drops fills it.
+// The model shown for each item lying on the ground (DA_ItemModels).
 [CreateAssetMenu(fileName = "DA_ItemModels", menuName = "Rushed Crops/Item Models")]
 public class ItemModels : ScriptableObject
 {
@@ -17,7 +16,6 @@ public class ItemModels : ScriptableObject
 
     [SerializeField] private Entry[] models = new Entry[0];
 
-    /// <summary>The model for an item, or null if it has none.</summary>
     public GameObject Get(ResourceType item) => Find(item).model;
 
     public Vector3 TurnFor(ResourceType item) => Find(item).turn;

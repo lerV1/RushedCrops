@@ -9,11 +9,8 @@ using UnityEngine.UI;
 
 namespace RushedCrops.Editor
 {
-    // Makes a picture of every item from its 3D model, so the hotbar can
-    // show what an item looks like instead of only its name. Each model is rendered alone in an empty
-    // scene, against a see-through background, and saved as a sprite in Textures/UI/Icons.
-    // Seeds show the seed sack with a small picture of their crop in the corner. DA_ItemIcons lists the results.
-    // Run it again after adding an item or changing a model.
+    // Renders a picture of every item from its model into Textures/UI/Icons and lists them in DA_ItemIcons.
+    // Seeds show the seed sack with their crop in the corner. Run it again after changing a model.
     public static class ItemIconRenderer
     {
         private const string IconFolder = "Assets/_Game/Textures/UI/Icons";
@@ -22,9 +19,7 @@ namespace RushedCrops.Editor
         private const string Pack = "Assets/Holotna/Medieval Rural/Prefabs/";
         private const int Size = 128;
 
-        // The model for each item, how to turn it so it reads well in a small square, and how much of
-        // it to show: 1 fits the whole model, less zooms in on its top (the hoe's long handle would
-        // otherwise shrink the blade to a few pixels).
+        // Each item's model, how to turn it, and how much to show (below 1 zooms in on its top).
         internal static readonly (ResourceType item, string model, Vector3 turn, float zoom)[] Models =
         {
             (ResourceType.Carrots, "Assets/_Game/Prefabs/Crops/PFB_Carrot01.prefab", new Vector3(0f, 60f, 25f), 1f),
@@ -40,7 +35,6 @@ namespace RushedCrops.Editor
             (ResourceType.Hatchet, "Assets/_Game/Prefabs/Tools/PFB_Hatchet01.prefab", new Vector3(0f, 90f, -40f), 1f),
         };
 
-        // Seeds show the sack with the crop they grow into.
         internal static readonly (ResourceType seeds, ResourceType crop)[] Seeds =
         {
             (ResourceType.CarrotSeeds, ResourceType.Carrots), (ResourceType.TomatoSeeds, ResourceType.Tomatoes),
@@ -61,7 +55,6 @@ namespace RushedCrops.Editor
             var pictures = new List<(ResourceType item, Texture2D picture)>();
             foreach (var (item, model, turn, zoom) in Models)
                 pictures.Add((item, Shoot(camera, zoom, () => Place(model, turn, 1f))));
-            // Every seed shows the same sack, told apart by a small picture of its crop in the corner.
             Texture2D sack = Shoot(camera, 1f, () => Place(SeedSack, new Vector3(0f, 20f, 0f), 0f));
             foreach (var (seeds, crop) in Seeds)
                 pictures.Add((seeds, WithBadge(sack, pictures.Find(p => p.item == crop).picture)));
@@ -100,7 +93,6 @@ namespace RushedCrops.Editor
             Debug.Log($"Rendered {made.Count} item icons into {IconFolder}.");
         }
 
-        // A camera with a see-through background, a key light and soft fill, in the empty scene.
         private static Camera SetUpStudio()
         {
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
@@ -121,12 +113,10 @@ namespace RushedCrops.Editor
             return camera;
         }
 
-        // Builds a model, takes its picture and removes it again.
         private static Texture2D Shoot(Camera camera, float zoom, Func<GameObject> build)
         {
             GameObject subject = build();
             Bounds bounds = BoundsOf(subject);
-            // Look from the front, a little above and to the right, far enough to fit the whole model.
             // Zooming in moves closer and aims toward the model's highest point, so a tool's head stays in the picture.
             Vector3 view = new Vector3(0.45f, 0.5f, 1f).normalized;
             float distance = bounds.extents.magnitude / Mathf.Sin(camera.fieldOfView * 0.5f * Mathf.Deg2Rad) * 0.92f * zoom;
@@ -150,8 +140,7 @@ namespace RushedCrops.Editor
             return picture;
         }
 
-        // A copy of the sack's picture with a smaller copy of the crop's picture over its bottom-left corner
-        // (the hotbar writes the count in the bottom-right).
+        // The sack's picture with the crop's over its bottom-left corner (the count goes bottom-right).
         private static Texture2D WithBadge(Texture2D sack, Texture2D crop)
         {
             const float BadgeShare = 0.55f; // how much of the picture's width the crop covers
@@ -166,7 +155,6 @@ namespace RushedCrops.Editor
                     Color over = x < side && y < side
                         ? crop.GetPixelBilinear((x + 0.5f) / side, (y + 0.5f) / side)
                         : Color.clear;
-                    // Lay the crop over the sack, letting the sack show where the crop is see-through.
                     float alpha = over.a + under.a * (1f - over.a);
                     Color mixed = alpha > 0f ? (over * over.a + under * under.a * (1f - over.a)) / alpha : Color.clear;
                     mixed.a = alpha;
@@ -191,7 +179,6 @@ namespace RushedCrops.Editor
             return go;
         }
 
-        // Scales an object so its biggest side is this many metres.
         private static void FitInside(GameObject go, float size)
         {
             Bounds b = BoundsOf(go);
@@ -199,7 +186,6 @@ namespace RushedCrops.Editor
             if (biggest > 0f) go.transform.localScale *= size / biggest;
         }
 
-        // The highest corner of the visible meshes, such as the tip of a hoe's blade.
         private static Vector3 HighestPoint(GameObject go)
         {
             Vector3 best = go.transform.position;
@@ -242,9 +228,6 @@ namespace RushedCrops.Editor
             importer.SaveAndReimport();
         }
 
-        // ---------- Hotbar ----------
-
-        // Gives every hotbar slot an icon image behind its count and links DA_ItemIcons to the HUD.
         [MenuItem("Rushed Crops/UI/Add item icons to the hotbar")]
         public static void AddIconsToHotbar()
         {

@@ -1,8 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-// The text under the crosshair that says what pressing Interact will do, like "[E] Plant carrot seed".
-// PlayerInteractor calls Show and Hide; this script only draws.
+// The prompt under the crosshair, like "[E] Plant carrot seed". PlayerInteractor calls Show and Hide.
 public class InteractionPromptHud : MonoBehaviour
 {
     [Tooltip("The prompt's background. It is hidden when there is nothing to use.")]

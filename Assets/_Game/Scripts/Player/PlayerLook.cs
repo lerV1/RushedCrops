@@ -1,9 +1,8 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// First-person look with the mouse or right stick.
-// Turns the camera holder instead of the Rigidbody: rotating an interpolated
-// Rigidbody by hand every frame fights the interpolation and makes the view jitter.
+// First-person look. It turns the camera holder, not the Rigidbody: turning an interpolated
+// Rigidbody every frame makes the view jitter.
 public class PlayerLook : MonoBehaviour
 {
     [Header("Input")]
@@ -29,15 +28,12 @@ public class PlayerLook : MonoBehaviour
     private float yaw;
     private float pitch;
 
-    // Facing around the Y axis in degrees. Movement uses this so W walks where the camera points.
     public float Yaw => yaw;
 
-    // How many degrees the view turned this frame (x = right, y = up). Hand sway reads this.
     public Vector2 LookDelta { get; private set; }
 
     private void Awake()
     {
-        // Start facing whichever way the player was placed in the scene.
         yaw = transform.eulerAngles.y;
     }
 

@@ -1,11 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Part of the ground the player can use by aiming at it, like the crop field.
-// An area has no collider of its own, so the player can stand inside it and still aim at it:
-// when the look ray lands on the ground, PlayerInteractor asks every registered area whether
-// that point lies inside it. The area then works like any other target (IInteractable,
-// IToolTarget, IHighlightable) for the point it was given.
+// Ground the player can use by aiming at it, like the crop field. It has no collider, so PlayerInteractor
+// asks each area whether the ground point it hit lies inside.
 public interface IAreaTarget
 {
     // True if the point is inside this area. The area remembers it as the aimed point.

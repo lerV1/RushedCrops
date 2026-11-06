@@ -1,8 +1,6 @@
 using UnityEngine;
 
-// Moves the first-person hands a little so they feel attached to a body:
-// they lag behind when the view turns and bob while the player walks.
-// Put it on the object that holds the hands (HandsRoot).
+// Makes the first-person hands lag behind turns and bob while walking. Sits on HandsRoot.
 public class HandSway : MonoBehaviour
 {
     [Header("References")]
@@ -49,7 +47,6 @@ public class HandSway : MonoBehaviour
 
     private Vector3 GetSwayOffset(float dt)
     {
-        // Drift opposite to the turn, as if the hands are a moment behind the head.
         Vector2 turnSpeed = look != null ? look.LookDelta / dt : Vector2.zero;
         Vector3 target = new Vector3(-turnSpeed.x, -turnSpeed.y, 0f) * swayAmount;
         target = Vector3.ClampMagnitude(target, maxSway);
@@ -67,7 +64,6 @@ public class HandSway : MonoBehaviour
         bool airborne = Mathf.Abs(velocity.y) > 1f;
         float walkAmount = airborne ? 0f : groundSpeed / fullBobSpeed;
 
-        // Faster steps when sprinting, but the size stops growing at full walking speed.
         bobPhase += dt * bobFrequency * 2f * Mathf.PI * walkAmount;
         bobWeight = Mathf.Lerp(bobWeight, Mathf.Clamp01(walkAmount), 1f - Mathf.Exp(-10f * dt));
 

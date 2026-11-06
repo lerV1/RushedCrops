@@ -3,17 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// One melee swing for the weapon in hand. PlayerTools calls TryAttack when the player
-// clicks with the hatchet selected. A swing has three parts:
-//   windup:   the arm swings; nothing can be hit yet.
-//   active:   a box in front of the camera hurts what is inside it, each target once.
-//   recovery: the arm comes back. The next swing waits until this is over.
-// This component only finds targets and deals damage through their Health.
-// The flash (HitFlash) and the push (Knockback) are separate components on the target.
-//
-// Example:
-//   if (melee.TryAttack()) hands.PlaySwing();
-//   melee.HitLanded += target => Debug.Log($"Hit {target.name}");
+// One melee swing: a windup, then a hit window where a box in front of the camera hurts each target once,
+// then recovery before the next swing. Damage goes through the target's Health.
 public class MeleeAttack : MonoBehaviour
 {
     [Header("References")]
@@ -46,12 +37,10 @@ public class MeleeAttack : MonoBehaviour
     // Everything already hit by this swing. A target with several colliders is still one Health.
     private readonly HashSet<Health> hitThisSwing = new HashSet<Health>();
 
-    // True from the click until recovery ends.
     public bool IsBusy { get; private set; }
 
     public int Damage => damage;
 
-    // Raised after a target takes damage from a swing.
     public event Action<Health> HitLanded;
 
     private void OnDisable()
@@ -61,7 +50,6 @@ public class MeleeAttack : MonoBehaviour
         IsBusy = false;
     }
 
-    // Starts a swing. Returns false if the last swing has not finished yet.
     public bool TryAttack()
     {
         if (IsBusy)
@@ -82,8 +70,7 @@ public class MeleeAttack : MonoBehaviour
     {
         IsBusy = true;
         hitThisSwing.Clear();
-        // "finally" runs even if a script reacting to the hit throws an error,
-        // so one broken target can't leave the weapon unable to swing again.
+        // Runs even if something reacting to the hit throws, so the weapon can always swing again.
         try
         {
             yield return new WaitForSeconds(windup);
@@ -105,8 +92,6 @@ public class MeleeAttack : MonoBehaviour
         }
     }
 
-    // Looks in the hitbox once and hurts every target not hit yet this swing.
-    // Returns how many targets were hit. The swing calls this during its hit window.
     public int CheckHitbox()
     {
         Vector3 halfSize = new Vector3(hitboxSize.x, hitboxSize.y, reach) * 0.5f;
@@ -117,13 +102,12 @@ public class MeleeAttack : MonoBehaviour
         int hits = 0;
         foreach (Collider part in found)
         {
-            // Skip the attacker's own body.
             if (part.transform.IsChildOf(transform))
             {
                 continue;
             }
 
-            // Only things with Health can be hit. The collider may be on a child, so look up the parents.
+            // The collider may be on a child, so look up the parents.
             Health target = part.GetComponentInParent<Health>();
             if (target == null || target.IsDead || hitThisSwing.Contains(target))
             {
@@ -142,7 +126,6 @@ public class MeleeAttack : MonoBehaviour
         return hits;
     }
 
-    // True when something solid, like a wall, stands between the camera and this part of the target.
     private bool IsBlocked(Collider part, Health target)
     {
         Vector3 from = viewPoint.position;
@@ -163,7 +146,6 @@ public class MeleeAttack : MonoBehaviour
     {
         target.TakeDamage(damage);
 
-        // The push goes away from the attacker, along the ground.
         var knockback = target.GetComponent<Knockback>();
         if (knockback != null && knockbackStrength > 0f)
         {
@@ -179,7 +161,6 @@ public class MeleeAttack : MonoBehaviour
         HitLanded?.Invoke(target);
     }
 
-    // Draws the hitbox in the Scene view while this object is selected.
     private void OnDrawGizmosSelected()
     {
         if (viewPoint == null)

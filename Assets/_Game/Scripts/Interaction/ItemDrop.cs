@@ -1,10 +1,7 @@
 using UnityEngine;
 
-// Some of one item lying on the ground: seeds the crop boss threw out, or something the player
-// dropped from the hotbar with Backspace. It flies out in an arc, lands, and then bobs and spins
-// until the player takes it: walk into it, or look at it and press Interact.
-// With a full hotbar it stays where it is.
-// It shows the item's own model from ItemModels, sized to fit a small box.
+// Items lying on the ground (boss seeds or a hotbar drop). It flies out, lands, then bobs until the player
+// walks into it or presses Interact on it.
 public class ItemDrop : MonoBehaviour, IInteractable
 {
     [Tooltip("The 3D model for each item.")]
@@ -31,7 +28,6 @@ public class ItemDrop : MonoBehaviour, IInteractable
     public int Amount => amount;
     public bool HasLanded => launched && flown >= flightTime;
 
-    // Called by whoever drops it: what it is, how many, and where on the ground it lands.
     // walkPickupDelay stops the player who just dropped it from walking straight back into it.
     public void Launch(Inventory target, ResourceType what, int count, Vector3 landingPoint, float walkPickupDelay = 0f)
     {
@@ -65,7 +61,6 @@ public class ItemDrop : MonoBehaviour, IInteractable
         }
         look.transform.localRotation = Quaternion.Euler(models.TurnFor(item));
 
-        // Shrink or grow it to modelSize, then stand it on the drop's origin.
         Bounds bounds = BoundsOf(look);
         float longest = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
         if (longest > 0.0001f)
@@ -108,12 +103,10 @@ public class ItemDrop : MonoBehaviour, IInteractable
         {
             flown = Mathf.Min(flown + Time.deltaTime, flightTime);
             float t = flown / flightTime;
-            // A straight line to the landing spot, lifted into an arc.
             transform.position = Vector3.Lerp(from, landing, t) + Vector3.up * (Mathf.Sin(t * Mathf.PI) * 1.2f);
             return;
         }
 
-        // Bob and spin, so it is easy to spot on the grass.
         transform.position = landing + Vector3.up * (0.15f + Mathf.Sin(Time.time * 3f) * 0.08f);
         transform.Rotate(0f, 90f * Time.deltaTime, 0f, Space.World);
 
@@ -142,7 +135,6 @@ public class ItemDrop : MonoBehaviour, IInteractable
 
     public void Interact(PlayerInteractor player) => TryCollect();
 
-    // Puts the items in the hotbar and removes the drop. Returns false if there was no room.
     public bool TryCollect()
     {
         if (!HasLanded || !inventory.Add(item, amount))

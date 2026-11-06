@@ -1,11 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// Backspace drops one of the item in the selected hotbar slot; Shift + Backspace drops the
-// whole stack. It lands on the ground a short way in front of the player as an ItemDrop,
-// which the player can pick up again.
-// Sits on the Player next to PlayerTools, and uses PlayerTools' Inventory. While PlayerTools
-// is switched off (the shop is open) nothing can be dropped.
+// Backspace drops one of the selected item in front of the player; Shift + Backspace drops the whole stack.
 [RequireComponent(typeof(PlayerTools))]
 public class ItemDropper : MonoBehaviour
 {
@@ -37,7 +33,6 @@ public class ItemDropper : MonoBehaviour
         Drop(keyboard.shiftKey.isPressed);
     }
 
-    // Drops one of the selected item, or the whole stack. Returns the drop, or null if the slot is empty.
     public ItemDrop Drop(bool wholeStack)
     {
         if (inventory == null)

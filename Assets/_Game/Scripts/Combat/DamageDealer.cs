@@ -1,7 +1,6 @@
 using UnityEngine;
 
-// Hurts anything with a Health component that enters this trigger: the player,
-// enemies, animals. Use it for hazards such as spikes, fire or thorn bushes.
+// Hurts anything with Health that enters this trigger, like spikes or thorns.
 [RequireComponent(typeof(Collider))]
 public class DamageDealer : MonoBehaviour
 {
@@ -9,7 +8,7 @@ public class DamageDealer : MonoBehaviour
 
     public int Damage => damage;
 
-    // Unity calls Reset when the component is first added, so the collider starts as a trigger.
+    // Makes the collider a trigger when the component is added.
     private void Reset()
     {
         GetComponent<Collider>().isTrigger = true;
@@ -17,7 +16,6 @@ public class DamageDealer : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        // The collider may sit on a child object, so look up the parents for the Health.
         Health target = other.GetComponentInParent<Health>();
         if (target != null)
         {

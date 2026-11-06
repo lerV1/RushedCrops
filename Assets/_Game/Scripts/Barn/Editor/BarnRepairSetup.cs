@@ -7,10 +7,8 @@ using UnityEngine;
 
 namespace RushedCrops.Editor
 {
-    // Turns the inherited barn into the repair goal (see BarnRepair) and saves it broken:
-    // boards and a lock across the front doors, four roof boards missing, and two east wall
-    // sections leaning out on a prop. The map builder calls this. Running it again from the menu
-    // first puts every barn piece back the way the pack made it, so the result is always the same.
+    // Sets up the barn repair (see BarnRepair) and saves the barn broken: boards across the doors, roof holes
+    // and a leaning east wall. Running it again restores every barn piece first, so the result is the same.
     public static class BarnRepairSetup
     {
         public const string BarnName = "Inherited barn";
@@ -92,7 +90,6 @@ namespace RushedCrops.Editor
             Undo.RecordObject(repair, "Set up barn repair");
             repair.Configure(inventory, jobs);
 
-            // Save it broken: the game starts with no repairs done.
             foreach (BarnRepair.Job job in jobs)
             foreach (BarnRepair.Part part in job.parts)
             {
@@ -110,7 +107,6 @@ namespace RushedCrops.Editor
             return repair;
         }
 
-        // The barn piece with this name standing on this grid spot.
         private static Transform Piece(Transform barn, string name, Vector3 spot)
         {
             Transform[] found = barn.Cast<Transform>().Where(t => t.name == name && (t.localPosition - spot).sqrMagnitude < 0.01f).ToArray();
@@ -118,7 +114,6 @@ namespace RushedCrops.Editor
             return found[0];
         }
 
-        // Puts a barn piece back the way the pack's Barn01 prefab has it, shown.
         private static void Restore(Transform piece)
         {
             Undo.RecordObject(piece, "Set up barn repair");
@@ -157,7 +152,6 @@ namespace RushedCrops.Editor
             brokenRotation = t.localEulerAngles, fixedRotation = t.localEulerAngles, scale = t.localScale,
         };
 
-        // Two boards nailed in an X across the closed doors, a third across the middle, and a lock.
         private static Transform BuildDoorBoards(Transform barn, Transform door)
         {
             // The barn is not turned, so its front doors face -Z, out into the yard.
@@ -179,7 +173,6 @@ namespace RushedCrops.Editor
             return boards;
         }
 
-        // A beam from the ground up to the leaning wall, holding it.
         private static Transform BuildWallProp(Transform barn, Transform[] walls)
         {
             // The barn is not turned, so its east wall faces +X.

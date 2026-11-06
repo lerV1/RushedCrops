@@ -5,11 +5,8 @@ using UnityEngine;
 
 namespace RushedCrops.Editor
 {
-    // Gives the player Health and a RespawnController, then places the respawn checkpoints in SC_Farm:
-    //   Farm checkpoint    - the starting checkpoint at the player's spawn
-    //   Market checkpoint  - on the path where it reaches the market
-    // Everything sits under its own scene root, so "Rebuild map" (which replaces WORLD_RushedCrops) keeps it.
-    // Safe to run again: it replaces its own objects and keeps the player's other components.
+    // Gives the player Health and a RespawnController, and places the farm and market checkpoints in SC_Farm.
+    // Safe to run again.
     public static class RespawnSetup
     {
         public const string RootName = "GAMEPLAY_Respawn";
@@ -68,7 +65,6 @@ namespace RushedCrops.Editor
             Debug.Log("Respawn set up: player Health and RespawnController, and the farm and market checkpoints.");
         }
 
-        // The components go on the prefab, so every copy of the player has them.
         private static void AddPlayerComponentsToPrefab()
         {
             GameObject prefab = PrefabUtility.LoadPrefabContents(PlayerPrefabPath);
@@ -91,7 +87,6 @@ namespace RushedCrops.Editor
             }
         }
 
-        // A trigger box on the ground, with the spawn point raised to standing height.
         private static Transform MakeCheckpoint(Transform parent, string name, Vector3 groundPoint, float spawnHeight)
         {
             var checkpoint = new GameObject(name);

@@ -1,8 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-// Shows the player they were hurt: the screen edges flash red, and a "-2" floats up
-// beside the health bar and fades out. Bigger hits give a stronger flash.
+// Flashes the screen edges red and floats a "-2" beside the health bar when the player is hurt.
 public class DamageIndicatorHud : MonoBehaviour
 {
     [Tooltip("The Health to watch, usually the player's.")]

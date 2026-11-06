@@ -1,8 +1,7 @@
 using System;
 using UnityEngine;
 
-// One soil bed in the garden: a grid of FarmTile squares that share these settings.
-// Each square is tilled, planted, grown and harvested on its own (see FarmTile).
+// Settings every square of the crop field shares: the Inventory, the crops and the growth speed.
 [DisallowMultipleComponent]
 public class FarmPlot : MonoBehaviour
 {
@@ -38,8 +37,7 @@ public class FarmPlot : MonoBehaviour
 
     public bool CanGrow(CropData crop) => crop != null && Array.IndexOf(crops, crop) >= 0;
 
-    // The crop whose seeds are in the selected hotbar slot, if this bed can grow it.
-    // Null when the player isn't holding seeds.
+    // The crop whose seeds are in hand, or null.
     public CropData SelectedCrop()
     {
         if (!inventory.TryGetSelectedItem(out ResourceType held))

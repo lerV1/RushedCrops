@@ -5,11 +5,7 @@ using UnityEngine;
 
 namespace RushedCrops.Editor
 {
-    // Sets up dropping items:
-    //   DA_ItemModels lists the 3D model for every item (the same models the hotbar icons are made from;
-    //   seeds use the seed sack),
-    //   PFB_ItemDrop is the pickup that lies on the ground and shows one of them,
-    //   and the player prefab gets an ItemDropper, so Backspace drops the selected item.
+    // Sets up item drops: DA_ItemModels, the PFB_ItemDrop pickup and the player's ItemDropper (Backspace).
     // The crop boss's seeds use the same drop. Run it again after adding an item.
     public static class ItemDropSetup
     {
@@ -35,7 +31,6 @@ namespace RushedCrops.Editor
             Debug.Log("Backspace now drops the selected hotbar item (Shift + Backspace drops the whole stack).");
         }
 
-        // Makes or updates DA_ItemModels.
         public static ItemModels Models()
         {
             var asset = AssetDatabase.LoadAssetAtPath<ItemModels>(ModelsPath);
@@ -91,7 +86,6 @@ namespace RushedCrops.Editor
             }
         }
 
-        // Gives the player prefab an ItemDropper that throws PFB_ItemDrop the way the camera faces.
         public static void SetUpPlayer()
         {
             var dropPrefab = AssetDatabase.LoadAssetAtPath<ItemDrop>(DropPath);

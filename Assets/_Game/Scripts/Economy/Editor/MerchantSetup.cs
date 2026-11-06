@@ -9,9 +9,8 @@ using UnityEngine.UI;
 
 namespace RushedCrops.Editor
 {
-    // Puts the merchant behind the market stall counter, builds his trading window (HUD_Shop) and
-    // makes sure the scene has an EventSystem so the window's buttons can be clicked.
-    // The map builder places the merchant with the stall, and this can be run again from the menu.
+    // Puts the merchant behind the stall counter, builds his trading window (HUD_Shop) and adds an
+    // EventSystem so its buttons can be clicked.
     public static class MerchantSetup
     {
         public const string MerchantName = "Merchant";
@@ -38,7 +37,6 @@ namespace RushedCrops.Editor
             Debug.Log("Merchant and trading window set up.");
         }
 
-        // Places (or replaces) the merchant and links him to the Inventory, the day cycle and the window.
         public static GameObject PlaceMerchant(Transform market)
         {
             Transform old = market.Find(MerchantName);
@@ -57,7 +55,6 @@ namespace RushedCrops.Editor
             settings.FindProperty("shop").objectReferenceValue = shop;
             settings.ApplyModifiedProperties();
 
-            // He watches and greets the player, and talks in the window while it is open.
             var personality = merchant.GetComponent<MerchantPersonality>();
             if (personality != null)
             {
@@ -75,8 +72,6 @@ namespace RushedCrops.Editor
             var go = new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
             Undo.RegisterCreatedObjectUndo(go, "Add EventSystem");
         }
-
-        // ---------- The trading window ----------
 
         private static void BuildShopWindow()
         {

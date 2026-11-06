@@ -6,11 +6,8 @@ using UnityEngine;
 
 namespace RushedCrops.Editor
 {
-    // Puts the crop boss (a giant angry carrot, modelled in Blender) just outside the east
-    // fence of the crop field, looking at the soil. It stands still, and killing it throws
-    // out a bag of seeds for every crop.
-    // Also makes its flat cartoon materials. Its seeds use the shared item drop (ItemDropSetup).
-    // The map builder calls Place, and it can be run again from the menu.
+    // Places the crop boss (a giant angry carrot made in Blender) outside the crop field's east fence
+    // and makes its cartoon materials. The map builder calls Place.
     public static class CropBossSetup
     {
         public const string RootName = "Crop boss";
@@ -25,7 +22,6 @@ namespace RushedCrops.Editor
         private const int MaxHealth = 75; // 3 hatchet hits
         private const int SeedsPerCrop = 3;
 
-        // The Blender material slots and their colours.
         private static readonly Dictionary<string, Color> Colours = new Dictionary<string, Color>
         {
             { "Boss_Orange", new Color(0.95f, 0.45f, 0.1f) },
@@ -106,8 +102,7 @@ namespace RushedCrops.Editor
             return root;
         }
 
-        // Gives the FBX the project's flat cartoon look: one material per Blender slot,
-        // made from the Straw material so it uses the same shader.
+        // One flat cartoon material per Blender slot, made from Straw so it shares the shader.
         public static void SetUpModelMaterials()
         {
             var importer = AssetImporter.GetAtPath(ModelPath) as ModelImporter;

@@ -1,11 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-// Makes the merchant feel alive. It only reacts; trading itself is Merchant's job.
-//   - Turns to watch the player while they are nearby, and back to the plaza when they leave.
-//   - Waves and greets the player when they walk up to the stall (not more than once a while).
-//   - Rubs his hands and says something smug after a trade, and grumbles when one is refused.
-// His words show in a speech bubble above his head, and in the trading window while it is open.
+// Makes the merchant react: he watches the player, greets them and comments on trades in a speech bubble.
 // Every line can be changed in the Inspector.
 [RequireComponent(typeof(Merchant))]
 public class MerchantPersonality : MonoBehaviour
@@ -197,7 +193,6 @@ public class MerchantPersonality : MonoBehaviour
         }
     }
 
-    // Picks one of the lines at random and shows it in the bubble, and in the window if it is open.
     private void Say(string[] lines)
     {
         if (lines == null || lines.Length == 0)

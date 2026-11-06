@@ -6,12 +6,8 @@ using UnityEngine;
 
 namespace RushedCrops.Editor
 {
-    // Grounds scenery against the saved terrain collider, never against another prop or a prefab pivot.
-    //   Embed: trees, stumps, rocks, plants, fences and posts sink slightly into the lowest ground under them,
-    //          so no edge hangs in the air on a slope.
-    //   Rest:  buildings, carts, crates and other props sit on top of the ground. They are only placed
-    //          on the flat pads, so resting on the highest point leaves no gap underneath.
-    //   Supported items (on a counter, block or stack) and authored structures are left alone.
+    // Grounds scenery on the terrain: trees, rocks and plants sink in slightly, buildings and props rest on top.
+    // Items standing on other props are left alone.
     public static class WorldGrounding
     {
         private const float RestTolerance = 0.05f;

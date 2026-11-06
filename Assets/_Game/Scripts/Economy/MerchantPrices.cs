@@ -2,14 +2,10 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-// The merchant's price list: what he sells (seeds and building supplies), what he buys (crops),
-// and the usual price of each. Prices move a little every day, so it pays to check before trading.
-// One asset (DA_MerchantPrices) holds the whole list. Change prices there, not in code.
-// Create one with Assets > Create > Rushed Crops > Merchant Prices.
+// The merchant's price list (DA_MerchantPrices). Prices move a little each day; edit them in the asset.
 [CreateAssetMenu(fileName = "DA_MerchantPrices", menuName = "Rushed Crops/Merchant Prices")]
 public class MerchantPrices : ScriptableObject
 {
-    // One line of the price list, such as "Carrot Seeds, usually 3 coins".
     [Serializable]
     public struct Offer
     {
@@ -56,8 +52,7 @@ public class MerchantPrices : ScriptableObject
         return 0;
     }
 
-    // A repeatable number from 0 to 1: the same day, item and list always give the same price,
-    // so prices hold all day and only change when a new day starts.
+    // The same day, item and list always give the same number, so prices hold all day.
     private double DailyRoll(int day, int item, int list)
     {
         unchecked

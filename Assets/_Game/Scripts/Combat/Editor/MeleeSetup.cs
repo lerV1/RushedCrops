@@ -5,10 +5,8 @@ using UnityEngine;
 
 namespace RushedCrops.Editor
 {
-    // Sets up melee combat:
-    //   the player prefab gets a hatchet model in the right hand and a MeleeAttack,
-    //   and SC_Farm gets a hatchet stuck in a chopping block for the player to pick up.
-    // The map builder calls Place, and both steps can be run again from the menu.
+    // Gives the player prefab a hatchet and a MeleeAttack, and puts a hatchet in a chopping block in SC_Farm.
+    // The map builder calls Place.
     public static class MeleeSetup
     {
         public const string RootName = "Hatchet block";
@@ -54,7 +52,6 @@ namespace RushedCrops.Editor
                     renderer.receiveShadows = hoeRenderer.receiveShadows;
                 }
                 model.SetActive(false);
-                // Line the handle up through the fist, the same way as the hoe and the watering can.
                 HandToolFitter.Fit(root);
 
                 var handSettings = new SerializedObject(hands);
@@ -104,7 +101,6 @@ namespace RushedCrops.Editor
             root.transform.position = ToolStumpSetup.Ground(Spot);
             root.transform.rotation = Quaternion.Euler(0f, FacingYaw, 0f);
 
-            // The hatchet, blade down in a chopping block.
             var block = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Pack + "Wood/ChoppingBlock01.prefab"), root.transform);
             block.transform.position = ToolStumpSetup.Ground(root.transform.TransformPoint(new Vector3(1.4f, 0f, 0.2f)));
             block.transform.localRotation = Quaternion.Euler(0f, 30f, 0f);

@@ -1,8 +1,7 @@
 using System;
 using UnityEngine;
 
-// What happened when the player tried to trade. Done means the trade went through;
-// anything else means nothing changed, and says why.
+// The result of a trade. Anything but Done means nothing changed.
 public enum TradeResult
 {
     Done,
@@ -14,13 +13,8 @@ public enum TradeResult
     NoRoom           // the hotbar has no space for what was bought
 }
 
-// The scheming merchant at the market stall. He sells seeds and building supplies and buys crops,
-// at prices (MerchantPrices) that change every day. Prices here are from the player's side:
-//   PriceToBuy  - what the player pays him for one.
-//   PriceToSell - what he pays the player for one.
-// Every trade goes through the shared Inventory and is all or nothing: coins are only taken if the
-// goods fit in the hotbar, and crops are only taken if he pays for them.
-// Look at him and press Interact to open the trading window (MerchantShopUI).
+// The merchant at the market stall: he sells seeds and supplies and buys crops at daily prices.
+// Trades are all or nothing. Look at him and press Interact to open the trading window.
 public class Merchant : MonoBehaviour, IInteractable
 {
     [Tooltip("The scene's shared Inventory. Coins and goods move in and out of it.")]
@@ -37,13 +31,11 @@ public class Merchant : MonoBehaviour, IInteractable
     public Inventory Inventory => inventory;
     public MerchantPrices Prices => prices;
 
-    // Today's day number, starting at 1.
     public int Day => dayCycle != null ? dayCycle.Day : 1;
 
     // Raised after every trade that went through: (item, amount, the player bought it).
     public event Action<ResourceType, int, bool> Traded;
 
-    // Raised when a trade didn't go through, with the reason.
     public event Action<TradeResult> TradeRefused;
 
     private void Awake()
@@ -55,15 +47,11 @@ public class Merchant : MonoBehaviour, IInteractable
         }
     }
 
-    // ---------- Talking to him ----------
-
     public bool CanInteract => shop != null && !shop.IsOpen;
 
     public string GetPrompt() => shop != null ? "Trade with the merchant" : null;
 
     public void Interact(PlayerInteractor player) => shop.Open(this);
-
-    // ---------- Trading ----------
 
     public int PriceToBuy(ResourceType item) => prices.ChargeFor(item, Day);
 
