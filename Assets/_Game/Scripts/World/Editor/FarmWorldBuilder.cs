@@ -369,12 +369,10 @@ namespace RushedCrops.Editor
 
         private static void BuildFarm(Transform parent)
         {
-            // The inherited barn: a few missing roof boards are the repair goal.
+            // The inherited barn, saved broken: the player pays to unlock it and repair it (see BarnRepair).
             var barn = Prefab("Barn01", parent, BarnSpot, 0f, 1.5f);
-            barn.name = "Inherited barn";
-            int roof = 0;
-            foreach (Transform child in barn.GetComponentsInChildren<Transform>())
-                if (child.name.StartsWith("RoofCenter") && ++roof % 7 == 0) child.gameObject.SetActive(false);
+            barn.name = BarnRepairSetup.BarnName;
+            BarnRepairSetup.SetUp(barn);
 
             // Repair materials stacked neatly by the east wall, ladder against the wall.
             float eastWall = BarnSpot.x + 3.5f * 1.5f;
