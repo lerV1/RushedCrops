@@ -104,22 +104,6 @@ namespace RushedCrops.Editor
                 Require(found, "The " + tool + " is missing from the tool stump. Run Rushed Crops > Farming > Place tool stump.");
             }
 
-            // One seed crate per crop.
-            Transform crates = garden.Find(SeedCrateSetup.RootName);
-            Require(crates != null, "The seed crates are missing. Run Rushed Crops > Farming > Place seed crates.");
-            foreach (string path in FarmPlotSetup.CropAssets)
-            {
-                var crop = AssetDatabase.LoadAssetAtPath<CropData>(path);
-                bool found = false;
-                foreach (SeedCrate crate in crates.GetComponentsInChildren<SeedCrate>(true))
-                {
-                    var crateSettings = new SerializedObject(crate);
-                    if (crate.Crop == crop && crateSettings.FindProperty("inventory").objectReferenceValue != null && crate.GetComponent<Collider>() != null)
-                        found = true;
-                }
-                Require(found, "There is no working seed crate for " + path + ". Run Rushed Crops > Farming > Place seed crates.");
-            }
-
             Transform water = world.Find(RiverWaterSetup.WaterPath);
             var waterCollider = water != null ? water.GetComponent<MeshCollider>() : null;
             Require(water != null && water.GetComponent<WaterSource>() != null && waterCollider != null && waterCollider.sharedMesh != null,
