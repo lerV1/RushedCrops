@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 // What the player holds: the tool in the selected hotbar slot, used with Use Tool on whatever is aimed at.
-// Empty hands punch, the hatchet swings a melee attack and the pickaxe mines rocks.
+// Empty hands punch, the hatchet chops trees (or swings at anything else) and the pickaxe mines rocks.
 public class PlayerTools : MonoBehaviour
 {
     [Header("Input")]
@@ -155,7 +155,14 @@ public class PlayerTools : MonoBehaviour
                 UseOnTarget(pourDelay);
                 break;
             case ToolType.Hatchet:
-                if (melee.TryAttack())
+                // A tree under the crosshair is chopped; anything else gets the melee swing.
+                IToolTarget tree = interactor.FindToolTarget();
+                if (tree != null && tree.CanUseTool(this))
+                {
+                    hands.PlaySwing();
+                    UseOnTarget(swingHitDelay);
+                }
+                else if (melee.TryAttack())
                 {
                     hands.PlaySwing();
                 }

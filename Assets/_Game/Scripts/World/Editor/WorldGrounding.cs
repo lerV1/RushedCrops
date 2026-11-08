@@ -74,10 +74,10 @@ namespace RushedCrops.Editor
                 bool imported = PrefabUtility.IsOutermostPrefabInstanceRoot(child.gameObject);
                 if (!(imported || child.name == "Dusk lantern")) continue;
                 if (child.name.Contains("(on ") || child.name.Contains("(stacked)") || child.name.StartsWith("Lantern0")) continue;
-                // The crop field's outline and squares are placed by the field, and the carrot boss stands in
-                // its own dirt mound (it sinks when beaten), so neither is aligned as scenery.
+                // The crop field's outline and squares are placed by the field, the carrot boss stands in its own
+                // dirt mound (it sinks when beaten), and gathering spots grow and fall, so none is aligned as scenery.
                 if (child.GetComponentInParent<FarmField>(true) != null || child.GetComponentInParent<FarmTile>(true) != null) continue;
-                if (child.GetComponentInParent<CropBoss>(true) != null) continue;
+                if (child.GetComponentInParent<CropBoss>(true) != null || child.GetComponentInParent<ResourceNode>(true) != null) continue;
                 items.Add(child);
             }
             return items;

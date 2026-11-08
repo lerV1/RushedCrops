@@ -95,6 +95,7 @@ namespace RushedCrops.Editor
             BuildLogging(Group("06_LoggingCamp"));
             BuildForest(Group("07_Forest"));
             BuildBoundaries(Group("08_Boundary"));
+            GatheringSetup.Place(world, false);
 
             CartoonWorldStyler.Apply();
             WorldGrounding.Apply();

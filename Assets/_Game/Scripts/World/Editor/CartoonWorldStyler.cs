@@ -38,6 +38,17 @@ namespace RushedCrops.Editor
             Debug.Log("Cartoon style applied: faceted trees, solid plants, flat shaded props, bright terrain.");
         }
 
+        // Styles pack objects added after the map was styled (like the gathering trees and rocks),
+        // with the same saved colours and meshes as the rest of the map.
+        public static void StyleAdded(IEnumerable<GameObject> imported)
+        {
+            Meshes.Clear(); Palette.Clear();
+            CreatePalette();
+            CreateMeshes();
+            foreach (GameObject go in imported) StyleImported(go);
+            AssetDatabase.SaveAssets();
+        }
+
         private static void CreatePalette()
         {
             Colour("Bark", 0.38f, 0.22f, 0.10f);
