@@ -23,7 +23,7 @@ namespace RushedCrops.Editor
                 scene = EditorSceneManager.OpenScene(FarmWorldBuilder.ScenePath);
             }
             Validate(scene);
-            Debug.Log("World validation passed: landmarks, player, crop field, tools, river water, merchant, hotbar pictures, barn repairs, colliders, materials and environment references.");
+            Debug.Log("World validation passed: landmarks, player, crop field, tools, river water, merchant, hotbar pictures, barn repairs, gathering spots, colliders, materials and environment references.");
         }
 
         private static void Validate(Scene scene)
@@ -62,6 +62,7 @@ namespace RushedCrops.Editor
             ValidateMelee(player, garden);
             ValidateItemIcons(UnityEngine.Object.FindAnyObjectByType<InventoryHud>());
             ValidateBarn(garden);
+            ValidateGathering(root.transform, player);
 
             var cycle = UnityEngine.Object.FindAnyObjectByType<EnvironmentCycle>();
             Require(cycle != null, "The day/night cycle is missing.");
@@ -170,6 +171,63 @@ namespace RushedCrops.Editor
             Require(fieldSettings.FindProperty("cursor").objectReferenceValue != null, "The crop field needs the outline that follows the aim." + fix);
             Require(field.GridSize.x > 0 && field.GridSize.y > 0, "The crop field has no room for squares." + fix);
             Require(fieldObject.GetComponentsInChildren<FarmTile>(true).Length == 0, "The crop field should be saved with no tilled squares.");
+        }
+
+        // The pickaxe waits in the quarry and fits the hand. Trees to chop stand round the logging camp and
+        // rocks to mine lie in the quarry; each is saved whole, is solid, and has room to walk round it.
+        private static void ValidateGathering(Transform world, GameObject player)
+        {
+            const string pickaxeFix = " Run Rushed Crops > Tools > Set up pickaxe.";
+            Transform pickaxe = world.Find("05_Quarry/" + PickaxeSetup.PickupName);
+            var pickup = pickaxe != null ? pickaxe.GetComponent<ToolPickup>() : null;
+            Require(pickup != null && new SerializedObject(pickup).FindProperty("tool").enumValueIndex == (int)ToolType.Pickaxe,
+                "The pickaxe is missing from the quarry." + pickaxeFix);
+            var hands = player.GetComponentInChildren<HandAnimator>(true);
+            SerializedProperty models = new SerializedObject(hands).FindProperty("toolModels");
+            Require(models.arraySize > (int)ToolType.Pickaxe && models.GetArrayElementAtIndex((int)ToolType.Pickaxe).objectReferenceValue != null,
+                "The player can't hold the pickaxe." + pickaxeFix);
+
+            Transform terrain = world.Find("00_Terrain");
+            ValidateSpots(world.Find("06_LoggingCamp/" + GatheringSetup.TreesName), terrain, ToolType.Hatchet, ResourceType.Wood, 6, "choppable trees");
+            ValidateSpots(world.Find("05_Quarry/" + GatheringSetup.RocksName), terrain, ToolType.Pickaxe, ResourceType.Stone, 4, "mineable rocks");
+        }
+
+        private static void ValidateSpots(Transform group, Transform terrain, ToolType tool, ResourceType item, int atLeast, string label)
+        {
+            const string fix = " Run Rushed Crops > World > Place gathering spots.";
+            Require(group != null, "The " + label + " are missing." + fix);
+            ResourceNode[] spots = group.GetComponentsInChildren<ResourceNode>(true);
+            Require(spots.Length >= atLeast, "There should be at least " + atLeast + " " + label + ", but there are " + spots.Length + "." + fix);
+            foreach (ResourceNode spot in spots)
+            {
+                var settings = new SerializedObject(spot);
+                var whole = settings.FindProperty("whole").objectReferenceValue as Transform;
+                var broken = settings.FindProperty("broken").objectReferenceValue as GameObject;
+                Require(settings.FindProperty("inventory").objectReferenceValue != null && settings.FindProperty("dropPrefab").objectReferenceValue != null
+                    && whole != null && broken != null, spot.name + " is missing its Inventory, drop or looks." + fix);
+                Require(spot.Tool == tool && spot.Item == item, spot.name + " should give " + item + " for the " + tool + "." + fix);
+                Require(whole.gameObject.activeSelf && !broken.activeSelf, spot.name + " should be saved whole." + fix);
+
+                // Solid, so the player walks round it, not through it.
+                bool solid = false;
+                Bounds body = new Bounds(spot.transform.position, Vector3.zero);
+                foreach (Collider part in whole.GetComponentsInChildren<Collider>())
+                {
+                    if (!part.enabled || part.isTrigger) continue;
+                    if (!solid) body = part.bounds; else body.Encapsulate(part.bounds);
+                    solid = true;
+                }
+                Require(solid, spot.name + " isn't solid, so the player would walk through it." + fix);
+
+                // At least a metre of open ground all round it.
+                float reach = Mathf.Max(body.extents.x, body.extents.z) + 1f;
+                Vector3 ground = spot.transform.position;
+                foreach (Collider other in Physics.OverlapCapsule(ground + Vector3.up * (reach + 0.15f), ground + Vector3.up * (reach + 1.2f), reach, ~0, QueryTriggerInteraction.Ignore))
+                {
+                    if (other.transform.IsChildOf(spot.transform) || other.transform.IsChildOf(terrain) || other.gameObject.layer == 4) continue;
+                    Require(false, spot.name + " leaves no room to walk round it: " + other.name + " is too close." + fix);
+                }
+            }
         }
 
         // The barn is saved unrepaired, with one job per repair GameManager counts. Every job costs coins.
