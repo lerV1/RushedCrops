@@ -5,5 +5,6 @@ public enum ToolType
     None,
     Hoe,
     WateringCan,
-    Hatchet // the melee weapon
+    Hatchet, // the melee weapon, and it chops trees
+    Pickaxe  // mines rocks
 }

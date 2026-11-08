@@ -14,7 +14,7 @@ namespace RushedCrops.Editor
         private const string ArmPath = "CameraRoot/Main Camera/HandsRoot/HandRight";
 
         // Long-handled tools and where up the handle the hand holds them (0 bottom, 1 top).
-        private static readonly (string name, float gripFraction)[] LongTools = { ("Hoe", 0.68f), ("Hatchet", 0.55f) };
+        private static readonly (string name, float gripFraction)[] LongTools = { ("Hoe", 0.68f), ("Hatchet", 0.55f), ("Pickaxe", 0.66f) };
         // Degrees a handle leans across the palm, away from the knuckle line.
         private const float HandleLean = 30f;
 

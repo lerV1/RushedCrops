@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 // What the player holds: the tool in the selected hotbar slot, used with Use Tool on whatever is aimed at.
-// Empty hands punch, and the hatchet swings a melee attack.
+// Empty hands punch, the hatchet swings a melee attack and the pickaxe mines rocks.
 public class PlayerTools : MonoBehaviour
 {
     [Header("Input")]
@@ -21,6 +21,8 @@ public class PlayerTools : MonoBehaviour
     [Header("Timing")]
     [Tooltip("Seconds into the hoe swing when the blade hits the ground.")]
     [SerializeField, Min(0f)] private float hoeHitDelay = 0.3f;
+    [Tooltip("Seconds into the hatchet or pickaxe swing when the head hits a tree or rock.")]
+    [SerializeField, Min(0f)] private float swingHitDelay = 0.3f;
     [Tooltip("Seconds into the pour when the water reaches the ground.")]
     [SerializeField, Min(0f)] private float pourDelay = 0.4f;
 
@@ -157,6 +159,10 @@ public class PlayerTools : MonoBehaviour
                 {
                     hands.PlaySwing();
                 }
+                break;
+            case ToolType.Pickaxe:
+                hands.PlaySwing();
+                UseOnTarget(swingHitDelay);
                 break;
         }
     }

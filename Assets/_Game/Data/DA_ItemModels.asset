@@ -46,6 +46,9 @@ MonoBehaviour:
   - item: 17
     model: {fileID: 1289350146910500113, guid: 8e7f76a1e0161394cb0682c0def59ed7, type: 3}
     turn: {x: 0, y: 0, z: 90}
+  - item: 18
+    model: {fileID: 4329820020616001917, guid: 3a410755b36d6c744ad0082ffad036ca, type: 3}
+    turn: {x: 0, y: 0, z: 90}
   - item: 1
     model: {fileID: 919132149155446097, guid: 089ad7a74232cbb4eaa118029f6fdc42, type: 3}
     turn: {x: 0, y: 0, z: 0}

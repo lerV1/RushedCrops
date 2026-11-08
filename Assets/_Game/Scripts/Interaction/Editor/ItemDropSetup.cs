@@ -19,6 +19,7 @@ namespace RushedCrops.Editor
         {
             { ResourceType.Hoe, new Vector3(0f, 0f, 90f) },
             { ResourceType.Hatchet, new Vector3(0f, 0f, 90f) },
+            { ResourceType.Pickaxe, new Vector3(0f, 0f, 90f) },
             { ResourceType.Wood, new Vector3(0f, 35f, 0f) },
         };
 

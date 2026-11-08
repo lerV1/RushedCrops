@@ -33,6 +33,7 @@ namespace RushedCrops.Editor
             (ResourceType.Hoe, "Assets/_Game/Prefabs/Tools/PFB_Hoe01.prefab", new Vector3(0f, 90f, -40f), 0.6f),
             (ResourceType.WateringCan, "Assets/_Game/Models/Tools/WateringCan.fbx", new Vector3(0f, -60f, 0f), 1f),
             (ResourceType.Hatchet, "Assets/_Game/Prefabs/Tools/PFB_Hatchet01.prefab", new Vector3(0f, 90f, -40f), 1f),
+            (ResourceType.Pickaxe, "Assets/_Game/Prefabs/Tools/PFB_Pickaxe01.prefab", new Vector3(0f, 90f, -40f), 1f),
         };
 
         internal static readonly (ResourceType seeds, ResourceType crop)[] Seeds =

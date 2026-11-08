@@ -453,8 +453,7 @@ namespace RushedCrops.Editor
                 block.transform.position += Vector3.up * (0.24f + layer * 0.44f);
             }
             Prefab("Transport/Cart01", parent, Quarry + V(7f, -6.5f), 160f, 1.5f);
-            var pick = Prefab("Tools/Pickaxe01", parent, Quarry + V(-1.5f, -1f), 0f, 1.6f);
-            pick.transform.rotation = Quaternion.Euler(0f, 35f, 90f);
+            PickaxeSetup.Place(parent);
             Prefab("Shed01", parent, Quarry + V(-9f, -3f), YawTowards(Quarry + V(-9f, -3f), Quarry) + 180f, 1.2f);
             Lantern(parent, Quarry + V(-3.2f, -7f), 0f);
         }
