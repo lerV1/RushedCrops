@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // The inherited barn. Press Interact on it to pay for the next job: unlock it (coins), patch the roof
-// (coins, wood), then straighten the east wall (coins, wood, stone, after the boss). GameManager counts jobs.
+// (coins, wood), then straighten the east wall (coins, wood, stone, after beating a boss). GameManager counts jobs.
 public class BarnRepair : MonoBehaviour, IInteractable
 {
     // A barn piece that changes when its job is done. Positions and rotations are local to its parent.
@@ -33,7 +33,7 @@ public class BarnRepair : MonoBehaviour, IInteractable
         [Tooltip("What the job costs. Every job takes coins.")]
         public ResourceAmount[] cost = Array.Empty<ResourceAmount>();
 
-        [Tooltip("The job can only be done after the carrot boss is beaten.")]
+        [Tooltip("The job can only be done after a boss is beaten.")]
         public bool needsBossBeaten;
 
         public Part[] parts = Array.Empty<Part>();
@@ -127,7 +127,7 @@ public class BarnRepair : MonoBehaviour, IInteractable
         }
         if (job.needsBossBeaten && !BossBeaten)
         {
-            return $"{job.name}: beat the carrot boss first";
+            return $"{job.name}: beat a boss first";
         }
 
         string price = $"{job.name} ({CostText(job.cost)})";

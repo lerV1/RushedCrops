@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-// Shared game progress: barn repairs, the boss and victory. Items live in Inventory, health in Health.
+// Shared game progress: barn repairs, the bosses and victory. Items live in Inventory, health in Health.
 // Runs before other scripts so the progress is set when they first read it.
 [DefaultExecutionOrder(-100)]
 public class GameManager : MonoBehaviour
@@ -11,10 +11,18 @@ public class GameManager : MonoBehaviour
     [Header("Barn")]
     [SerializeField, Min(1)] private int barnRepairStages = 3;
 
+    [Header("Bosses")]
+    [Tooltip("How many bosses there are to beat: the carrot, the tomato and the onion.")]
+    [SerializeField, Min(1)] private int bossCount = 3;
+
     public int BarnRepairs { get; private set; }
     public int BarnRepairStages => barnRepairStages;
     public bool IsBarnRepaired => BarnRepairs >= barnRepairStages;
-    public bool IsBossDefeated { get; private set; }
+    public int BossesBeaten { get; private set; }
+    public int BossCount => bossCount;
+    // True once any boss is beaten (the barn's last repair waits for this).
+    public bool IsBossDefeated => BossesBeaten > 0;
+    public bool AreAllBossesBeaten => BossesBeaten >= bossCount;
     public bool HasWon { get; private set; }
 
     public event Action<int> BarnRepaired;
@@ -45,7 +53,7 @@ public class GameManager : MonoBehaviour
     public void ResetState()
     {
         BarnRepairs = 0;
-        IsBossDefeated = false;
+        BossesBeaten = 0;
         HasWon = false;
     }
 
@@ -64,21 +72,21 @@ public class GameManager : MonoBehaviour
 
     public void RecordBossDefeat()
     {
-        if (IsBossDefeated)
+        if (AreAllBossesBeaten)
         {
             return;
         }
 
-        IsBossDefeated = true;
-        Debug.Log("Boss defeated. The next region is open.");
+        BossesBeaten++;
+        Debug.Log($"Boss defeated ({BossesBeaten}/{bossCount}).");
         BossDefeated?.Invoke();
         CheckForVictory();
     }
 
-    // The game is won once the boss is beaten and every barn repair is done.
+    // The game is won once every boss is beaten and every barn repair is done.
     private void CheckForVictory()
     {
-        if (!HasWon && IsBossDefeated && IsBarnRepaired)
+        if (!HasWon && AreAllBossesBeaten && IsBarnRepaired)
         {
             TriggerVictory();
         }

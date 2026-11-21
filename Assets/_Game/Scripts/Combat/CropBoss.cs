@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-// A giant angry carrot beside the crop field. The hatchet hurts it; when it dies it sinks, throws out
-// seeds (ItemDrop) and GameManager records the boss as beaten.
+// A giant angry crop: the carrot by the crop field, the tomato at the logging camp, the onion in the quarry.
+// The hatchet hurts it and BossCombat makes it fight back. When it dies it sinks, throws out seeds (ItemDrop)
+// and GameManager counts the boss as beaten. If the player dies first, it heals back to full.
 [RequireComponent(typeof(Health))]
 public class CropBoss : MonoBehaviour, IInteractable
 {
@@ -32,13 +34,25 @@ public class CropBoss : MonoBehaviour, IInteractable
     [Tooltip("How long, in seconds, the boss takes to sink into the ground when it dies.")]
     [SerializeField, Min(0.05f)] private float sinkTime = 0.8f;
 
+    // Every living boss in the scene, for the boss health bar.
+    public static readonly List<CropBoss> All = new List<CropBoss>();
+
     private Health health;
     private Vector3 modelScale;
     private Vector3 modelPosition;
+    private Quaternion modelRotation;
     private float wobbleLeft;
     private const float WobbleTime = 0.25f;
 
     public SeedDropEntry[] Drops => drops;
+    public string DisplayName => displayName;
+    public Health Health => health;
+    public bool IsDead => health.IsDead;
+
+    // How BossCombat poses the model while it winds up and attacks, on top of the hit wobble.
+    public Vector3 PoseScale { get; set; } = Vector3.one;
+    public Vector3 PoseOffset { get; set; }
+    public Quaternion PoseTilt { get; set; } = Quaternion.identity;
 
     private void Awake()
     {
@@ -49,18 +63,21 @@ public class CropBoss : MonoBehaviour, IInteractable
         }
         modelScale = model.localScale;
         modelPosition = model.localPosition;
+        modelRotation = model.localRotation;
     }
 
     private void OnEnable()
     {
         health.Damaged += OnDamaged;
         health.Died += OnDied;
+        All.Add(this);
     }
 
     private void OnDisable()
     {
         health.Damaged -= OnDamaged;
         health.Died -= OnDied;
+        All.Remove(this);
     }
 
     public bool CanInteract => false;
@@ -73,15 +90,29 @@ public class CropBoss : MonoBehaviour, IInteractable
 
     private void Update()
     {
-        if (wobbleLeft <= 0f || health.IsDead)
+        if (health.IsDead)
         {
             return;
         }
         wobbleLeft = Mathf.Max(wobbleLeft - Time.deltaTime, 0f);
-        // Squash down and bulge out, then spring back.
-        float t = wobbleLeft / WobbleTime;
-        float squash = Mathf.Sin(t * Mathf.PI) * 0.12f;
-        model.localScale = Vector3.Scale(modelScale, new Vector3(1f + squash, 1f - squash, 1f + squash));
+        // Squash down and bulge out on a hit, then spring back.
+        float squash = Mathf.Sin(wobbleLeft / WobbleTime * Mathf.PI) * 0.12f;
+        model.localScale = Vector3.Scale(Vector3.Scale(modelScale, PoseScale), new Vector3(1f + squash, 1f - squash, 1f + squash));
+        model.localPosition = modelPosition + PoseOffset;
+        model.localRotation = modelRotation * PoseTilt;
+    }
+
+    // Back to full health and its resting pose, for when the player dies mid-fight.
+    public void ResetFight()
+    {
+        if (health.IsDead)
+        {
+            return;
+        }
+        health.RestoreFullHealth();
+        PoseScale = Vector3.one;
+        PoseOffset = Vector3.zero;
+        PoseTilt = Quaternion.identity;
     }
 
     private void OnDied()
@@ -92,6 +123,7 @@ public class CropBoss : MonoBehaviour, IInteractable
             part.enabled = false;
         }
         model.localScale = modelScale;
+        model.localRotation = modelRotation;
         DropSeeds();
         if (GameManager.Instance != null)
         {
