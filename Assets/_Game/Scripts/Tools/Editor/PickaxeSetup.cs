@@ -6,14 +6,14 @@ using UnityEngine;
 namespace RushedCrops.Editor
 {
     // Sets up the pickaxe: the game's copy of the pack model (PFB_Pickaxe01), the model in the player's hand,
-    // and the pickaxe lying on the quarry floor for the player to pick up. The map builder calls Place.
+    // and the pickaxe lying by the path into the quarry for the player to pick up. The map builder calls Place.
     public static class PickaxeSetup
     {
         public const string PickupName = "Pickaxe pickup";
         public const string PrefabPath = "Assets/_Game/Prefabs/Tools/PFB_Pickaxe01.prefab";
         private const string PackPickaxe = "Assets/Holotna/Medieval Rural/Prefabs/Tools/Pickaxe01.prefab";
         private const string HandPath = "CameraRoot/Main Camera/HandsRoot/HandRight/Rig/Forearm/Hand";
-        private static readonly Vector3 Spot = new Vector3(8.5f, 0f, 48f); // the quarry floor, in front of the cliffs
+        private static readonly Vector3 Spot = new Vector3(12.5f, 0f, 38.5f); // beside the path up from the bridge, out of the onion boss's reach
         private const float PickupScale = 1.3f;
 
         [MenuItem("Rushed Crops/Tools/Set up pickaxe")]
@@ -89,7 +89,7 @@ namespace RushedCrops.Editor
             }
         }
 
-        // The pickaxe lying flat on the quarry floor. Replaces the pack's decorative one if it is still there.
+        // The pickaxe lying flat by the path into the quarry. Replaces the pack's decorative one if it is still there.
         public static GameObject Place(Transform quarry)
         {
             foreach (string name in new[] { "Pickaxe01", PickupName })

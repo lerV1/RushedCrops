@@ -27,11 +27,11 @@ namespace RushedCrops.Editor
         // Oaks, so they stand out from the pines and spruces of the forest round the camp.
         private static readonly string[] TreeModels = { "Oak01", "Oak02" };
 
-        // The open quarry floor, clear of the shed, the stone blocks and the path from the bridge.
+        // In a ring round the onion boss on the quarry floor: cover from its charge and its tears.
         private static readonly Vector2[] RockSpots =
         {
-            new Vector2(5.5f, 51.5f), new Vector2(10f, 54f), new Vector2(15f, 52.5f),
-            new Vector2(18.5f, 48.5f), new Vector2(13f, 48.5f), new Vector2(7.5f, 45f),
+            new Vector2(5.3f, 50.2f), new Vector2(7.5f, 52.8f), new Vector2(12.5f, 52.8f), new Vector2(14.7f, 50.2f),
+            new Vector2(5.3f, 46.8f), new Vector2(7.5f, 44.2f), new Vector2(12.5f, 44.2f),
         };
 
         [MenuItem("Rushed Crops/World/Place gathering spots")]
@@ -83,11 +83,11 @@ namespace RushedCrops.Editor
                 bool done = false;
                 foreach (Vector2 nudge in new[] { Vector2.zero, Vector2.right, Vector2.left, Vector2.up, Vector2.down, new Vector2(1.5f, 1.5f), new Vector2(-1.5f, 1.5f) })
                 {
-                    if (!HasRoom(RockSpots[i] + nudge, 1.35f, terrain, placed, out Vector3 ground)) continue;
+                    if (!HasRoom(RockSpots[i] + nudge, 1.15f, terrain, placed, out Vector3 ground)) continue;
                     var node = MakeNode(rocks, "Mineable rock " + (i + 1), ground + Vector3.down * 0.05f, i * 61f,
-                        Pack + "Rocks/Stone0" + (1 + i % 3), 2.1f, Pack + "Rocks/Rubble01", 1f, inventory, drop, added);
+                        Pack + "Rocks/Stone0" + (1 + i % 3), 1.8f, Pack + "Rocks/Rubble01", 1f, inventory, drop, added);
                     node.Describe("rock", "Mine", ToolType.Pickaxe, ResourceType.Stone, 2, 4, 150f, false);
-                    placed.Add((ground, 1.35f));
+                    placed.Add((ground, 1.15f));
                     done = true;
                     break;
                 }
