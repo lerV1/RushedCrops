@@ -23,7 +23,7 @@ namespace RushedCrops.Editor
                 scene = EditorSceneManager.OpenScene(FarmWorldBuilder.ScenePath);
             }
             Validate(scene);
-            Debug.Log("World validation passed: landmarks, player, crop field, tools, river water, merchant, hotbar pictures, barn repairs, gathering spots, colliders, materials and environment references.");
+            Debug.Log("World validation passed: landmarks, player, crop field, tools, river water, merchant, hotbar pictures, barn repairs, gathering spots, bosses, colliders, materials and environment references.");
         }
 
         private static void Validate(Scene scene)
@@ -63,6 +63,7 @@ namespace RushedCrops.Editor
             ValidateItemIcons(UnityEngine.Object.FindAnyObjectByType<InventoryHud>());
             ValidateBarn(garden);
             ValidateGathering(root.transform, player);
+            ValidateBosses(player);
 
             var cycle = UnityEngine.Object.FindAnyObjectByType<EnvironmentCycle>();
             Require(cycle != null, "The day/night cycle is missing.");
@@ -171,6 +172,33 @@ namespace RushedCrops.Editor
             Require(fieldSettings.FindProperty("cursor").objectReferenceValue != null, "The crop field needs the outline that follows the aim." + fix);
             Require(field.GridSize.x > 0 && field.GridSize.y > 0, "The crop field has no room for squares." + fix);
             Require(fieldObject.GetComponentsInChildren<FarmTile>(true).Length == 0, "The crop field should be saved with no tilled squares.");
+        }
+
+        // As many bosses as GameManager counts, each able to be hit and to fight back: attacks with their
+        // warning patches, shots for any spitting, and the boss bar in the player's HUD.
+        private static void ValidateBosses(GameObject player)
+        {
+            const string fix = " Run Rushed Crops > Combat > Place crop bosses.";
+            CropBoss[] bosses = UnityEngine.Object.FindObjectsByType<CropBoss>(FindObjectsInactive.Include);
+            var manager = UnityEngine.Object.FindAnyObjectByType<GameManager>();
+            Require(manager != null && bosses.Length == manager.BossCount,
+                "GameManager expects " + (manager != null ? manager.BossCount : 0) + " bosses but the map has " + bosses.Length + "." + fix);
+            foreach (CropBoss boss in bosses)
+            {
+                var settings = new SerializedObject(boss);
+                Require(settings.FindProperty("model").objectReferenceValue != null && settings.FindProperty("inventory").objectReferenceValue != null
+                    && settings.FindProperty("dropPrefab").objectReferenceValue != null, boss.name + " is missing its model, Inventory or seed drop." + fix);
+                Require(boss.GetComponent<Collider>() != null, boss.name + " has nothing for the hatchet to hit." + fix);
+                var combat = boss.GetComponent<BossCombat>();
+                Require(combat != null && combat.Attacks.Count > 0, boss.name + " can't fight back." + fix);
+                var combatSettings = new SerializedObject(combat);
+                Require(combatSettings.FindProperty("warningMaterial").objectReferenceValue != null, boss.name + " has no warning patches." + fix);
+                foreach (BossCombat.Attack attack in combat.Attacks)
+                    Require(attack.kind != BossCombat.AttackKind.Spit || combatSettings.FindProperty("projectilePrefab").objectReferenceValue != null,
+                        boss.name + " spits but has nothing to spit." + fix);
+            }
+            Transform hud = player.transform.Find(BossHudSetup.CanvasName);
+            Require(hud != null && hud.GetComponent<BossHealthHud>() != null, "The boss health bar is missing. Run Rushed Crops > UI > Set up boss health bar.");
         }
 
         // The pickaxe waits in the quarry and fits the hand. Trees to chop stand round the logging camp and
