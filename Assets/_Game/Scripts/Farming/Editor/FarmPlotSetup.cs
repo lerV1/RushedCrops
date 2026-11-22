@@ -74,6 +74,8 @@ namespace RushedCrops.Editor
             fieldSettings.FindProperty("cursor").objectReferenceValue = cursor;
             fieldSettings.FindProperty("groundLayers").intValue = 1 << GroundLayer;
             fieldSettings.ApplyModifiedProperties();
+            // The old field was destroyed above, so give the new one its mini crop spawner again.
+            MiniCropSetup.AddSpawner(farmField);
             return field;
         }
 

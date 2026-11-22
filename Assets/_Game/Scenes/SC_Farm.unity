@@ -98564,6 +98564,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7556383252327835448, guid: 404f714312936fe41acb0bc5322e5e05, type: 3}
   m_PrefabInstance: {fileID: 275944543}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &276021813 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2543232108923715845, guid: bf8c920c9c39dfa4b8100fa2b8fb0a06, type: 3}
+  m_PrefabInstance: {fileID: 9210142081635899271}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 785beb0119ba1424ca56b39f3ea4bcc9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Health
 --- !u!1001 &276432725
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -588061,6 +588072,7 @@ GameObject:
   - component: {fileID: 1663945260}
   - component: {fileID: 1663945262}
   - component: {fileID: 1663945261}
+  - component: {fileID: 1663945263}
   m_Layer: 0
   m_Name: Crop field
   m_TagString: Untagged
@@ -588125,6 +588137,36 @@ MonoBehaviour:
   - {fileID: 11400000, guid: c005f39435944de6bc6587140223787b, type: 2}
   growthSpeed: 1
   wetSoil: {fileID: 2100000, guid: 02c4e598aa4f73344a8a7c81d6320778, type: 2}
+--- !u!114 &1663945263
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1663945259}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46b70b4e67bd9be4cb514ac31f63ed87, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiniCropSpawner
+  cropPrefabs:
+  - {fileID: 8676869819600417881, guid: c0056a5e1c57aa244a72227b2b4896c1, type: 3}
+  - {fileID: 6676021929868771726, guid: 28b4e4c1ef574274ca366d1cae3cec2c, type: 3}
+  - {fileID: 8846496892241398944, guid: e850947487761454d815426ed12dcb81, type: 3}
+  - {fileID: 7577399204740142879, guid: 2376041d7249f9841a06dfa13dd01486, type: 3}
+  - {fileID: 28484292134027192, guid: 7bb5a9782bf7ccd43b1a09d49b4fee1f, type: 3}
+  - {fileID: 6857272881435372629, guid: 21f543bab93454c4db329d7049e5387e, type: 3}
+  inventory: {fileID: 1423067451}
+  player: {fileID: 276021813}
+  areaSize: {x: 20, y: 16}
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 64
+  minPlayerDistance: 5
+  firstSpawnDelay: 20
+  minDelay: 25
+  maxDelay: 50
+  maxAlive: 3
 --- !u!1 &1664605031
 GameObject:
   m_ObjectHideFlags: 0

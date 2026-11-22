@@ -23,7 +23,7 @@ namespace RushedCrops.Editor
                 scene = EditorSceneManager.OpenScene(FarmWorldBuilder.ScenePath);
             }
             Validate(scene);
-            Debug.Log("World validation passed: landmarks, player, crop field, tools, river water, merchant, hotbar pictures, barn repairs, gathering spots, bosses, colliders, materials and environment references.");
+            Debug.Log("World validation passed: landmarks, player, crop field, tools, river water, merchant, hotbar pictures, barn repairs, gathering spots, bosses, mini crops, colliders, materials and environment references.");
         }
 
         private static void Validate(Scene scene)
@@ -64,6 +64,7 @@ namespace RushedCrops.Editor
             ValidateBarn(garden);
             ValidateGathering(root.transform, player);
             ValidateBosses(player);
+            ValidateMiniCrops(garden);
 
             var cycle = UnityEngine.Object.FindAnyObjectByType<EnvironmentCycle>();
             Require(cycle != null, "The day/night cycle is missing.");
@@ -199,6 +200,26 @@ namespace RushedCrops.Editor
             }
             Transform hud = player.transform.Find(BossHudSetup.CanvasName);
             Require(hud != null && hud.GetComponent<BossHealthHud>() != null, "The boss health bar is missing. Run Rushed Crops > UI > Set up boss health bar.");
+        }
+
+        // The crop field has a spawner with one evil mini crop per crop, each able to be hit and to drop its crop.
+        private static void ValidateMiniCrops(Transform garden)
+        {
+            const string fix = " Run Rushed Crops > Combat > Set up mini crops.";
+            var spawner = garden.GetComponentInChildren<MiniCropSpawner>(true);
+            Require(spawner != null, "The crop field has no mini crop spawner." + fix);
+            var settings = new SerializedObject(spawner);
+            Require(settings.FindProperty("inventory").objectReferenceValue != null && settings.FindProperty("player").objectReferenceValue != null,
+                "The mini crop spawner is missing the Inventory or the player." + fix);
+            Require(spawner.CropPrefabs.Count == FarmPlotSetup.CropAssets.Length,
+                "The mini crop spawner needs one prefab per crop." + fix);
+            foreach (MiniCrop crop in spawner.CropPrefabs)
+            {
+                Require(crop != null && crop.Crop != null, "A mini crop prefab or its crop is missing." + fix);
+                Require(crop.GetComponent<Collider>() != null && crop.GetComponent<Knockback>() != null,
+                    crop.name + " has nothing for the hatchet to hit or push." + fix);
+                Require(new SerializedObject(crop).FindProperty("dropPrefab").objectReferenceValue != null, crop.name + " has nothing to drop." + fix);
+            }
         }
 
         // The pickaxe waits in the quarry and fits the hand. Trees to chop stand round the logging camp and
