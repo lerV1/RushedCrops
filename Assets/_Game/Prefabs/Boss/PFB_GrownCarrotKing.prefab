@@ -1,0 +1,239 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &541253698710732988
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7353146811049632700}
+  - component: {fileID: 8475832005379349157}
+  - component: {fileID: 7761386084879171660}
+  - component: {fileID: 4437250018087989892}
+  - component: {fileID: 510965756057276523}
+  - component: {fileID: 4728264491125755877}
+  - component: {fileID: 7533184675465795454}
+  m_Layer: 0
+  m_Name: PFB_GrownCarrotKing
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7353146811049632700
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 541253698710732988}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7568103756185186420}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &8475832005379349157
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 541253698710732988}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.95
+  m_Height: 3.4
+  m_Direction: 1
+  m_Center: {x: 0, y: 1.9, z: 0}
+--- !u!65 &7761386084879171660
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 541253698710732988}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.8, y: 0.3, z: 1.8}
+  m_Center: {x: 0, y: 0.15, z: 0}
+--- !u!114 &4437250018087989892
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 541253698710732988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 785beb0119ba1424ca56b39f3ea4bcc9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Health
+  maxHealth: 75
+--- !u!114 &510965756057276523
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 541253698710732988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5fa89b7ef0f6df40a6a7853cedcf614, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  health: {fileID: 0}
+  renderers: []
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  flashDuration: 0.12
+--- !u!114 &4728264491125755877
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 541253698710732988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 895ceabd1383dd541b0e77848d184635, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CropBoss
+  displayName: Carrot King
+  model: {fileID: 7568103756185186420}
+  inventory: {fileID: 0}
+  dropPrefab: {fileID: 1567713493928193696, guid: b75aeef62b71c2a46a47192c542d474a, type: 3}
+  drops:
+  - crop: {fileID: 11400000, guid: 925db227256b77646a2ba8e150afbb06, type: 2}
+    amount: 3
+  - crop: {fileID: 11400000, guid: 73257a236c875bd4ca79cfee6687e810, type: 2}
+    amount: 3
+  - crop: {fileID: 11400000, guid: ef605b455a144c549154faf9e163e26e, type: 2}
+    amount: 3
+  - crop: {fileID: 11400000, guid: 5403a34dc7b94d929b5a2bccd571c86e, type: 2}
+    amount: 3
+  - crop: {fileID: 11400000, guid: 7cc98592287e471481d70ba32f1be751, type: 2}
+    amount: 3
+  - crop: {fileID: 11400000, guid: c005f39435944de6bc6587140223787b, type: 2}
+    amount: 3
+  dropRadius: 2.2
+  sinkTime: 0.8
+  countsTowardVictory: 0
+  removeAfterDeath: 1
+--- !u!114 &7533184675465795454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 541253698710732988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 561ccca1a1c810c438d8f88c03d3468b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossCombat
+  attacks:
+  - kind: 0
+    minRange: 0
+    maxRange: 4.5
+    windUp: 1.3
+    damage: 15
+    reach: 3.6
+    shots: 1
+    rest: 2.5
+  aggroRange: 8
+  moveSpeed: 0
+  leash: 0
+  turnSpeed: 120
+  angryBelow: 0
+  angrySpeedUp: 1.4
+  projectilePrefab: {fileID: 0}
+  warningMaterial: {fileID: 2100000, guid: 898970897b7ec9c438df65ec2bf27401, type: 2}
+  mouth: {x: 0, y: 1.8, z: 1}
+  bodyRadius: 0.95
+--- !u!1001 &7966295143094081439
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 7353146811049632700}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 4e28702653abc2643a9cace48ebec09f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4e28702653abc2643a9cace48ebec09f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4e28702653abc2643a9cace48ebec09f, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4e28702653abc2643a9cace48ebec09f, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4e28702653abc2643a9cace48ebec09f, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4e28702653abc2643a9cace48ebec09f, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4e28702653abc2643a9cace48ebec09f, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4e28702653abc2643a9cace48ebec09f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4e28702653abc2643a9cace48ebec09f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 4e28702653abc2643a9cace48ebec09f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 4e28702653abc2643a9cace48ebec09f, type: 3}
+      propertyPath: m_Name
+      value: Model
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 4e28702653abc2643a9cace48ebec09f, type: 3}
+--- !u!4 &7568103756185186420 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 4e28702653abc2643a9cace48ebec09f, type: 3}
+  m_PrefabInstance: {fileID: 7966295143094081439}
+  m_PrefabAsset: {fileID: 0}

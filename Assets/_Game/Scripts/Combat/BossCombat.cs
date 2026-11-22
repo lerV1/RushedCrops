@@ -128,6 +128,11 @@ public class BossCombat : MonoBehaviour
         {
             boss.Health.Died -= OnBossDied;
         }
+        // The warning patches live beside the boss, not under it, so remove them with it.
+        if (warnings != null)
+        {
+            Destroy(warnings.gameObject);
+        }
     }
 
     private void Update()

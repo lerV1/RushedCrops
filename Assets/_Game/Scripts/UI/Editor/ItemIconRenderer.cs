@@ -43,6 +43,17 @@ namespace RushedCrops.Editor
             (ResourceType.OnionSeeds, ResourceType.Onions), (ResourceType.WheatSeeds, ResourceType.Wheat),
         };
 
+        // Boss seeds show the seed sack with their boss in the corner.
+        internal static readonly (ResourceType seeds, string bossModel)[] BossSeeds =
+        {
+            (ResourceType.CarrotKingSeed, CropBossSetup.ModelPath),
+            (ResourceType.TomatoBruteSeed, CropBossSetup.TomatoModelPath),
+            (ResourceType.OnionOverlordSeed, CropBossSetup.OnionModelPath),
+            (ResourceType.BeetBaronSeed, CropBossSetup.BeetModelPath),
+            (ResourceType.CabbageColossusSeed, CropBossSetup.CabbageModelPath),
+            (ResourceType.WheatWarlordSeed, CropBossSetup.WheatModelPath),
+        };
+
         [MenuItem("Rushed Crops/UI/Render item icons")]
         public static void RenderAll()
         {
@@ -59,6 +70,12 @@ namespace RushedCrops.Editor
             Texture2D sack = Shoot(camera, 1f, () => Place(SeedSack, new Vector3(0f, 20f, 0f), 0f));
             foreach (var (seeds, crop) in Seeds)
                 pictures.Add((seeds, WithBadge(sack, pictures.Find(p => p.item == crop).picture)));
+            foreach (var (seeds, bossModel) in BossSeeds)
+            {
+                Texture2D boss = Shoot(camera, 1f, () => Place(bossModel, Vector3.zero, 1f));
+                pictures.Add((seeds, WithBadge(sack, boss)));
+                UnityEngine.Object.DestroyImmediate(boss);
+            }
             UnityEngine.Object.DestroyImmediate(sack);
 
             var made = new List<(ResourceType, string)>();

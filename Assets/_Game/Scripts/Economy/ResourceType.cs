@@ -23,7 +23,14 @@ public enum ResourceType
     Onions,
     Wheat,
     Hatchet,
-    Pickaxe
+    Pickaxe,
+    // Rare boss seeds dropped by evil mini crops. Planting one grows that boss.
+    CarrotKingSeed,
+    TomatoBruteSeed,
+    OnionOverlordSeed,
+    BeetBaronSeed,
+    CabbageColossusSeed,
+    WheatWarlordSeed
 }
 
 public static class ResourceTypes

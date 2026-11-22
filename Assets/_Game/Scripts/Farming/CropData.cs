@@ -22,6 +22,10 @@ public class CropData : ScriptableObject
     [Tooltip("How many times the crop must be watered. Each watering lets it grow an equal share of the way.")]
     [SerializeField, Min(1)] private int waterNeeded = 1;
 
+    [Header("Boss seed")]
+    [Tooltip("Only for boss seeds: when the plant is fully grown this boss climbs out instead of a harvest.")]
+    [SerializeField] private CropBoss grownBoss;
+
     public CropType CropType => cropType;
     public string DisplayName => displayName;
     public ResourceType SeedResource => seedResource;
@@ -30,6 +34,8 @@ public class CropData : ScriptableObject
     public float GrowSeconds => growSeconds;
     public int StageCount => stageModels.Length;
     public int WaterNeeded => waterNeeded;
+    public CropBoss GrownBoss => grownBoss;
+    public bool IsBossSeed => grownBoss != null;
 
     public GameObject GetStageModel(int stage)
     {

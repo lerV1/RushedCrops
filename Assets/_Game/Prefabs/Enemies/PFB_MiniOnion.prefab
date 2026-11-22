@@ -148,6 +148,8 @@ MonoBehaviour:
   dropAmount: 1
   model: {fileID: 9170092737760294855}
   dropPrefab: {fileID: 1567713493928193696, guid: b75aeef62b71c2a46a47192c542d474a, type: 3}
+  bossSeed: {fileID: 11400000, guid: e37501b112f2ed946a6e7bb997f90460, type: 2}
+  bossSeedChance: 0.05
   wanderSpeed: 1.2
   chaseSpeed: 3.2
   turnSpeed: 360
@@ -158,6 +160,10 @@ MonoBehaviour:
   damage: 9
   windUp: 0.45
   cooldown: 1.2
+  biteHeight: 0.8
+  blockingLayers:
+    serializedVersion: 2
+    m_Bits: 4294967291
 --- !u!1001 &8703223592926187564
 PrefabInstance:
   m_ObjectHideFlags: 0

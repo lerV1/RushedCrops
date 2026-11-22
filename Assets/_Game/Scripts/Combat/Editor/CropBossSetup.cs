@@ -22,6 +22,10 @@ namespace RushedCrops.Editor
         public const string ModelPath = "Assets/_Game/Models/Boss/CropBoss.fbx";
         public const string TomatoModelPath = "Assets/_Game/Models/Boss/TomatoBoss.fbx";
         public const string OnionModelPath = "Assets/_Game/Models/Boss/OnionBoss.fbx";
+        // Bosses that only grow from boss seeds (they have no spot on the map).
+        public const string BeetModelPath = "Assets/_Game/Models/Boss/BeetBoss.fbx";
+        public const string CabbageModelPath = "Assets/_Game/Models/Boss/CabbageBoss.fbx";
+        public const string WheatModelPath = "Assets/_Game/Models/Boss/WheatBoss.fbx";
         public const string WarningMaterialPath = MaterialFolder + "/MAT_BossWarning.mat";
         private const string MaterialFolder = "Assets/_Game/Materials/Boss";
         private const string PrefabFolder = "Assets/_Game/Prefabs/Boss";
@@ -45,6 +49,13 @@ namespace RushedCrops.Editor
             { "Boss_Gold", new Color(0.98f, 0.78f, 0.2f) },
             { "Boss_Tear", new Color(0.6f, 0.85f, 1f) },
             { "Boss_Seed", new Color(0.98f, 0.88f, 0.5f) },
+            { "Boss_Beet", new Color(0.56f, 0.08f, 0.26f) },
+            { "Boss_BeetDark", new Color(0.36f, 0.04f, 0.16f) },
+            { "Boss_Cabbage", new Color(0.62f, 0.84f, 0.42f) },
+            { "Boss_CabbageDark", new Color(0.36f, 0.62f, 0.26f) },
+            { "Boss_Wheat", new Color(0.95f, 0.78f, 0.32f) },
+            { "Boss_WheatDark", new Color(0.72f, 0.52f, 0.18f) },
+            { "Boss_Steel", new Color(0.7f, 0.72f, 0.76f) },
         };
 
         // Everything that makes one boss different from another.
@@ -115,6 +126,53 @@ namespace RushedCrops.Editor
             },
         };
 
+        // Medium: a crowned beet that charges across the field and slams up close. 8 hatchet hits.
+        private static readonly Spec Beet = new Spec
+        {
+            rootName = "Beet boss", displayName = "Beet Baron", model = BeetModelPath,
+            spot = Vector3.zero, yaw = 0f, health = 200, seedsPerCrop = 4,
+            bodyCentre = new Vector3(0f, 1.7f, 0f), bodyRadius = 1.05f, bodyHeight = 3.2f, mound = false,
+            aggro = 10f, moveSpeed = 2.6f, leash = 6f, turnSpeed = 180f, angryBelow = 0f,
+            mouth = new Vector3(0f, 1.8f, 1.05f),
+            attacks = new[]
+            {
+                Attack(BossCombat.AttackKind.Charge, 4f, 10f, 0.9f, 15, 8f, 1, 1.6f),
+                Attack(BossCombat.AttackKind.Slam, 0f, 4f, 0.9f, 15, 3.8f, 1, 1.8f),
+            },
+        };
+
+        // Hard and heavy: a slow cabbage with big slams and shockwaves to jump over; faster below 40% health.
+        // 11 hatchet hits.
+        private static readonly Spec Cabbage = new Spec
+        {
+            rootName = "Cabbage boss", displayName = "Cabbage Colossus", model = CabbageModelPath,
+            spot = Vector3.zero, yaw = 0f, health = 260, seedsPerCrop = 5,
+            bodyCentre = new Vector3(0f, 1.6f, 0f), bodyRadius = 1.25f, bodyHeight = 3.0f, mound = false,
+            aggro = 9f, moveSpeed = 1.6f, leash = 5f, turnSpeed = 120f, angryBelow = 0.4f,
+            mouth = new Vector3(0f, 1.6f, 1.25f),
+            attacks = new[]
+            {
+                Attack(BossCombat.AttackKind.Slam, 0f, 4.5f, 1.1f, 20, 4.5f, 1, 2f),
+                Attack(BossCombat.AttackKind.Shockwave, 0f, 6f, 1.1f, 15, 7f, 1, 2.2f),
+            },
+        };
+
+        // Medium: a wheat sheaf with a sickle that throws grain from range, charges and slams. 8 hatchet hits.
+        private static readonly Spec Wheat = new Spec
+        {
+            rootName = "Wheat boss", displayName = "Wheat Warlord", model = WheatModelPath,
+            spot = Vector3.zero, yaw = 0f, health = 180, seedsPerCrop = 4,
+            bodyCentre = new Vector3(0f, 1.6f, 0f), bodyRadius = 0.8f, bodyHeight = 3.2f, mound = false,
+            aggro = 11f, moveSpeed = 2.8f, leash = 6f, turnSpeed = 200f, angryBelow = 0f,
+            mouth = new Vector3(0f, 2f, 0.8f), shot = "PFB_BossSeed", shotMaterial = "Boss_Seed", shotSize = new Vector3(0.28f, 0.28f, 0.42f),
+            attacks = new[]
+            {
+                Attack(BossCombat.AttackKind.Spit, 4f, 12f, 0.8f, 8, 1.4f, 5, 1.4f),
+                Attack(BossCombat.AttackKind.Charge, 3f, 9f, 0.8f, 15, 7f, 1, 1.5f),
+                Attack(BossCombat.AttackKind.Slam, 0f, 3.5f, 0.8f, 12, 3.2f, 1, 1.6f),
+            },
+        };
+
         [MenuItem("Rushed Crops/Combat/Place crop bosses")]
         public static void PlaceInScene()
         {
@@ -132,6 +190,60 @@ namespace RushedCrops.Editor
         public static GameObject Place(Transform farm) => PlaceBoss(farm, Carrot);
         public static GameObject PlaceTomato(Transform loggingCamp) => PlaceBoss(loggingCamp, Tomato);
         public static GameObject PlaceOnion(Transform quarry) => PlaceBoss(quarry, Onion);
+
+        // One boss per crop saved as a prefab, for boss seeds to grow: the three map bosses plus the beet, cabbage
+        // and wheat bosses, which only come from seeds. Beating one of these doesn't count toward winning, and the
+        // farm square hands it the Inventory when it climbs out.
+        // Order: carrot, tomato, onion, beet, cabbage, wheat. An existing prefab is kept as it is.
+        public static CropBoss[] MakeGrownBossPrefabs()
+        {
+            return new[]
+            {
+                GrownBossPrefab(Carrot, "PFB_GrownCarrotKing"),
+                GrownBossPrefab(Tomato, "PFB_GrownTomatoBrute"),
+                GrownBossPrefab(Onion, "PFB_GrownOnionOverlord"),
+                GrownBossPrefab(Beet, "PFB_GrownBeetBaron"),
+                GrownBossPrefab(Cabbage, "PFB_GrownCabbageColossus"),
+                GrownBossPrefab(Wheat, "PFB_GrownWheatWarlord"),
+            };
+        }
+
+        private static CropBoss GrownBossPrefab(Spec spec, string prefabName)
+        {
+            string path = $"{PrefabFolder}/{prefabName}.prefab";
+            var existing = AssetDatabase.LoadAssetAtPath<CropBoss>(path);
+            if (existing != null)
+            {
+                // Keep the saved prefab, but make sure it has the grown-boss settings.
+                GameObject contents = PrefabUtility.LoadPrefabContents(path);
+                try
+                {
+                    SetGrownBossSettings(contents.GetComponent<CropBoss>());
+                    PrefabUtility.SaveAsPrefabAsset(contents, path);
+                }
+                finally
+                {
+                    PrefabUtility.UnloadPrefabContents(contents);
+                }
+                return AssetDatabase.LoadAssetAtPath<CropBoss>(path);
+            }
+
+            EnsureFolder(PrefabFolder);
+            var holder = new GameObject("Grown boss holder");
+            try
+            {
+                GameObject root = PlaceBoss(holder.transform, spec);
+                root.name = prefabName;
+                root.transform.localPosition = Vector3.zero;
+                root.transform.localRotation = Quaternion.identity;
+                SetGrownBossSettings(root.GetComponent<CropBoss>());
+                return PrefabUtility.SaveAsPrefabAsset(root, path).GetComponent<CropBoss>();
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(holder);
+            }
+        }
 
         private static GameObject PlaceBoss(Transform parent, Spec spec)
         {
@@ -222,6 +334,17 @@ namespace RushedCrops.Editor
             }
             combat.ApplyModifiedPropertiesWithoutUndo();
             return root;
+        }
+
+        // A grown boss gets the Inventory from its farm square, doesn't count toward winning, and is removed once
+        // it has sunk after dying.
+        private static void SetGrownBossSettings(CropBoss boss)
+        {
+            var settings = new SerializedObject(boss);
+            settings.FindProperty("inventory").objectReferenceValue = null; // a prefab can't keep a scene object
+            settings.FindProperty("countsTowardVictory").boolValue = false;
+            settings.FindProperty("removeAfterDeath").boolValue = true;
+            settings.ApplyModifiedPropertiesWithoutUndo();
         }
 
         // A see-through red for warning patches, seen from both sides and never casting shadows.

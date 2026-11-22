@@ -65,6 +65,12 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
         int lastStage = Crop.StageCount - 1;
         if (Progress >= 1f)
         {
+            // A boss seed doesn't give a harvest: its boss climbs out of the soil instead.
+            if (Crop.IsBossSeed)
+            {
+                GrowBoss();
+                return;
+            }
             State = TileState.Ripe;
             ShowStage(lastStage);
             return;
@@ -219,13 +225,29 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
             return false;
         }
 
+        ClearSquare();
+        return true;
+    }
+
+    // The boss climbs out where the plant stood, facing a random way, and the square is empty soil again.
+    private CropBoss GrowBoss()
+    {
+        Quaternion facing = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
+        CropBoss boss = Instantiate(Crop.GrownBoss, transform.position, facing, plot.transform.parent);
+        boss.Setup(plot.Inventory);
+        ClearSquare();
+        return boss;
+    }
+
+    // Back to tilled soil with nothing planted.
+    private void ClearSquare()
+    {
         RemovePlant();
         Crop = null;
         growTime = 0f;
         waterings = 0;
         SetWet(false);
         State = TileState.Tilled;
-        return true;
     }
 
     private void SetWet(bool wet)

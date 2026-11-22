@@ -65,6 +65,44 @@ namespace RushedCrops.Editor
 
         public static int VariantCount => Specs.Length;
 
+        // The rare boss seed each mini crop can drop: one per crop.
+        private static readonly Dictionary<string, string> BossSeeds = new Dictionary<string, string>
+        {
+            { "MiniCarrot", "DA_CarrotKingSeed" },
+            { "MiniTomato", "DA_TomatoBruteSeed" },
+            { "MiniOnion", "DA_OnionOverlordSeed" },
+            { "MiniBeet", "DA_BeetBaronSeed" },
+            { "MiniCabbage", "DA_CabbageColossusSeed" },
+            { "MiniWheat", "DA_WheatWarlordSeed" },
+        };
+
+        private static CropData BossSeedFor(string model)
+        {
+            if (!BossSeeds.TryGetValue(model, out string asset)) return null;
+            return AssetDatabase.LoadAssetAtPath<CropData>($"Assets/_Game/Data/{asset}.asset");
+        }
+
+        // Gives the saved mini crop prefabs their boss seeds, changing only that field.
+        public static void AssignBossSeeds()
+        {
+            foreach (Spec spec in Specs)
+            {
+                string path = $"{PrefabFolder}/PFB_{spec.model}.prefab";
+                GameObject root = PrefabUtility.LoadPrefabContents(path);
+                try
+                {
+                    var settings = new SerializedObject(root.GetComponent<MiniCrop>());
+                    settings.FindProperty("bossSeed").objectReferenceValue = BossSeedFor(spec.model);
+                    settings.ApplyModifiedPropertiesWithoutUndo();
+                    PrefabUtility.SaveAsPrefabAsset(root, path);
+                }
+                finally
+                {
+                    PrefabUtility.UnloadPrefabContents(root);
+                }
+            }
+        }
+
         [MenuItem("Rushed Crops/Combat/Set up mini crops")]
         public static void SetUpInScene()
         {
@@ -152,6 +190,7 @@ namespace RushedCrops.Editor
                 settings.FindProperty("crop").objectReferenceValue = crop;
                 settings.FindProperty("model").objectReferenceValue = model.transform;
                 settings.FindProperty("dropPrefab").objectReferenceValue = drop;
+                settings.FindProperty("bossSeed").objectReferenceValue = BossSeedFor(spec.model);
                 settings.FindProperty("damage").intValue = spec.damage;
                 settings.FindProperty("chaseSpeed").floatValue = spec.chaseSpeed;
                 settings.ApplyModifiedPropertiesWithoutUndo();

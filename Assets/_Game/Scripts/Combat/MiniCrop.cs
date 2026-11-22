@@ -32,6 +32,10 @@ public class MiniCrop : MonoBehaviour, IInteractable
     [SerializeField] private Transform model;
     [Tooltip("What is thrown out when it dies.")]
     [SerializeField] private ItemDrop dropPrefab;
+    [Tooltip("The rare boss seed it can drop instead of its crop. Leave empty if its crop has no boss.")]
+    [SerializeField] private CropData bossSeed;
+    [Tooltip("Chance, from 0 to 1, of dropping the boss seed instead of its crop. 0.05 is 5%.")]
+    [SerializeField, Range(0f, 1f)] private float bossSeedChance = 0.05f;
 
     [Header("Moving (metres per second)")]
     [SerializeField, Min(0f)] private float wanderSpeed = 1.2f;
@@ -86,6 +90,8 @@ public class MiniCrop : MonoBehaviour, IInteractable
     public Temper Temperament => temper;
     public string DisplayName => displayName;
     public CropData Crop => crop;
+    public CropData BossSeed => bossSeed;
+    public float BossSeedChance => bossSeedChance;
     public bool IsAngry => angry;
     public Health Health => health;
 
@@ -345,10 +351,25 @@ public class MiniCrop : MonoBehaviour, IInteractable
             Debug.LogError($"{name} needs a drop prefab, a crop and the Inventory to drop its crop.", this);
             return;
         }
+        // Roll once: a number from 0 to 1 picks the boss seed or the normal crop.
+        ResourceType item = ChooseDrop(Random.value);
+        int amount = item == crop.HarvestResource ? dropAmount : 1;
+
         Vector2 offset = Random.insideUnitCircle.normalized * 1.2f;
         Vector3 landing = transform.position + new Vector3(offset.x, 0f, offset.y);
         ItemDrop drop = Instantiate(dropPrefab, transform.position + Vector3.up, Quaternion.identity, transform.parent);
-        drop.Launch(inventory, crop.HarvestResource, dropAmount, landing);
+        drop.Launch(inventory, item, amount, landing);
+    }
+
+    // What to drop for a roll between 0 and 1. A roll under the chance (under 0.05 for 5%) gives the boss seed;
+    // any other roll, or a crop with no boss seed, gives the normal crop.
+    public ResourceType ChooseDrop(float roll)
+    {
+        if (bossSeed != null && roll < bossSeedChance)
+        {
+            return bossSeed.SeedResource;
+        }
+        return crop.HarvestResource;
     }
 
     private IEnumerator ShrinkAway()

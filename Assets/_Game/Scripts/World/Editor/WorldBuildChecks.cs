@@ -157,7 +157,8 @@ namespace RushedCrops.Editor
             Require(settings.FindProperty("inventory").objectReferenceValue != null, "The crop field needs the Inventory assigned." + fix);
             Require(settings.FindProperty("wetSoil").objectReferenceValue != null, "The crop field needs its wet soil material assigned." + fix);
             SerializedProperty crops = settings.FindProperty("crops");
-            Require(crops.arraySize == FarmPlotSetup.CropAssets.Length, "The crop field can't grow every crop. Run Rushed Crops > Farming > Update crops in crop field.");
+            // Every crop plus every boss seed.
+            Require(crops.arraySize == FarmPlotSetup.CropAssets.Length + FarmPlotSetup.BossSeedAssets.Length, "The crop field can't grow every crop. Run Rushed Crops > Farming > Update crops in crop field.");
             for (int i = 0; i < crops.arraySize; i++)
             {
                 var crop = crops.GetArrayElementAtIndex(i).objectReferenceValue as CropData;
@@ -220,6 +221,19 @@ namespace RushedCrops.Editor
                     crop.name + " has nothing for the hatchet to hit or push." + fix);
                 Require(new SerializedObject(crop).FindProperty("dropPrefab").objectReferenceValue != null, crop.name + " has nothing to drop." + fix);
             }
+
+            // Every boss seed is dropped by a mini crop, grows a boss, and can be planted in the crop field.
+            const string seedFix = " Run Rushed Crops > Farming > Set up boss seeds.";
+            var plot = garden.GetComponentInChildren<FarmPlot>(true);
+            int droppers = 0;
+            foreach (MiniCrop crop in spawner.CropPrefabs)
+            {
+                if (crop.BossSeed == null) continue;
+                droppers++;
+                Require(crop.BossSeed.GrownBoss != null, crop.BossSeed.name + " doesn't grow a boss." + seedFix);
+                Require(plot != null && plot.CanGrow(crop.BossSeed), "The crop field can't grow " + crop.BossSeed.name + "." + seedFix);
+            }
+            Require(droppers == FarmPlotSetup.BossSeedAssets.Length, "Only " + droppers + " mini crops drop a boss seed." + seedFix);
         }
 
         // The pickaxe waits in the quarry and fits the hand. Trees to chop stand round the logging camp and

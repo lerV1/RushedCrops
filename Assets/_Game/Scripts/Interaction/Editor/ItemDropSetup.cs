@@ -44,6 +44,7 @@ namespace RushedCrops.Editor
             var entries = new List<(ResourceType item, string path)>();
             foreach (var (item, model, _, _) in ItemIconRenderer.Models) entries.Add((item, model));
             foreach (var (seeds, _) in ItemIconRenderer.Seeds) entries.Add((seeds, ItemIconRenderer.SeedSack));
+            foreach (var (seeds, _) in ItemIconRenderer.BossSeeds) entries.Add((seeds, ItemIconRenderer.SeedSack));
 
             var settings = new SerializedObject(asset);
             SerializedProperty list = settings.FindProperty("models");

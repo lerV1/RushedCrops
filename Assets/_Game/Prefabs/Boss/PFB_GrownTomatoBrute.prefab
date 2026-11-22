@@ -1,0 +1,225 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7747321200792180396
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5127072645647664188}
+  - component: {fileID: 7971568892706385826}
+  - component: {fileID: 5161724980153093929}
+  - component: {fileID: 1522197568535183329}
+  - component: {fileID: 8140270333551605196}
+  - component: {fileID: 3206282121398443331}
+  m_Layer: 0
+  m_Name: PFB_GrownTomatoBrute
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5127072645647664188
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7747321200792180396}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7205239241589594917}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &7971568892706385826
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7747321200792180396}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 1.45
+  m_Height: 2.7
+  m_Direction: 1
+  m_Center: {x: 0, y: 1.3, z: 0}
+--- !u!114 &5161724980153093929
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7747321200792180396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 785beb0119ba1424ca56b39f3ea4bcc9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Health
+  maxHealth: 175
+--- !u!114 &1522197568535183329
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7747321200792180396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5fa89b7ef0f6df40a6a7853cedcf614, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  health: {fileID: 0}
+  renderers: []
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  flashDuration: 0.12
+--- !u!114 &8140270333551605196
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7747321200792180396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 895ceabd1383dd541b0e77848d184635, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CropBoss
+  displayName: Tomato Brute
+  model: {fileID: 7205239241589594917}
+  inventory: {fileID: 0}
+  dropPrefab: {fileID: 1567713493928193696, guid: b75aeef62b71c2a46a47192c542d474a, type: 3}
+  drops:
+  - crop: {fileID: 11400000, guid: 925db227256b77646a2ba8e150afbb06, type: 2}
+    amount: 4
+  - crop: {fileID: 11400000, guid: 73257a236c875bd4ca79cfee6687e810, type: 2}
+    amount: 4
+  - crop: {fileID: 11400000, guid: ef605b455a144c549154faf9e163e26e, type: 2}
+    amount: 4
+  - crop: {fileID: 11400000, guid: 5403a34dc7b94d929b5a2bccd571c86e, type: 2}
+    amount: 4
+  - crop: {fileID: 11400000, guid: 7cc98592287e471481d70ba32f1be751, type: 2}
+    amount: 4
+  - crop: {fileID: 11400000, guid: c005f39435944de6bc6587140223787b, type: 2}
+    amount: 4
+  dropRadius: 2.2
+  sinkTime: 0.8
+  countsTowardVictory: 0
+  removeAfterDeath: 1
+--- !u!114 &3206282121398443331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7747321200792180396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 561ccca1a1c810c438d8f88c03d3468b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossCombat
+  attacks:
+  - kind: 1
+    minRange: 5.5
+    maxRange: 11
+    windUp: 0.9
+    damage: 10
+    reach: 1.7
+    shots: 3
+    rest: 1.6
+  - kind: 0
+    minRange: 0
+    maxRange: 3.8
+    windUp: 0.9
+    damage: 15
+    reach: 3.8
+    shots: 1
+    rest: 1.8
+  aggroRange: 10
+  moveSpeed: 2.2
+  leash: 5
+  turnSpeed: 160
+  angryBelow: 0
+  angrySpeedUp: 1.4
+  projectilePrefab: {fileID: 2328377348973418016, guid: 9dfe0cddeb6edf14a952d5d9e81c8b0f, type: 3}
+  warningMaterial: {fileID: 2100000, guid: 898970897b7ec9c438df65ec2bf27401, type: 2}
+  mouth: {x: 0, y: 1, z: 1.45}
+  bodyRadius: 1.45
+--- !u!1001 &7238585972820704462
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 5127072645647664188}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: dbb66ee68be428f47bcf690e8ed0a010, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: dbb66ee68be428f47bcf690e8ed0a010, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: dbb66ee68be428f47bcf690e8ed0a010, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: dbb66ee68be428f47bcf690e8ed0a010, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: dbb66ee68be428f47bcf690e8ed0a010, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: dbb66ee68be428f47bcf690e8ed0a010, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: dbb66ee68be428f47bcf690e8ed0a010, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: dbb66ee68be428f47bcf690e8ed0a010, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: dbb66ee68be428f47bcf690e8ed0a010, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: dbb66ee68be428f47bcf690e8ed0a010, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: dbb66ee68be428f47bcf690e8ed0a010, type: 3}
+      propertyPath: m_Name
+      value: Model
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: dbb66ee68be428f47bcf690e8ed0a010, type: 3}
+--- !u!4 &7205239241589594917 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: dbb66ee68be428f47bcf690e8ed0a010, type: 3}
+  m_PrefabInstance: {fileID: 7238585972820704462}
+  m_PrefabAsset: {fileID: 0}

@@ -416280,6 +416280,7 @@ MonoBehaviour:
     amount: 4
   dropRadius: 2.2
   sinkTime: 0.8
+  countsTowardVictory: 1
 --- !u!114 &1177009730
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -432459,6 +432460,7 @@ MonoBehaviour:
     amount: 3
   dropRadius: 2.2
   sinkTime: 0.8
+  countsTowardVictory: 1
 --- !u!114 &1224565098
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -588135,6 +588137,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5403a34dc7b94d929b5a2bccd571c86e, type: 2}
   - {fileID: 11400000, guid: 7cc98592287e471481d70ba32f1be751, type: 2}
   - {fileID: 11400000, guid: c005f39435944de6bc6587140223787b, type: 2}
+  - {fileID: 11400000, guid: 90d0310cc42c2904788bff76c5959b06, type: 2}
+  - {fileID: 11400000, guid: 87add35fa671a1a44b758f077df1d86a, type: 2}
+  - {fileID: 11400000, guid: e37501b112f2ed946a6e7bb997f90460, type: 2}
+  - {fileID: 11400000, guid: 5dad9c41525994448918ccd587c4675b, type: 2}
+  - {fileID: 11400000, guid: a364ebac3f716f941b2ca0125cb989ed, type: 2}
+  - {fileID: 11400000, guid: b1cc1afe046496a4b8deccfd366d37b4, type: 2}
   growthSpeed: 1
   wetSoil: {fileID: 2100000, guid: 02c4e598aa4f73344a8a7c81d6320778, type: 2}
 --- !u!114 &1663945263
@@ -657972,6 +657980,7 @@ MonoBehaviour:
     amount: 6
   dropRadius: 2.2
   sinkTime: 0.8
+  countsTowardVictory: 1
 --- !u!114 &1855506770
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -34,6 +34,12 @@ public class CropBoss : MonoBehaviour, IInteractable
     [Tooltip("How long, in seconds, the boss takes to sink into the ground when it dies.")]
     [SerializeField, Min(0.05f)] private float sinkTime = 0.8f;
 
+    [Header("Progress")]
+    [Tooltip("Off for bosses grown from boss seeds: beating one of those doesn't count toward winning.")]
+    [SerializeField] private bool countsTowardVictory = true;
+    [Tooltip("On for bosses grown from boss seeds: once it has sunk, the whole boss is removed from the scene. Map bosses stay.")]
+    [SerializeField] private bool removeAfterDeath;
+
     // Every living boss in the scene, for the boss health bar.
     public static readonly List<CropBoss> All = new List<CropBoss>();
 
@@ -78,6 +84,15 @@ public class CropBoss : MonoBehaviour, IInteractable
         health.Damaged -= OnDamaged;
         health.Died -= OnDied;
         All.Remove(this);
+    }
+
+    public bool CountsTowardVictory => countsTowardVictory;
+
+    // A boss grown from a boss seed is made from a prefab, which can't point at the scene's Inventory,
+    // so the farm square that grew it hands the Inventory over here.
+    public void Setup(Inventory sharedInventory)
+    {
+        inventory = sharedInventory;
     }
 
     public bool CanInteract => false;
@@ -125,7 +140,7 @@ public class CropBoss : MonoBehaviour, IInteractable
         model.localScale = modelScale;
         model.localRotation = modelRotation;
         DropSeeds();
-        if (GameManager.Instance != null)
+        if (countsTowardVictory && GameManager.Instance != null)
         {
             GameManager.Instance.RecordBossDefeat();
         }
@@ -166,5 +181,13 @@ public class CropBoss : MonoBehaviour, IInteractable
         }
         model.gameObject.SetActive(false);
         model.localPosition = modelPosition;
+
+        // A grown boss can be planted again and again, so don't leave dead ones behind. Destroying it also
+        // takes it out of All (OnDisable) and removes its warning patches (BossCombat.OnDestroy). The seeds it
+        // dropped are not its children, so they stay.
+        if (removeAfterDeath)
+        {
+            Destroy(gameObject);
+        }
     }
 }

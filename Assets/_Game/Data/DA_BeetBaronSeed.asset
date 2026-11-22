@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72c27e150e7b3854cb3c910ec5ffb8fd, type: 3}
+  m_Name: DA_BeetBaronSeed
+  m_EditorClassIdentifier: Assembly-CSharp::CropData
+  cropType: 2
+  displayName: Beet Baron
+  seedResource: 22
+  harvestResource: 13
+  harvestAmount: 1
+  growSeconds: 120
+  stageModels:
+  - {fileID: 2265237532034311122, guid: 51cdc20ff703a0e4987ae76f21d28e22, type: 3}
+  - {fileID: 8473038821654067866, guid: 07a61c7b898ed7e448e69a9d2c07dc57, type: 3}
+  - {fileID: 343999695345150714, guid: e3be1eab97ad1e447b00772b9b1080d4, type: 3}
+  waterNeeded: 2
+  grownBoss: {fileID: 7262702959797257237, guid: 750e34e41811b314a8da607c9ba485cb, type: 3}

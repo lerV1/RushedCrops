@@ -18,6 +18,16 @@ namespace RushedCrops.Editor
             "Assets/_Game/Data/DA_Onion.asset",
             "Assets/_Game/Data/DA_Wheat.asset",
         };
+        // Rare boss seeds (Rushed Crops > Farming > Set up boss seeds makes them). The field grows these too.
+        public static readonly string[] BossSeedAssets =
+        {
+            "Assets/_Game/Data/DA_CarrotKingSeed.asset",
+            "Assets/_Game/Data/DA_TomatoBruteSeed.asset",
+            "Assets/_Game/Data/DA_OnionOverlordSeed.asset",
+            "Assets/_Game/Data/DA_BeetBaronSeed.asset",
+            "Assets/_Game/Data/DA_CabbageColossusSeed.asset",
+            "Assets/_Game/Data/DA_WheatWarlordSeed.asset",
+        };
         public const string FieldName = "Crop field";
         private const string TilePrefab = "Assets/_Game/Prefabs/Farm/PFB_FarmTile.prefab";
         private const string SoilModel = "Assets/_Game/Models/Farm/SoilMound.fbx";
@@ -94,14 +104,27 @@ namespace RushedCrops.Editor
 
         public static void AssignCrops(FarmPlot farmPlot)
         {
+            var growable = new System.Collections.Generic.List<CropData>();
+            foreach (string path in CropAssets)
+            {
+                var crop = AssetDatabase.LoadAssetAtPath<CropData>(path);
+                if (crop == null) throw new InvalidOperationException("Missing crop asset: " + path);
+                growable.Add(crop);
+            }
+            // Boss seeds are optional here, so the map still builds before they are set up.
+            foreach (string path in BossSeedAssets)
+            {
+                var seed = AssetDatabase.LoadAssetAtPath<CropData>(path);
+                if (seed != null) growable.Add(seed);
+                else Debug.LogWarning("No boss seed at " + path + " yet. Run Rushed Crops > Farming > Set up boss seeds.");
+            }
+
             var settings = new SerializedObject(farmPlot);
             SerializedProperty crops = settings.FindProperty("crops");
-            crops.arraySize = CropAssets.Length;
-            for (int i = 0; i < CropAssets.Length; i++)
+            crops.arraySize = growable.Count;
+            for (int i = 0; i < growable.Count; i++)
             {
-                var crop = AssetDatabase.LoadAssetAtPath<CropData>(CropAssets[i]);
-                if (crop == null) throw new InvalidOperationException("Missing crop asset: " + CropAssets[i]);
-                crops.GetArrayElementAtIndex(i).objectReferenceValue = crop;
+                crops.GetArrayElementAtIndex(i).objectReferenceValue = growable[i];
             }
             settings.ApplyModifiedProperties();
         }
