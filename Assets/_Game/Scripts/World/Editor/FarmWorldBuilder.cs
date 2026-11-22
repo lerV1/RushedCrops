@@ -394,7 +394,7 @@ namespace RushedCrops.Editor
             Lantern(parent, V(Garden.x + 1.6f, max.y + 0.6f), 180f);
             ToolStumpSetup.Place(parent);
             MeleeSetup.Place(parent);
-            CropBossSetup.Place(parent);
+            // No bosses on the map: they only come from boss seeds planted in the crop field.
         }
 
 
@@ -455,7 +455,6 @@ namespace RushedCrops.Editor
             }
             Prefab("Transport/Cart01", parent, Quarry + V(7f, -6.5f), 160f, 1.5f);
             PickaxeSetup.Place(parent);
-            CropBossSetup.PlaceOnion(parent);
             Prefab("Shed01", parent, Quarry + V(-9f, -3f), YawTowards(Quarry + V(-9f, -3f), Quarry) + 180f, 1.2f);
             Lantern(parent, Quarry + V(-3.2f, -7f), 0f);
         }
@@ -480,7 +479,6 @@ namespace RushedCrops.Editor
                 Prefab("Vegetation/PineStump0" + random.Next(1, 3), parent, spot, R(0f, 360f), R(1.6f, 2.1f));
             }
             Lantern(parent, Logging + V(-3f, -7.5f), 0f);
-            CropBossSetup.PlaceTomato(parent);
         }
 
         // ---------------------------------------------------------------- forest and meadows

@@ -7,13 +7,15 @@ using UnityEngine.Rendering;
 
 namespace RushedCrops.Editor
 {
-    // Places the three crop bosses (modelled in Blender) and makes their cartoon materials, shots and the red
-    // warning patches their attacks show on the ground:
-    //   Carrot King (easy), outside the crop field's east fence: stays put and slams the ground round it.
-    //   Tomato Brute (medium), in the logging camp: hops after the player, spits seeds and stomps.
-    //   Onion Overlord (hard), in the quarry: charges, throws tears, sends out shockwaves to jump over,
-    //   and speeds up at half health.
-    // How hard each boss is lives in the numbers below. The map builder calls the Place methods.
+    // Builds the six crop bosses (modelled in Blender) as prefabs that boss seeds grow in the crop field, with
+    // their cartoon materials, shots and the red warning patches their attacks show on the ground. No boss is
+    // placed on the map: the only way to meet one is to plant its seed.
+    //   Carrot King (easy): stays put and slams the ground round it.
+    //   Tomato Brute (medium): hops after the player, spits seeds and stomps.
+    //   Onion Overlord (hard): charges, throws tears, sends out shockwaves to jump over, faster at half health.
+    //   Beet Baron, Cabbage Colossus and Wheat Warlord: bonus bosses that don't count toward winning.
+    // Beating the Carrot King, Tomato Brute and Onion Overlord (each once) is the boss part of winning.
+    // How hard each boss is lives in the numbers below.
     public static class CropBossSetup
     {
         public const string RootName = "Crop boss";
@@ -173,42 +175,23 @@ namespace RushedCrops.Editor
             },
         };
 
-        [MenuItem("Rushed Crops/Combat/Place crop bosses")]
-        public static void PlaceInScene()
-        {
-            if (Application.isPlaying) throw new InvalidOperationException("Place the bosses outside Play.");
-            Transform world = GameObject.Find(FarmWorldBuilder.RootName)?.transform;
-            if (world == null) throw new InvalidOperationException("Open SC_Farm with the farm map built first.");
-            Place(world.Find(FarmWorldBuilder.FarmGroup));
-            PlaceTomato(world.Find("06_LoggingCamp"));
-            PlaceOnion(world.Find("05_Quarry"));
-            BossHudSetup.SetUp();
-            EditorSceneManager.MarkSceneDirty(world.gameObject.scene);
-            Debug.Log("Placed the carrot, tomato and onion bosses.");
-        }
-
-        public static GameObject Place(Transform farm) => PlaceBoss(farm, Carrot);
-        public static GameObject PlaceTomato(Transform loggingCamp) => PlaceBoss(loggingCamp, Tomato);
-        public static GameObject PlaceOnion(Transform quarry) => PlaceBoss(quarry, Onion);
-
-        // One boss per crop saved as a prefab, for boss seeds to grow: the three map bosses plus the beet, cabbage
-        // and wheat bosses, which only come from seeds. Beating one of these doesn't count toward winning, and the
-        // farm square hands it the Inventory when it climbs out.
-        // Order: carrot, tomato, onion, beet, cabbage, wheat. An existing prefab is kept as it is.
+        // One boss per crop saved as a prefab, for boss seeds to grow. The farm square hands it the Inventory when it
+        // climbs out. Only the carrot, tomato and onion bosses count toward winning.
+        // Order: carrot, tomato, onion, beet, cabbage, wheat. An existing prefab is kept and only its settings updated.
         public static CropBoss[] MakeGrownBossPrefabs()
         {
             return new[]
             {
-                GrownBossPrefab(Carrot, "PFB_GrownCarrotKing"),
-                GrownBossPrefab(Tomato, "PFB_GrownTomatoBrute"),
-                GrownBossPrefab(Onion, "PFB_GrownOnionOverlord"),
-                GrownBossPrefab(Beet, "PFB_GrownBeetBaron"),
-                GrownBossPrefab(Cabbage, "PFB_GrownCabbageColossus"),
-                GrownBossPrefab(Wheat, "PFB_GrownWheatWarlord"),
+                GrownBossPrefab(Carrot, "PFB_GrownCarrotKing", true),
+                GrownBossPrefab(Tomato, "PFB_GrownTomatoBrute", true),
+                GrownBossPrefab(Onion, "PFB_GrownOnionOverlord", true),
+                GrownBossPrefab(Beet, "PFB_GrownBeetBaron", false),
+                GrownBossPrefab(Cabbage, "PFB_GrownCabbageColossus", false),
+                GrownBossPrefab(Wheat, "PFB_GrownWheatWarlord", false),
             };
         }
 
-        private static CropBoss GrownBossPrefab(Spec spec, string prefabName)
+        private static CropBoss GrownBossPrefab(Spec spec, string prefabName, bool countsTowardVictory)
         {
             string path = $"{PrefabFolder}/{prefabName}.prefab";
             var existing = AssetDatabase.LoadAssetAtPath<CropBoss>(path);
@@ -218,7 +201,7 @@ namespace RushedCrops.Editor
                 GameObject contents = PrefabUtility.LoadPrefabContents(path);
                 try
                 {
-                    SetGrownBossSettings(contents.GetComponent<CropBoss>());
+                    SetGrownBossSettings(contents.GetComponent<CropBoss>(), countsTowardVictory);
                     PrefabUtility.SaveAsPrefabAsset(contents, path);
                 }
                 finally
@@ -236,7 +219,7 @@ namespace RushedCrops.Editor
                 root.name = prefabName;
                 root.transform.localPosition = Vector3.zero;
                 root.transform.localRotation = Quaternion.identity;
-                SetGrownBossSettings(root.GetComponent<CropBoss>());
+                SetGrownBossSettings(root.GetComponent<CropBoss>(), countsTowardVictory);
                 return PrefabUtility.SaveAsPrefabAsset(root, path).GetComponent<CropBoss>();
             }
             finally
@@ -336,13 +319,12 @@ namespace RushedCrops.Editor
             return root;
         }
 
-        // A grown boss gets the Inventory from its farm square, doesn't count toward winning, and is removed once
-        // it has sunk after dying.
-        private static void SetGrownBossSettings(CropBoss boss)
+        // A grown boss gets the Inventory from its farm square and is removed once it has sunk after dying.
+        private static void SetGrownBossSettings(CropBoss boss, bool countsTowardVictory)
         {
             var settings = new SerializedObject(boss);
             settings.FindProperty("inventory").objectReferenceValue = null; // a prefab can't keep a scene object
-            settings.FindProperty("countsTowardVictory").boolValue = false;
+            settings.FindProperty("countsTowardVictory").boolValue = countsTowardVictory;
             settings.FindProperty("removeAfterDeath").boolValue = true;
             settings.ApplyModifiedPropertiesWithoutUndo();
         }

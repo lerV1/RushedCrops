@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.Build;
@@ -176,20 +177,31 @@ namespace RushedCrops.Editor
             Require(fieldObject.GetComponentsInChildren<FarmTile>(true).Length == 0, "The crop field should be saved with no tilled squares.");
         }
 
-        // As many bosses as GameManager counts, each able to be hit and to fight back: attacks with their
-        // warning patches, shots for any spitting, and the boss bar in the player's HUD.
+        // No boss stands on the map: every boss grows from a boss seed. Each grown boss can be hit and fights back
+        // (attacks with warning patches, shots for any spitting), and exactly as many different bosses as
+        // GameManager counts are worth credit toward winning. The player's HUD has the boss bar.
         private static void ValidateBosses(GameObject player)
         {
-            const string fix = " Run Rushed Crops > Combat > Place crop bosses.";
-            CropBoss[] bosses = UnityEngine.Object.FindObjectsByType<CropBoss>(FindObjectsInactive.Include);
+            const string fix = " Run Rushed Crops > Farming > Set up boss seeds.";
+            CropBoss[] onMap = UnityEngine.Object.FindObjectsByType<CropBoss>(FindObjectsInactive.Include);
+            Require(onMap.Length == 0, "The map should have no bosses (they grow from boss seeds), but it has " + onMap.Length + ".");
+
             var manager = UnityEngine.Object.FindAnyObjectByType<GameManager>();
-            Require(manager != null && bosses.Length == manager.BossCount,
-                "GameManager expects " + (manager != null ? manager.BossCount : 0) + " bosses but the map has " + bosses.Length + "." + fix);
-            foreach (CropBoss boss in bosses)
+            Require(manager != null, "The scene needs a GameManager.");
+            var winNames = new List<string>();
+            foreach (string seedPath in FarmPlotSetup.BossSeedAssets)
             {
+                var seed = AssetDatabase.LoadAssetAtPath<CropData>(seedPath);
+                Require(seed != null && seed.GrownBoss != null, seedPath + " is missing or grows no boss." + fix);
+                CropBoss boss = seed.GrownBoss;
+                if (boss.CountsTowardVictory)
+                {
+                    Require(!winNames.Contains(boss.DisplayName), "Two bosses that count toward winning are both called " + boss.DisplayName + "." + fix);
+                    winNames.Add(boss.DisplayName);
+                }
                 var settings = new SerializedObject(boss);
-                Require(settings.FindProperty("model").objectReferenceValue != null && settings.FindProperty("inventory").objectReferenceValue != null
-                    && settings.FindProperty("dropPrefab").objectReferenceValue != null, boss.name + " is missing its model, Inventory or seed drop." + fix);
+                Require(settings.FindProperty("model").objectReferenceValue != null && settings.FindProperty("dropPrefab").objectReferenceValue != null,
+                    boss.name + " is missing its model or seed drop." + fix);
                 Require(boss.GetComponent<Collider>() != null, boss.name + " has nothing for the hatchet to hit." + fix);
                 var combat = boss.GetComponent<BossCombat>();
                 Require(combat != null && combat.Attacks.Count > 0, boss.name + " can't fight back." + fix);
@@ -199,6 +211,8 @@ namespace RushedCrops.Editor
                     Require(attack.kind != BossCombat.AttackKind.Spit || combatSettings.FindProperty("projectilePrefab").objectReferenceValue != null,
                         boss.name + " spits but has nothing to spit." + fix);
             }
+            Require(winNames.Count == manager.BossCount,
+                "GameManager needs " + manager.BossCount + " bosses to win, but " + winNames.Count + " grown bosses count toward winning." + fix);
             Transform hud = player.transform.Find(BossHudSetup.CanvasName);
             Require(hud != null && hud.GetComponent<BossHealthHud>() != null, "The boss health bar is missing. Run Rushed Crops > UI > Set up boss health bar.");
         }
@@ -305,7 +319,7 @@ namespace RushedCrops.Editor
             Require(manager != null, "The GameManager is missing, so barn repairs can't be counted.");
             Require(repair.Jobs.Count == manager.BarnRepairStages,
                 "The barn has " + repair.Jobs.Count + " repair jobs but GameManager expects " + manager.BarnRepairStages + ".");
-            Require(repair.Jobs[repair.Jobs.Count - 1].needsBossBeaten, "The last barn repair should wait for the carrot boss." + fix);
+            Require(repair.Jobs[repair.Jobs.Count - 1].needsBossBeaten, "The last barn repair should wait for a boss to be beaten." + fix);
 
             foreach (BarnRepair.Job job in repair.Jobs)
             {

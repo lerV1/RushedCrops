@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// A giant angry crop: the carrot by the crop field, the tomato at the logging camp, the onion in the quarry.
+// A giant angry crop that climbs out of the crop field when a boss seed finishes growing (see FarmTile).
 // The hatchet hurts it and BossCombat makes it fight back. When it dies it sinks, throws out seeds (ItemDrop)
 // and GameManager counts the boss as beaten. If the player dies first, it heals back to full.
 [RequireComponent(typeof(Health))]
@@ -35,7 +35,7 @@ public class CropBoss : MonoBehaviour, IInteractable
     [SerializeField, Min(0.05f)] private float sinkTime = 0.8f;
 
     [Header("Progress")]
-    [Tooltip("Off for bosses grown from boss seeds: beating one of those doesn't count toward winning.")]
+    [Tooltip("On for the bosses that must be beaten to win (Carrot King, Tomato Brute, Onion Overlord). Each counts once, by name.")]
     [SerializeField] private bool countsTowardVictory = true;
     [Tooltip("On for bosses grown from boss seeds: once it has sunk, the whole boss is removed from the scene. Map bosses stay.")]
     [SerializeField] private bool removeAfterDeath;
@@ -140,9 +140,10 @@ public class CropBoss : MonoBehaviour, IInteractable
         model.localScale = modelScale;
         model.localRotation = modelRotation;
         DropSeeds();
-        if (countsTowardVictory && GameManager.Instance != null)
+        // Every boss unlocks the barn's last repair; only the required ones count toward winning.
+        if (GameManager.Instance != null)
         {
-            GameManager.Instance.RecordBossDefeat();
+            GameManager.Instance.RecordBossDefeat(displayName, countsTowardVictory);
         }
         StartCoroutine(Sink());
     }

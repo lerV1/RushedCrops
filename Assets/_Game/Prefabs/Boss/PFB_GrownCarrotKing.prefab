@@ -142,7 +142,7 @@ MonoBehaviour:
     amount: 3
   dropRadius: 2.2
   sinkTime: 0.8
-  countsTowardVictory: 0
+  countsTowardVictory: 1
   removeAfterDeath: 1
 --- !u!114 &7533184675465795454
 MonoBehaviour:
