@@ -28,9 +28,12 @@ namespace RushedCrops.Editor
             CreateMeshes();
 
             // Snapshot the imported prefab roots before adding any visual children.
+            // The crop field's aim outline and the tools waiting to be picked up keep the look their own setups gave them.
             var imports = new List<GameObject>();
             foreach (Transform transform in root.GetComponentsInChildren<Transform>(true))
-                if (PrefabUtility.IsOutermostPrefabInstanceRoot(transform.gameObject)) imports.Add(transform.gameObject);
+                if (PrefabUtility.IsOutermostPrefabInstanceRoot(transform.gameObject)
+                    && transform.GetComponentInParent<FarmField>(true) == null && transform.GetComponentInParent<ToolPickup>(true) == null)
+                    imports.Add(transform.gameObject);
             foreach (GameObject imported in imports) StyleImported(imported);
             StyleGround();
             AssetDatabase.SaveAssets();
@@ -119,7 +122,9 @@ namespace RushedCrops.Editor
                         if (materials[i] != null) materials[i] = ForMaterial(materials[i].name);
                     renderer.sharedMaterials = materials;
                     var filter = renderer.GetComponent<MeshFilter>();
-                    if (filter != null && filter.sharedMesh != null && !AssetDatabase.GetAssetPath(filter.sharedMesh).StartsWith(MeshFolder + "/"))
+                    string meshPath = filter != null && filter.sharedMesh != null ? AssetDatabase.GetAssetPath(filter.sharedMesh) : "";
+                    // Built-in cubes are already flat, and so is a mesh some other setup flattened (Flat_...).
+                    if (meshPath.StartsWith("Assets/") && !meshPath.StartsWith(MeshFolder + "/") && !System.IO.Path.GetFileName(meshPath).StartsWith("Flat_"))
                     {
                         string key = AssetDatabase.GetAssetPath(filter.sharedMesh) + "/" + filter.sharedMesh.name;
                         if (!Meshes.TryGetValue(key, out Mesh flat))

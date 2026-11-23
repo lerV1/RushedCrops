@@ -66,8 +66,9 @@ namespace RushedCrops.Editor
             ValidateGathering(root.transform, player);
             ValidateBosses(player);
             ValidateMiniCrops(garden);
+            ValidateBoundary(root.transform, player);
 
-            var cycle = UnityEngine.Object.FindAnyObjectByType<EnvironmentCycle>();
+            var cycle =UnityEngine.Object.FindAnyObjectByType<EnvironmentCycle>();
             Require(cycle != null, "The day/night cycle is missing.");
             var settings = new SerializedObject(cycle);
             Require(settings.FindProperty("sun").objectReferenceValue != null, "Assign the sun.");
@@ -248,6 +249,32 @@ namespace RushedCrops.Editor
                 Require(plot != null && plot.CanGrow(crop.BossSeed), "The crop field can't grow " + crop.BossSeed.name + "." + seedFix);
             }
             Require(droppers == FarmPlotSetup.BossSeedAssets.Length, "Only " + droppers + " mini crops drop a boss seed." + seedFix);
+        }
+
+        // A wall runs all the way round the valley rim, and everything worth visiting stands well inside it.
+        // The quarry's rock faces are left out: they are the valley's wall there.
+        private static void ValidateBoundary(Transform world, GameObject player)
+        {
+            const string fix = " Move it, or the rim in FarmWorldBuilder, and rebuild the map.";
+            const float room = 6f;
+            int walls = 0;
+            foreach (BoxCollider wall in world.Find("08_Boundary").GetComponentsInChildren<BoxCollider>(true))
+                if (wall.enabled && !wall.isTrigger) walls++;
+            Require(walls >= 40, "The valley rim has only " + walls + " wall pieces; the player could walk out of the map. Rebuild the map.");
+
+            var places = new List<Transform> { player.transform };
+            foreach (string group in new[] { FarmWorldBuilder.FarmGroup, "04_Market", "05_Quarry", "06_LoggingCamp" })
+            foreach (Transform child in world.Find(group))
+                if (!child.name.StartsWith("QuarryFace")) places.Add(child);
+            places.AddRange(Array.ConvertAll(world.GetComponentsInChildren<ResourceNode>(true), node => node.transform));
+            foreach (Transform place in places)
+            {
+                float inside = -FarmWorldBuilder.RimDistance(place.position);
+                Require(inside >= room, place.name + " is only " + inside.ToString("F1") + " m inside the map's edge." + fix);
+            }
+            Vector2 field = FarmWorldBuilder.Garden, half = FarmWorldBuilder.GardenHalfSize;
+            foreach (Vector2 corner in new[] { field + half, field - half, field + new Vector2(half.x, -half.y), field + new Vector2(-half.x, half.y) })
+                Require(-FarmWorldBuilder.RimDistance(new Vector3(corner.x, 0f, corner.y)) >= room, "A corner of the crop field is too close to the map's edge." + fix);
         }
 
         // The pickaxe waits in the quarry and fits the hand. Trees to chop stand round the logging camp and

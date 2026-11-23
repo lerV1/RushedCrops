@@ -58,7 +58,7 @@ namespace RushedCrops.Editor
             string name = item.name;
             sink = 0f;
             if (name.StartsWith("Oak") || name.StartsWith("Pine") || name.StartsWith("Spruce") || name.StartsWith("Willow")) { sink = 0.15f; return Fit.Embed; }
-            if (name.StartsWith("Stone") || name.StartsWith("QuarryFace")) { sink = bounds.size.y * 0.3f; return Fit.Embed; }
+            if (name.StartsWith("Stone") || name.StartsWith("Rock0") || name.StartsWith("QuarryFace")) { sink = bounds.size.y * 0.3f; return Fit.Embed; }
             if (name.StartsWith("Rubble") || name.StartsWith("Patch") || name.StartsWith("Planting plot")) { sink = 0.05f; return Fit.Embed; }
             if (name.StartsWith("Grass") || name.StartsWith("Fern") || name.StartsWith("Bush") || name.StartsWith("Flower") || name.StartsWith("Cattail")) { sink = 0.05f; return Fit.Embed; }
             if (name.StartsWith("Fence") || name.StartsWith("Garden gate") || name.StartsWith("Dusk lantern")) { sink = 0.1f; return Fit.Embed; }

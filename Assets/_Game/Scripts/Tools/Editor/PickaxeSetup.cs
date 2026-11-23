@@ -13,7 +13,7 @@ namespace RushedCrops.Editor
         public const string PrefabPath = "Assets/_Game/Prefabs/Tools/PFB_Pickaxe01.prefab";
         private const string PackPickaxe = "Assets/Holotna/Medieval Rural/Prefabs/Tools/Pickaxe01.prefab";
         private const string HandPath = "CameraRoot/Main Camera/HandsRoot/HandRight/Rig/Forearm/Hand";
-        private static readonly Vector3 Spot = new Vector3(12.5f, 0f, 38.5f); // beside the path up from the bridge, out of the onion boss's reach
+        private static readonly Vector3 Spot = new Vector3(5f, 0f, 41.8f); // at the quarry's mouth, by the lantern where the path comes in
         private const float PickupScale = 1.3f;
 
         [MenuItem("Rushed Crops/Tools/Set up pickaxe")]

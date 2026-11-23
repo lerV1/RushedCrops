@@ -10,7 +10,9 @@ using Object = UnityEngine.Object;
 namespace RushedCrops.Editor
 {
     // Builds the saved map (editor only). Farm and spawn south-west, market in the centre, logging camp east,
-    // quarry north over the only river bridge. X is east, Z is north.
+    // quarry north over the only river bridge. Wooded hills ring the valley about ten metres past the last
+    // place worth visiting; the player is stopped at their foot and a ridge behind hides the world's edge.
+    // X is east, Z is north.
     public static class FarmWorldBuilder
     {
         public const string ScenePath = "Assets/_Game/Scenes/SC_Farm.unity";
@@ -26,12 +28,15 @@ namespace RushedCrops.Editor
         private const string MeshFolder = "Assets/_Game/Models/World";
         private const string MaterialFolder = "Assets/_Game/Materials/World";
         private const int GroundLayer = 6;
-        private const float HalfWidth = 80f, HalfDepth = 70f;
+        private const float FineReach = 10f;  // metres past the rim the detailed walkable terrain goes
+        private const float HillReach = 56f;  // metres past the rim the coarse hills go; the ridge hides the rest
+        private const float TreeReach = 26f;  // metres past the rim the forest goes, up the slope below the ridge
 
         private static readonly Vector2 BarnSpot = V(-41, -2);
         private static readonly Vector2 Yard = V(-36, -15);
-        public static readonly Vector2 Garden = V(-25, -31);
-        public static readonly Vector2 GardenHalfSize = V(11, 9); // whole metres, so the tilled soil edge follows the terrain grid
+        // Big enough for a planted boss to charge and slam with crops still growing round it.
+        public static readonly Vector2 Garden = V(-24, -32);
+        public static readonly Vector2 GardenHalfSize = V(12, 10); // whole metres, so the tilled soil edge follows the terrain grid
         private static readonly Vector2 Market = V(4, -6);
         private static readonly Vector2 Logging = V(42, -22);
         private static readonly Vector2 Quarry = V(10, 49);
@@ -39,14 +44,23 @@ namespace RushedCrops.Editor
 
         // Flat building pads: centre, radius. Terrain is exactly level inside each radius.
         private static readonly Vector3[] Pads = {
-            new Vector3(-36f, -15f, 27f),   // farm: barn, yard and garden
+            new Vector3(-36f, -15f, 27f),   // farm: barn and yard
+            new Vector3(-24f, -32f, 14f),   // crop field
             new Vector3(4f, -6f, 14f),      // market
             new Vector3(42f, -22f, 15f),    // logging camp
             new Vector3(10f, 49f, 15f),     // quarry
         };
 
+        // The valley's rim, clockwise from where the river leaves in the west. Its line is the edge of play.
+        private static readonly Vector2[] RimGuide = {
+            V(-60, 34), V(-48, 45), V(-30, 46), V(-14, 47), V(-11, 56), V(-6, 66), V(2, 72), V(10, 74), V(19, 72), V(27, 66),
+            V(32, 57), V(35, 47), V(46, 41), V(60, 37), V(69, 25), V(71, 10), V(68, -8), V(67, -24), V(63, -38), V(52, -47),
+            V(36, -47), V(20, -38), V(6, -35), V(-4, -48), V(-12, -54), V(-24, -55), V(-36, -54), V(-48, -48), V(-57, -36),
+            V(-60, -20), V(-60, -2), V(-61, 16)
+        };
+        // Beyond the rim the river bends away inside a gorge, so no one sees where it ends.
         private static readonly Vector2[] RiverGuide = {
-            V(-175, 40), V(-120, 30), V(-86, 31), V(-62, 35), V(-40, 29), V(-18, 27), V(6, 24), V(28, 27), V(48, 21), V(66, 25), V(86, 19), V(120, 24), V(175, 14)
+            V(-98, 92), V(-96, 62), V(-82, 40), V(-62, 35), V(-40, 29), V(-18, 27), V(6, 24), V(28, 27), V(48, 21), V(66, 25), V(84, 20), V(98, 2), V(102, -34)
         };
         private static readonly Vector2[][] RouteGuides = {
             new[] { V(-33, -14), V(-20, -11), V(-8, -8), V(4, -6) },                             // farm -> market
@@ -55,6 +69,8 @@ namespace RushedCrops.Editor
         };
         private static readonly Vector2[] River = Smooth(RiverGuide);
         private static readonly Vector2[][] Routes = SmoothRoutes(RouteGuides);
+        private static readonly Vector2[] Rim = SmoothLoop(RimGuide);
+        private static readonly Dictionary<long, float> Heights = new Dictionary<long, float>();
 
         private static readonly Dictionary<string, Material> Materials = new Dictionary<string, Material>();
         private static readonly List<Light> Lanterns = new List<Light>();
@@ -82,6 +98,7 @@ namespace RushedCrops.Editor
             random = new System.Random(451);
             Materials.Clear();
             Lanterns.Clear();
+            Heights.Clear();
             EnsureFolder(MeshFolder);
             EnsureFolder(MaterialFolder);
             world = new GameObject(RootName).transform;
@@ -102,8 +119,9 @@ namespace RushedCrops.Editor
             PlaceOnTops();
             ConnectEnvironment();
 
-            var oldGround = GameObject.Find("Ground");
-            if (oldGround != null) oldGround.SetActive(false);
+            // The template's flat ground plane, long replaced by the valley terrain.
+            foreach (var root in EditorSceneManager.GetActiveScene().GetRootGameObjects())
+                if (root.name == "Ground") Object.DestroyImmediate(root);
             var player = GameObject.Find("Player");
             if (player != null)
             {
@@ -115,7 +133,7 @@ namespace RushedCrops.Editor
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
             Selection.activeGameObject = world.gameObject;
-            Debug.Log("Rushed Crops: rebuilt farm map with farm, market, logging camp, quarry and one river bridge.");
+            Debug.Log("Rushed Crops: rebuilt farm map with farm, market, logging camp, quarry, one river bridge and the valley rim.");
         }
 
         // ---------------------------------------------------------------- materials
@@ -176,17 +194,24 @@ namespace RushedCrops.Editor
             var triangles = new List<int>[surfaceCount];
             for (int i = 0; i < surfaceCount; i++) triangles[i] = new List<int>();
 
-            // One-metre faceted grid. Paths, yards and soil are coloured into the ground mesh itself
-            // instead of being separate decals that could float above or clip into it.
-            int columns = (int)(HalfWidth * 2f), rows = (int)(HalfDepth * 2f);
+            // One-metre faceted grid over the valley and the foot of its hills. Paths, yards and soil are coloured
+            // into the ground mesh itself instead of being separate decals that could float above or clip into it.
+            RimBounds(FineReach + 2f, out Vector2Int min, out Vector2Int max);
+            int columns = max.x - min.x, rows = max.y - min.y;
             var corners = new Surface[columns + 1, rows + 1];
+            var rim = new float[columns + 1, rows + 1];
             for (int zi = 0; zi <= rows; zi++)
             for (int xi = 0; xi <= columns; xi++)
-                corners[xi, zi] = SurfaceAt(V(xi - HalfWidth, zi - HalfDepth));
+            {
+                Vector2 p = V(min.x + xi, min.y + zi);
+                corners[xi, zi] = SurfaceAt(p);
+                rim[xi, zi] = RimDistance(p);
+            }
             for (int zi = 0; zi < rows; zi++)
             for (int xi = 0; xi < columns; xi++)
             {
-                float x = xi - HalfWidth, z = zi - HalfDepth;
+                if (Mathf.Min(Mathf.Min(rim[xi, zi], rim[xi + 1, zi]), Mathf.Min(rim[xi, zi + 1], rim[xi + 1, zi + 1])) > FineReach) continue;
+                float x = min.x + xi, z = min.y + zi;
                 GroundTriangle(vertices, triangles, V(x, z), V(x, z + 1f), V(x + 1f, z), corners[xi, zi], corners[xi, zi + 1], corners[xi + 1, zi]);
                 GroundTriangle(vertices, triangles, V(x + 1f, z), V(x, z + 1f), V(x + 1f, z + 1f), corners[xi + 1, zi], corners[xi, zi + 1], corners[xi + 1, zi + 1]);
             }
@@ -207,21 +232,22 @@ namespace RushedCrops.Editor
             BuildDistantHills(parent);
         }
 
-        // Coarse, collider-free hills beyond the map edge so the horizon and the river's exits
-        // fade into fog instead of ending at the edge of the world.
+        // Coarse hills past the walkable terrain, out to just behind the ridge and along the river's gorges.
+        // Nothing further is ever in view, so nothing further is built.
         private static void BuildDistantHills(Transform parent)
         {
-            const float cell = 5f, reachX = 170f, reachZ = 160f, overlap = 2f;
+            const float cell = 5f;
             var vertices = new List<Vector3>();
             var triangles = new[] { new List<int>(), new List<int>(), new List<int>() };
-            for (float z = -reachZ; z < reachZ; z += cell)
-            for (float x = -reachX; x < reachX; x += cell)
+            RimBounds(HillReach + cell, out Vector2Int min, out Vector2Int max);
+            for (float z = min.y; z < max.y; z += cell)
+            for (float x = min.x; x < max.x; x += cell)
             {
-                bool inside = x >= -HalfWidth + overlap && x + cell <= HalfWidth - overlap && z >= -HalfDepth + overlap && z + cell <= HalfDepth - overlap;
-                if (inside) continue;
-                Vector3 a = Hill(x, z), b = Hill(x + cell, z), c = Hill(x, z + cell), d = Hill(x + cell, z + cell);
                 Vector2 centre = V(x + cell * 0.5f, z + cell * 0.5f);
-                int surface = Distance(centre, River) < 6f ? 2 : Mathf.PerlinNoise(centre.x * 0.03f + 5f, centre.y * 0.03f) > 0.5f ? 1 : 0;
+                float rim = RimDistance(centre), river = Distance(centre, River);
+                if (rim < 4f || (rim > HillReach && river > 32f)) continue;
+                Vector3 a = Hill(x, z), b = Hill(x + cell, z), c = Hill(x, z + cell), d = Hill(x + cell, z + cell);
+                int surface = river < 6f ? 2 : Mathf.PerlinNoise(centre.x * 0.03f + 5f, centre.y * 0.03f) > 0.5f ? 1 : 0;
                 AddTriangle(vertices, triangles[surface], a, c, b);
                 AddTriangle(vertices, triangles[surface], b, c, d);
             }
@@ -237,16 +263,8 @@ namespace RushedCrops.Editor
             hills.AddComponent<MeshCollider>().sharedMesh = mesh; // lets trees beyond the edge be grounded; the player cannot reach it
         }
 
-        // Inside the map edge the hills sit just below the walkable terrain, so the seam is hidden.
-        private static Vector3 Hill(float x, float z)
-        {
-            float edge = Mathf.Max(Mathf.Abs(x) / HalfWidth, Mathf.Abs(z) / HalfDepth);
-            float height = Height(x, z) - 0.25f;
-            float rise = Mathf.InverseLerp(1f, 1.6f, edge) * (10f + Mathf.PerlinNoise(x * 0.02f, z * 0.02f) * 16f);
-            float river = Distance(V(x, z), River);
-            height += rise * Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(9f, 30f, river));
-            return new Vector3(x, height, z);
-        }
+        // Where the two meshes overlap the hills sit just below the walkable terrain, so the seam is hidden.
+        private static Vector3 Hill(float x, float z) => new Vector3(x, Height(x, z) - 0.3f, z);
 
         // A triangle whose corners lie on different surfaces is split through its edge midpoints and
         // centre, so each corner keeps its own colour and boundaries run smoothly instead of saw-toothed.
@@ -292,20 +310,54 @@ namespace RushedCrops.Editor
 
         public static float Height(float x, float z)
         {
+            // Cached by 1/48 m so the halves and thirds the ground mesh samples each get their own entry.
+            long key = ((long)Mathf.RoundToInt(x * 48f) << 32) | (uint)Mathf.RoundToInt(z * 48f);
+            if (Heights.TryGetValue(key, out float known)) return known;
+
             Vector2 p = V(x, z);
             float natural = (Mathf.PerlinNoise((x + 200f) * 0.03f, (z + 200f) * 0.03f) - 0.5f) * 1.6f;
-            float edge = Mathf.Max(Mathf.Abs(x) / HalfWidth, Mathf.Abs(z) / HalfDepth);
-            natural += Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.74f, 1f, edge)) * 9f;
-
             float level = 0f;
             foreach (Vector3 pad in Pads)
                 level = Mathf.Max(level, 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(pad.z, pad.z + 9f, Vector2.Distance(p, V(pad.x, pad.y)))));
             level = Mathf.Max(level, 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(3.5f, 9f, PathDistance(p))));
             float height = Mathf.Lerp(natural, 0f, level);
 
+            // Past the rim the ground climbs (the player is stopped partway up the first slope) to a ridge, then
+            // drops a little behind the crest so the end of the hills stays out of sight. The river cuts a gorge.
+            float rim = RimDistance(p);
             float riverDistance = Distance(p, River);
+            if (rim > -10f)
+            {
+                float slope = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-10f, 12f, rim)) * 9f;
+                float crest = 8f + Mathf.PerlinNoise(x * 0.02f, z * 0.02f) * 14f;
+                float ridge = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(8f, 34f, rim)) * crest * (1f - 0.5f * Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(40f, HillReach, rim)));
+                height += (slope + ridge) * Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(10f, 26f, riverDistance));
+            }
             if (riverDistance < 9f) height = Mathf.Min(height, Mathf.Lerp(-1.8f, 0f, Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(3f, 9f, riverDistance))));
+            Heights[key] = height;
             return height;
+        }
+
+        // Metres outside the valley rim (the edge of play); negative inside it.
+        public static float RimDistance(Vector3 p) => RimDistance(V(p.x, p.z));
+
+        private static float RimDistance(Vector2 p)
+        {
+            float distance = Distance(p, Rim);
+            bool inside = false;
+            for (int i = 0, j = Rim.Length - 1; i < Rim.Length; j = i++)
+                if ((Rim[i].y > p.y) != (Rim[j].y > p.y) && p.x < (Rim[j].x - Rim[i].x) * (p.y - Rim[i].y) / (Rim[j].y - Rim[i].y) + Rim[i].x)
+                    inside = !inside;
+            return inside ? -distance : distance;
+        }
+
+        // Whole-metre box round the rim, widened by margin.
+        private static void RimBounds(float margin, out Vector2Int min, out Vector2Int max)
+        {
+            Vector2 low = Rim[0], high = Rim[0];
+            foreach (Vector2 p in Rim) { low = Vector2.Min(low, p); high = Vector2.Max(high, p); }
+            min = new Vector2Int(Mathf.FloorToInt(low.x - margin), Mathf.FloorToInt(low.y - margin));
+            max = new Vector2Int(Mathf.CeilToInt(high.x + margin), Mathf.CeilToInt(high.y + margin));
         }
 
         // ---------------------------------------------------------------- river
@@ -317,7 +369,7 @@ namespace RushedCrops.Editor
 
             for (int i = 4; i < River.Length - 1; i += 7)
             {
-                if (Mathf.Abs(River[i].x) > 70f) continue;
+                if (RimDistance(River[i]) > -6f) continue;
                 Vector2 direction = (River[i + 1] - River[i]).normalized;
                 Vector2 side = V(-direction.y, direction.x) * (i % 2 == 0 ? 1f : -1f);
                 Vector2 bank = River[i] + side * R(6.2f, 7.4f);
@@ -332,6 +384,31 @@ namespace RushedCrops.Editor
             Bridge(parent, crossing, V(-flow.y, flow.x), "River bridge");
             Lantern(parent, crossing + V(3.4f, -10f), 0f);
             Lantern(parent, crossing + V(-3.4f, 10f), 180f);
+            RiverExitRapids(parent);
+        }
+
+        // Where the river leaves the valley a line of boulders crosses the banks and the shallows, so the
+        // edge there looks like rapids at the mouth of a gorge rather than an invisible wall.
+        private static void RiverExitRapids(Transform parent)
+        {
+            for (int i = 0; i < River.Length - 1; i++)
+            {
+                float here = RimDistance(River[i]), next = RimDistance(River[i + 1]);
+                if ((here < 0f) == (next < 0f)) continue;
+                Vector2 mouth = Vector2.Lerp(River[i], River[i + 1], here / (here - next));
+                Vector2 outward = (River[i + 1] - River[i]).normalized * (next > 0f ? 1f : -1f);
+                Vector2 across = V(-outward.y, outward.x);
+                var rapids = new GameObject("River rapids").transform;
+                rapids.SetParent(parent, false);
+                rapids.position = At(mouth);
+                foreach (float side in new[] { -10.5f, -8f, -5.2f, -2.4f, 0.4f, 3.2f, 6f, 8.5f, 11f })
+                {
+                    bool bank = Mathf.Abs(side) > 7.5f;
+                    string model = bank ? "Rocks/Rock0" + random.Next(1, 4) : "Rocks/Stone0" + random.Next(1, 4);
+                    float scale = bank ? R(1.4f, 1.8f) : Mathf.Abs(side) < 4f ? R(3.6f, 4.2f) : R(2.8f, 3.4f); // deeper water needs bigger stones to show
+                    Prefab(model, rapids, mouth + across * side + outward * R(-0.6f, 1.2f), R(0f, 360f), scale);
+                }
+            }
         }
 
         private static void Bridge(Transform parent, Vector2 centre, Vector2 forward, string name)
@@ -384,11 +461,19 @@ namespace RushedCrops.Editor
             Vector2 min = Garden - GardenHalfSize, max = Garden + GardenHalfSize;
             FenceLine(parent, V(min.x, min.y), V(max.x, min.y));
             FenceLine(parent, V(min.x, min.y), V(min.x, max.y));
-            FenceLine(parent, V(max.x, min.y), V(max.x, max.y));
+            FenceLine(parent, V(max.x, min.y), V(max.x, Garden.y - 1.1f));
+            FenceLine(parent, V(max.x, Garden.y + 1.1f), V(max.x, max.y));
             FenceLine(parent, V(min.x, max.y), V(Garden.x - 1.1f, max.y));
             FenceLine(parent, V(Garden.x + 1.1f, max.y), V(max.x, max.y));
             var gate = Prefab("Other/Gate01", parent, V(Garden.x, max.y), 0f, 1.08f);
             gate.name = "Garden gate";
+            // A second way in from the market side, and a second way out of a boss fight.
+            var eastGate = Prefab("Other/Gate01", parent, V(max.x, Garden.y), 90f, 1.08f);
+            eastGate.name = "Garden gate (east)";
+            // Both stand open, swung outward off the planting squares, so the player can walk in.
+            foreach (var swing in new[] { gate, eastGate })
+            foreach (Transform part in swing.GetComponentsInChildren<Transform>(true))
+                if (part.name.StartsWith("Leaf")) part.localRotation = Quaternion.Euler(0f, -100f, 0f);
             Prefab("Containers/Bucket01", parent, V(Garden.x + 2.4f, max.y + 1.2f), 0f, 1.3f);
             Prefab("Containers/Crate01", parent, V(Garden.x - 2.6f, max.y + 1.1f), 10f, 1.6f);
             Lantern(parent, V(Garden.x + 1.6f, max.y + 0.6f), 180f);
@@ -439,11 +524,7 @@ namespace RushedCrops.Editor
                 Vector2 spot = Quarry + V(Mathf.Cos(angle) * 13.5f, Mathf.Sin(angle) * 11.5f + 2f);
                 Prefab("Rocks/QuarryFace01", parent, spot, YawTowards(spot, Quarry) + 180f, R(1.6f, 2.0f));
             }
-            for (int i = 0; i < 8; i++)
-            {
-                float angle = R(25f, 155f) * Mathf.Deg2Rad;
-                Prefab("Rocks/Stone0" + random.Next(1, 4), parent, Quarry + V(Mathf.Cos(angle) * 9.5f, Mathf.Sin(angle) * 7.5f + 2f), R(0f, 360f), R(1.2f, 2.0f));
-            }
+            // No loose boulders here: every boulder on the quarry floor can be mined (see GatheringSetup).
             Prefab("Rocks/Rubble01", parent, Quarry + V(-6f, 6f), 30f, 1.4f);
             Prefab("Rocks/Rubble01", parent, Quarry + V(6.5f, 5.5f), 200f, 1.2f);
             for (int layer = 0; layer < 2; layer++)
@@ -485,45 +566,38 @@ namespace RushedCrops.Editor
 
         private static void BuildForest(Transform parent)
         {
-            string[] broadleaf = { "Oak01", "Oak02" };
+            // Only conifers: the round-crowned oaks at the logging camp are the trees a hatchet can fell
+            // (see GatheringSetup), so no look-alikes stand anywhere else.
             string[] conifer = { "Pine01", "Pine02", "Spruce01", "Spruce02" };
-            // The grid runs a little past the map edge so the rim and the distant hills stay wooded.
-            for (float z = -HalfDepth - 12f; z < HalfDepth + 12f; z += 4.6f)
-            for (float x = -HalfWidth - 12f; x < HalfWidth + 12f; x += 4.6f)
+            // Thick on the hills round the rim, in groves inside, and none past where the ridge hides them.
+            RimBounds(TreeReach, out Vector2Int min, out Vector2Int max);
+            for (float z = min.y; z < max.y; z += 4.6f)
+            for (float x = min.x; x < max.x; x += 4.6f)
             {
                 Vector2 p = V(x + R(-1.8f, 1.8f), z + R(-1.8f, 1.8f));
-                if (Blocked(p, 4f, 5.5f, 8.5f)) continue;
-                float edge = Mathf.Max(Mathf.Abs(p.x) / HalfWidth, Mathf.Abs(p.y) / HalfDepth);
+                float rim = RimDistance(p);
+                if (rim > TreeReach || Blocked(p, 4f, 5.5f, 8.5f)) continue;
                 float grove = Mathf.PerlinNoise(p.x * 0.045f + 11f, p.y * 0.045f + 7f);
-                float woods = Vector2.Distance(p, Logging) < 32f || p.x > 50f || p.y < -45f ? 0.85f : 0f;
-                float chance = edge > 0.78f ? 0.95f : Mathf.Max(woods, grove > 0.58f ? 0.75f : 0.06f);
+                float woods = Vector2.Distance(p, Logging) < 30f ? 0.85f : 0f;
+                float chance = rim > 10f ? 0.7f : rim > -12f ? 0.92f : Mathf.Max(woods, grove > 0.58f ? 0.75f : 0.06f);
                 if (random.NextDouble() > chance) continue;
-                bool pine = edge > 0.78f || p.x > 30f || random.NextDouble() < 0.45;
-                string tree = pine ? conifer[random.Next(conifer.Length)] : broadleaf[random.Next(broadleaf.Length)];
-                Prefab("Vegetation/" + tree, parent, p, R(0f, 360f), R(1.3f, 2.0f));
+                Prefab("Vegetation/" + conifer[random.Next(conifer.Length)], parent, p, R(0f, 360f), rim > 6f ? R(1.6f, 2.3f) : R(1.3f, 2.0f));
             }
-            for (int i = 2; i < River.Length - 1; i += 9)
+            for (int group = 0; group < 6; group++)
             {
-                if (Mathf.Abs(River[i].x) > 70f) continue;
-                Vector2 direction = (River[i + 1] - River[i]).normalized;
-                Vector2 bank = River[i] + V(-direction.y, direction.x) * (i % 2 == 0 ? 9.5f : -9.5f);
-                if (!Blocked(bank, 3f, 6f, 8.5f)) Prefab("Vegetation/Willow0" + random.Next(1, 3), parent, bank, R(0f, 360f), R(1.2f, 1.5f));
-            }
-            for (int group = 0; group < 10; group++)
-            {
-                Vector2 centre = V(R(-70f, 70f), R(-60f, 60f));
+                Vector2 centre = InValley(8f);
                 if (Blocked(centre, 6f, 7f, 10f)) continue;
                 for (int i = 0; i < 3; i++)
                     Prefab("Rocks/Stone0" + random.Next(1, 4), parent, centre + V(R(-1.6f, 1.6f), R(-1.6f, 1.6f)), R(0f, 360f), R(1.2f, 2.6f) / (i + 1));
             }
             string[] small = { "Grass01", "Grass02", "Fern01", "Bush01" };
-            for (int i = 0; i < 520; i++)
+            for (int i = 0; i < 340; i++)
             {
-                Vector2 p = V(R(-74f, 74f), R(-64f, 64f));
+                Vector2 p = InValley(3f);
                 if (Blocked(p, 1.5f, 3.4f, 7f)) continue;
                 Prefab("Vegetation/" + small[random.Next(small.Length)], parent, p, R(0f, 360f), R(0.8f, 1.4f), false);
             }
-            foreach (Vector3 pad in new[] { Pads[0], Pads[1] })
+            foreach (Vector3 pad in new[] { Pads[0], Pads[2] }) // farm and market
             for (int i = 0; i < 26; i++)
             {
                 float angle = R(0f, Mathf.PI * 2f);
@@ -543,12 +617,35 @@ namespace RushedCrops.Editor
             return false;
         }
 
+        // A random spot at least inset metres inside the rim.
+        private static Vector2 InValley(float inset)
+        {
+            RimBounds(0f, out Vector2Int min, out Vector2Int max);
+            while (true)
+            {
+                Vector2 p = V(R(min.x, max.x), R(min.y, max.y));
+                if (RimDistance(p) < -inset) return p;
+            }
+        }
+
+        // Walls end to end along the rim, partway up the first slope, so the player is stopped among the trees
+        // at the foot of the hills rather than in the open.
         private static void BuildBoundaries(Transform parent)
         {
-            foreach (float x in new[] { -HalfWidth + 3f, HalfWidth - 3f })
-                Boundary(parent, new Vector3(x, 10f, 0f), new Vector3(1f, 40f, HalfDepth * 2f));
-            foreach (float z in new[] { -HalfDepth + 3f, HalfDepth - 3f })
-                Boundary(parent, new Vector3(0f, 10f, z), new Vector3(HalfWidth * 2f, 40f, 1f));
+            const float length = 5f;
+            var corners = new List<Vector2> { Rim[0] };
+            for (int i = 1; i < Rim.Length; i++)
+                if (Vector2.Distance(corners[corners.Count - 1], Rim[i]) >= length || i == Rim.Length - 1) corners.Add(Rim[i]);
+            for (int i = 0; i < corners.Count - 1; i++)
+            {
+                Vector2 from = corners[i], to = corners[i + 1], middle = (from + to) * 0.5f;
+                if (to == from) continue;
+                var go = new GameObject("Map edge collider");
+                go.transform.SetParent(parent, false);
+                go.transform.SetPositionAndRotation(new Vector3(middle.x, Height(middle.x, middle.y) + 10f, middle.y),
+                    Quaternion.LookRotation(new Vector3(to.x - from.x, 0f, to.y - from.y)));
+                go.AddComponent<BoxCollider>().size = new Vector3(1.5f, 50f, Vector2.Distance(from, to) + 1f);
+            }
         }
 
         // ---------------------------------------------------------------- finishing
@@ -727,14 +824,6 @@ namespace RushedCrops.Editor
             return go;
         }
 
-        private static void Boundary(Transform parent, Vector3 position, Vector3 size)
-        {
-            var go = new GameObject("Map edge collider");
-            go.transform.SetParent(parent, false);
-            go.transform.position = position;
-            go.AddComponent<BoxCollider>().size = size;
-        }
-
         private static bool Bounds(Transform root, out Bounds bounds)
         {
             bool found = false;
@@ -786,14 +875,30 @@ namespace RushedCrops.Editor
                 Vector2 a = points[Mathf.Max(0, i - 1)], b = points[i], c = points[i + 1], d = points[Mathf.Min(points.Length - 1, i + 2)];
                 int steps = Mathf.Max(2, Mathf.CeilToInt(Vector2.Distance(b, c) / 2f));
                 for (int n = 0; n < steps; n++)
-                {
-                    float t = n / (float)steps;
-                    result.Add(0.5f * ((2f * b) + (-a + c) * t + (2f * a - 5f * b + 4f * c - d) * t * t + (-a + 3f * b - 3f * c + d) * t * t * t));
-                }
+                    result.Add(CatmullRom(a, b, c, d, n / (float)steps));
             }
             result.Add(points[points.Length - 1]);
             return result.ToArray();
         }
+
+        // The same curve through a closed loop of points; the last point repeats the first.
+        private static Vector2[] SmoothLoop(Vector2[] points)
+        {
+            var result = new List<Vector2>();
+            int count = points.Length;
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 a = points[(i + count - 1) % count], b = points[i], c = points[(i + 1) % count], d = points[(i + 2) % count];
+                int steps = Mathf.Max(2, Mathf.CeilToInt(Vector2.Distance(b, c) / 2f));
+                for (int n = 0; n < steps; n++)
+                    result.Add(CatmullRom(a, b, c, d, n / (float)steps));
+            }
+            result.Add(result[0]);
+            return result.ToArray();
+        }
+
+        private static Vector2 CatmullRom(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float t) =>
+            0.5f * ((2f * b) + (-a + c) * t + (2f * a - 5f * b + 4f * c - d) * t * t + (-a + 3f * b - 3f * c + d) * t * t * t);
 
         private static float PathDistance(Vector2 p)
         {

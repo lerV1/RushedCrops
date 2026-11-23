@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace RushedCrops.Editor
 {
-    // Places the gathering spots (see ResourceNode): choppable pines round the edge of the logging camp and
+    // Places the gathering spots (see ResourceNode): choppable oaks round the edge of the logging camp and
     // mineable rocks on the quarry floor. Every spot is solid and gets moved until there is room to walk round it.
     // The map builder calls Place, and it can be run again from the menu.
     public static class GatheringSetup
@@ -27,11 +27,11 @@ namespace RushedCrops.Editor
         // Oaks, so they stand out from the pines and spruces of the forest round the camp.
         private static readonly string[] TreeModels = { "Oak01", "Oak02" };
 
-        // In a ring round the onion boss on the quarry floor: cover from its charge and its tears.
+        // Along the back wall and the sides of the quarry floor, where boulders would fall, leaving the middle open.
         private static readonly Vector2[] RockSpots =
         {
-            new Vector2(5.3f, 50.2f), new Vector2(7.5f, 52.8f), new Vector2(12.5f, 52.8f), new Vector2(14.7f, 50.2f),
-            new Vector2(5.3f, 46.8f), new Vector2(7.5f, 44.2f), new Vector2(12.5f, 44.2f),
+            new Vector2(4.5f, 53.5f), new Vector2(8.5f, 55.5f), new Vector2(12.5f, 55.5f), new Vector2(16f, 53.5f),
+            new Vector2(2.8f, 48.8f), new Vector2(18f, 48.5f), new Vector2(6f, 44.5f),
         };
 
         [MenuItem("Rushed Crops/World/Place gathering spots")]
