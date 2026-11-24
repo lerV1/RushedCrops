@@ -103,6 +103,7 @@ public class MerchantShopUI : MonoBehaviour
         panel.SetActive(true);
         SetPlayerPaused(true);
         Refresh();
+        GameAudio.Play2D(Sfx.ShopOpen);
         Opened?.Invoke(merchant);
 
         // Gamepad players start on the first button so they can move round the window.
@@ -121,6 +122,7 @@ public class MerchantShopUI : MonoBehaviour
 
         merchant.Inventory.Changed -= Refresh;
         panel.SetActive(false);
+        GameAudio.Play2D(Sfx.ShopClose);
         SetPlayerPaused(false);
         if (EventSystem.current != null)
         {
@@ -220,6 +222,7 @@ public class MerchantShopUI : MonoBehaviour
             price = merchant.PriceToBuy(row.item);
             result = merchant.TryBuy(row.item, amount);
         }
+        GameAudio.Play2D(result == TradeResult.Done ? Sfx.Coins : Sfx.Click);
         ShowMessage(Describe(result, row, amount, price * amount));
         Refresh();
     }

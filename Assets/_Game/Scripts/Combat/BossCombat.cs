@@ -225,6 +225,7 @@ public class BossCombat : MonoBehaviour
     {
         Vector3 centre = Ground(transform.position);
         Show(edgeRing, centre, attack.reach);
+        GameAudio.Play(Sfx.BossRoar, transform.position + Vector3.up);
         for (float t = 0f; t < 1f; t += Time.deltaTime * Speed / attack.windUp)
         {
             boss.PoseScale = new Vector3(1f - 0.08f * t, 1f + 0.2f * t, 1f - 0.08f * t);
@@ -233,6 +234,7 @@ public class BossCombat : MonoBehaviour
         }
         boss.PoseScale = new Vector3(1.18f, 0.78f, 1.18f);
         GameEffects.Play(Effect.Dust, centre + Vector3.up * 0.2f, 2f + attack.reach * 0.3f);
+        GameAudio.Play(Sfx.BossSlam, centre);
         if (FlatDistanceBetween(player.position, centre) <= attack.reach + PlayerRadius)
         {
             playerHealth.TakeDamage(attack.damage);
@@ -252,6 +254,7 @@ public class BossCombat : MonoBehaviour
         }
         boss.PoseScale = new Vector3(0.92f, 1.05f, 0.92f);
 
+        GameAudio.Play(Sfx.BossSpit, transform.position + Vector3.up);
         Vector3 target = Ground(player.position);
         Vector3 across = Vector3.Cross(Vector3.up, target - transform.position).normalized;
         Vector3 from = transform.TransformPoint(mouth);
@@ -280,6 +283,7 @@ public class BossCombat : MonoBehaviour
         direction.Normalize();
         transform.rotation = Quaternion.LookRotation(direction);
         Vector3 start = Ground(transform.position);
+        GameAudio.Play(Sfx.BossRoar, transform.position + Vector3.up);
         for (float t = 0f; t < 1f; t += Time.deltaTime * Speed / attack.windUp)
         {
             boss.PoseTilt = Quaternion.Euler(-14f * t, 0f, 0f);
@@ -287,6 +291,7 @@ public class BossCombat : MonoBehaviour
             yield return null;
         }
         boss.PoseTilt = Quaternion.Euler(10f, 0f, 0f);
+        GameAudio.Play(Sfx.BossCharge, transform.position + Vector3.up);
 
         bool hit = false;
         float runSpeed = attack.reach / 0.55f;
@@ -317,6 +322,7 @@ public class BossCombat : MonoBehaviour
         facingLocked = true;
         Vector3 centre = Ground(transform.position);
         Show(edgeRing, centre, attack.reach);
+        GameAudio.Play(Sfx.BossRoar, transform.position + Vector3.up);
         for (float t = 0f; t < 1f; t += Time.deltaTime * Speed / attack.windUp)
         {
             boss.PoseOffset = Vector3.up * Mathf.Sin(t * Mathf.PI * 0.5f) * 1.4f;
@@ -325,6 +331,7 @@ public class BossCombat : MonoBehaviour
         boss.PoseOffset = Vector3.zero;
         boss.PoseScale = new Vector3(1.2f, 0.75f, 1.2f);
         GameEffects.Play(Effect.Dust, centre + Vector3.up * 0.2f, 3f);
+        GameAudio.Play(Sfx.BossSlam, centre);
 
         bool hit = false;
         for (float t = 0f; t < 1f; t += Time.deltaTime / ShockwaveTime)

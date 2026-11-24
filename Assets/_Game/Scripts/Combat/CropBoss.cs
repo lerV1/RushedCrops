@@ -105,6 +105,7 @@ public class CropBoss : MonoBehaviour, IInteractable
     {
         wobbleLeft = WobbleTime;
         GameEffects.Play(Effect.Juice, model.position + Vector3.up * 1.2f, 1.2f);
+        if (!health.IsDead) GameAudio.Play(Sfx.BossHurt, transform.position + Vector3.up);
     }
 
     private void Update()
@@ -145,6 +146,7 @@ public class CropBoss : MonoBehaviour, IInteractable
         model.localRotation = modelRotation;
         DropSeeds();
         GameEffects.Play(Effect.Dust, transform.position + Vector3.up * 0.4f, 2.5f);
+        GameAudio.Play(Sfx.BossDie, transform.position + Vector3.up);
         GameEffects.Play(Effect.Sparkle, transform.position + Vector3.up * 1.5f, 2.5f);
         // Every boss unlocks the barn's last repair; only the required ones count toward winning.
         if (GameManager.Instance != null)

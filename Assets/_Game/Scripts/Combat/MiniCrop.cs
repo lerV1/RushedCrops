@@ -277,6 +277,7 @@ public class MiniCrop : MonoBehaviour, IInteractable
     {
         biting = true;
         nextBiteTime = Time.time + windUp + cooldown;
+        GameAudio.Play(Sfx.MiniBite, transform.position);
         yield return new WaitForSeconds(windUp);
 
         if (state != State.Dead && !playerHealth.IsDead
@@ -318,6 +319,7 @@ public class MiniCrop : MonoBehaviour, IInteractable
         // Any hit makes it angry, so a grumpy crop now fights back.
         angry = true;
         GameEffects.Play(Effect.Juice, transform.position + Vector3.up * 0.5f, 0.6f);
+        GameAudio.Play(Sfx.MiniHurt, transform.position);
         if (state == State.Wander)
         {
             state = State.Chase;
@@ -342,6 +344,7 @@ public class MiniCrop : MonoBehaviour, IInteractable
         }
         body.isKinematic = true;
         GameEffects.Play(Effect.Juice, transform.position + Vector3.up * 0.4f, 1.4f);
+        GameAudio.Play(Sfx.MiniDie, transform.position);
         GameEffects.Play(Effect.Dust, transform.position + Vector3.up * 0.2f, 0.5f);
         DropCrop();
         StartCoroutine(ShrinkAway());

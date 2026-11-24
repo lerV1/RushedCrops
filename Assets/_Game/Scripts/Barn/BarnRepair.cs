@@ -146,6 +146,7 @@ public class BarnRepair : MonoBehaviour, IInteractable
         message = $"{job.doneMessage}! Barn repairs {JobsDone + 1}/{jobs.Length}";
         GameEffects.Play(Effect.Dust, transform.position + Vector3.up * 2f, 3f);
         GameEffects.Play(Effect.Sparkle, transform.position + Vector3.up * 3f, 3f);
+        GameAudio.Play(Sfx.Repair, transform.position + Vector3.up * 2f);
         messageUntil = Time.time + messageSeconds;
         GameManager.Instance.RecordBarnRepair();
     }

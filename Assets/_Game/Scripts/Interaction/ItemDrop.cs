@@ -158,6 +158,7 @@ public class ItemDrop : MonoBehaviour, IInteractable
         }
         collected = true;
         GameEffects.Play(Effect.Sparkle, transform.position + Vector3.up * 0.3f, 0.5f);
+        GameAudio.Play2D(Sfx.Pickup);
         StartCoroutine(FlyToPlayer());
         return true;
     }

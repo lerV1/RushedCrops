@@ -59,7 +59,7 @@ public class CameraFeel : MonoBehaviour
         // The bob follows distance walked, so sprinting bobs faster, and fades in and out with movement.
         float before = stride;
         if (Grounded) stride += speed * dt * stepsPerMetre;
-        if (Mathf.Floor(stride) != Mathf.Floor(before)) Stepped?.Invoke();
+        if (Mathf.Floor(stride + 0.5f) != Mathf.Floor(before + 0.5f)) Stepped?.Invoke(); // a step lands at the bottom of each dip
         bobWeight = Mathf.MoveTowards(bobWeight, Grounded && speed > 0.5f ? 1f : 0f, dt * 4f);
         float phase = stride * Mathf.PI * 2f;
         Vector3 bob = new Vector3(Mathf.Sin(phase * 0.5f) * bobSway, -Mathf.Abs(Mathf.Sin(phase * 0.5f)) * bobHeight, 0f) * bobWeight;

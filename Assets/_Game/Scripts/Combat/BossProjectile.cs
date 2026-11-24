@@ -48,6 +48,8 @@ public class BossProjectile : MonoBehaviour
                     player.TakeDamage(damage);
                 }
             }
+            GameAudio.Play(Sfx.ShotLand, hit.point);
+            GameEffects.Play(Effect.Juice, hit.point + Vector3.up * 0.1f, 0.6f);
             Destroy(gameObject);
             return;
         }

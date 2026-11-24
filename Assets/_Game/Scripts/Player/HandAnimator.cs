@@ -74,9 +74,17 @@ public class HandAnimator : MonoBehaviour
         }
     }
 
-    public void PlaySwing() => PlayRight(AttackTrigger);
+    public void PlaySwing()
+    {
+        PlayRight(AttackTrigger);
+        GameAudio.Play2D(Sfx.Swing);
+    }
 
-    public void PlayPunch() => PlayRight(AttackTrigger);
+    public void PlayPunch()
+    {
+        PlayRight(AttackTrigger);
+        GameAudio.Play2D(Sfx.Swing);
+    }
 
     public void PlayPour(bool withWater)
     {

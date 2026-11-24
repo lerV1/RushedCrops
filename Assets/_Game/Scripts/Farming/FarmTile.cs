@@ -188,6 +188,7 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
         State = TileState.Tilled;
         soil.SetActive(true);
         GameEffects.Play(Effect.Dirt, transform.position + Vector3.up * 0.1f);
+        GameAudio.Play(Sfx.Till, transform.position);
         PopIn.On(soil, 0.25f);
         return true;
     }
@@ -206,6 +207,7 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
         State = TileState.Growing;
         ShowStage(0);
         GameEffects.Play(Effect.Dirt, transform.position + Vector3.up * 0.1f, 0.5f);
+        GameAudio.Play(Sfx.Plant, transform.position);
         return true;
     }
 
@@ -219,6 +221,7 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
         waterings++;
         SetWet(true);
         GameEffects.Play(Effect.Water, transform.position + Vector3.up * 0.15f);
+        GameAudio.Play(Sfx.Water, transform.position);
         return true;
     }
 
@@ -231,6 +234,7 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
 
         GameEffects.Play(Effect.Leaves, transform.position + Vector3.up * 0.4f, 0.8f);
         GameEffects.Play(Effect.Sparkle, transform.position + Vector3.up * 0.5f, 0.6f);
+        GameAudio.Play(Sfx.Harvest, transform.position);
         ClearSquare();
         return true;
     }
@@ -242,6 +246,7 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
         CropBoss boss = Instantiate(Crop.GrownBoss, transform.position, facing, plot.transform.parent);
         GameEffects.Play(Effect.Dirt, transform.position + Vector3.up * 0.2f, 3f);
         GameEffects.Play(Effect.Dust, transform.position + Vector3.up * 0.3f, 1.5f);
+        GameAudio.Play(Sfx.BossEmerge, transform.position + Vector3.up);
         boss.Setup(plot.Inventory);
         ClearSquare();
         return boss;

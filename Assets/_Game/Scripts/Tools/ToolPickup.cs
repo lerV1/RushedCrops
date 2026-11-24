@@ -24,6 +24,7 @@ public class ToolPickup : MonoBehaviour, IInteractable
         if (tools.GiveTool(tool))
         {
             GameEffects.Play(Effect.Sparkle, transform.position + Vector3.up * 0.2f);
+            GameAudio.Play2D(Sfx.ToolPickup);
             gameObject.SetActive(false);
         }
         else

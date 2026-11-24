@@ -120,6 +120,7 @@ public class ResourceNode : MonoBehaviour, IToolTarget, IInteractable
         toward.y = 0f;
         toward = toward.sqrMagnitude > 0.01f ? toward.normalized : transform.forward;
         GameEffects.Play(topples ? Effect.WoodChips : Effect.StoneChips, transform.position + Vector3.up * (topples ? 1.1f : 0.6f) + toward * 0.5f);
+        GameAudio.Play(topples ? Sfx.Chop : Sfx.Mine, transform.position + Vector3.up);
         if (hits < hitsToBreak)
         {
             Play(Shake());
@@ -138,9 +139,11 @@ public class ResourceNode : MonoBehaviour, IToolTarget, IInteractable
         if (topples)
         {
             GameEffects.Play(Effect.Leaves, transform.position + Vector3.up * 2.8f + away * 1.2f, 1.5f);
+            GameAudio.Play(Sfx.TreeFall, transform.position + Vector3.up * 2f);
         }
         else
         {
+            GameAudio.Play(Sfx.RockBreak, transform.position + Vector3.up * 0.5f);
             GameEffects.Play(Effect.StoneChips, transform.position + Vector3.up * 0.5f, 2.5f);
             GameEffects.Play(Effect.Dust, transform.position + Vector3.up * 0.3f, 1.2f);
         }
@@ -228,6 +231,7 @@ public class ResourceNode : MonoBehaviour, IToolTarget, IInteractable
         }
         whole.rotation = Quaternion.AngleAxis(85f, axis) * start;
         GameEffects.Play(Effect.Dust, transform.position + away * 2.5f + Vector3.up * 0.3f, 1.4f);
+        GameAudio.Play(Sfx.TreeLand, transform.position + away * 2.5f);
         GameEffects.Play(Effect.Leaves, transform.position + away * 3.5f + Vector3.up * 0.6f);
         yield return Shrink(0.3f);
     }

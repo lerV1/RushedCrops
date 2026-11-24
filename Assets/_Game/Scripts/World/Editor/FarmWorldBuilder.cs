@@ -392,6 +392,32 @@ namespace RushedCrops.Editor
             Lantern(parent, crossing + V(-3.4f, 10f), 180f);
             RiverExitRapids(parent);
             RiverLife(parent);
+            RiverRush(parent);
+        }
+
+        // The river's sound, sliding along its course inside the valley to stay nearest the listener.
+        private const string RiverClipPath = "Assets/_Game/Audio/Ambience/River.ogg";
+
+        private static void RiverRush(Transform parent)
+        {
+            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(RiverClipPath);
+            if (clip == null) throw new InvalidOperationException("Missing " + RiverClipPath + ".");
+            var course = new List<Vector3>();
+            for (int i = 0; i < River.Length; i += 3)
+                if (RimDistance(River[i]) < 8f) course.Add(new Vector3(River[i].x, WaterLevel, River[i].y));
+            var go = new GameObject("River sound");
+            go.transform.SetParent(parent, false);
+            var source = go.AddComponent<AudioSource>();
+            source.clip = clip;
+            source.loop = true;
+            source.playOnAwake = true;
+            source.volume = 0.55f;
+            source.spatialBlend = 1f;
+            source.rolloffMode = AudioRolloffMode.Linear;
+            source.minDistance = 6f;
+            source.maxDistance = 32f;
+            source.dopplerLevel = 0f;
+            go.AddComponent<RiverSound>().Configure(course.ToArray());
         }
 
         // A fishing dock with a rowboat on the farm side of the river, and lily pads in the slack water by the banks.

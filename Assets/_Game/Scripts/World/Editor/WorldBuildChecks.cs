@@ -70,6 +70,7 @@ namespace RushedCrops.Editor
             ValidateBoundary(root.transform, player);
             ValidateScenery(root.transform);
             ValidateFeel(player);
+            ValidateAudio(root.transform);
 
             var cycle =UnityEngine.Object.FindAnyObjectByType<EnvironmentCycle>();
             Require(cycle != null, "The day/night cycle is missing.");
@@ -252,6 +253,30 @@ namespace RushedCrops.Editor
                 Require(plot != null && plot.CanGrow(crop.BossSeed), "The crop field can't grow " + crop.BossSeed.name + "." + seedFix);
             }
             Require(droppers == FarmPlotSetup.BossSeedAssets.Length, "Only " + droppers + " mini crops drop a boss seed." + seedFix);
+        }
+
+        // Every sound has at least one clip, the ambience loops and the player's sounds are wired, and the
+        // river can be heard along its course.
+        private static void ValidateAudio(Transform world)
+        {
+            const string fix = " Run Rushed Crops > Audio > Set up sounds.";
+            var audio = UnityEngine.Object.FindAnyObjectByType<GameAudio>();
+            Require(audio != null, "The scene has no GameAudio, so the game is silent." + fix);
+            var settings = new SerializedObject(audio);
+            var bank = settings.FindProperty("bank").objectReferenceValue as SoundBank;
+            Require(bank != null, "GameAudio has no sound bank." + fix);
+            foreach (Sfx sound in Enum.GetValues(typeof(Sfx)))
+            {
+                SoundBank.Entry entry = bank.Get(sound);
+                Require(entry != null && entry.clips.Length > 0 && Array.TrueForAll(entry.clips, clip => clip != null), "The " + sound + " sound has no clips." + fix);
+            }
+            foreach (string field in new[] { "birds", "crickets", "wind", "tools", "playerHealth", "feel" })
+                Require(settings.FindProperty(field).objectReferenceValue != null, "GameAudio is missing its " + field + "." + fix);
+            Require(UnityEngine.Object.FindAnyObjectByType<AudioListener>() != null, "Nothing in the scene listens: the camera needs an AudioListener.");
+
+            var river = world.GetComponentInChildren<RiverSound>(true);
+            Require(river != null && river.GetComponent<AudioSource>().clip != null && new SerializedObject(river).FindProperty("course").arraySize >= 5,
+                "The river makes no sound. Rebuild the map.");
         }
 
         // Hits throw chips, dirt and leaves, and the camera bobs, dips on landing and shakes when the player is hurt.

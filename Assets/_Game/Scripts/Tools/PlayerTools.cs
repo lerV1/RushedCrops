@@ -127,6 +127,7 @@ public class PlayerTools : MonoBehaviour
     public void FillCan()
     {
         WaterLeft = canCapacity;
+        GameAudio.Play2D(Sfx.FillCan);
         Changed?.Invoke();
     }
 
