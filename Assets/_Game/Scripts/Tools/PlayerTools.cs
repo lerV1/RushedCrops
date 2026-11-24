@@ -56,6 +56,8 @@ public class PlayerTools : MonoBehaviour
 
     private void OnDisable()
     {
+        // Death disables tools; a pending harvest or watering action must stop too.
+        StopAllCoroutines();
         if (useAction != null)
         {
             useAction.action.performed -= OnUse;
@@ -171,6 +173,20 @@ public class PlayerTools : MonoBehaviour
             case ToolType.Pickaxe:
                 hands.PlaySwing();
                 UseOnTarget(swingHitDelay);
+                break;
+            case ToolType.Sword:
+                if (melee.TryAttack())
+                {
+                    hands.PlaySwing();
+                }
+                break;
+            case ToolType.CaptureJar:
+                hands.PlaySwing();
+                interactor.FindToolTarget();
+                if (interactor.Target is CropBoss boss)
+                {
+                    boss.TryCapture();
+                }
                 break;
         }
     }

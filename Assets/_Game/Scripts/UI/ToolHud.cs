@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-// Shows the watering can's water above the hotbar, like "Water 3 / 6", while the can is in hand.
+// Shows the selected tool above the hotbar, with the watering can's remaining water.
 public class ToolHud : MonoBehaviour
 {
     [SerializeField] private PlayerTools tools;
@@ -30,11 +30,14 @@ public class ToolHud : MonoBehaviour
 
     private void Refresh()
     {
-        bool holdingCan = tools.Equipped == ToolType.WateringCan;
-        label.enabled = holdingCan;
-        if (holdingCan)
+        bool holdingTool = tools.Equipped != ToolType.None;
+        label.enabled = holdingTool;
+        if (holdingTool)
         {
-            label.text = $"Water {tools.WaterLeft} / {tools.CanCapacity}";
+            string name = ResourceTypes.DisplayName(ResourceTypes.FromTool(tools.Equipped));
+            label.text = tools.Equipped == ToolType.WateringCan
+                ? $"{name}: {tools.WaterLeft} / {tools.CanCapacity}"
+                : name;
         }
     }
 }

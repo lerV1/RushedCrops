@@ -48,12 +48,29 @@ public class CropBoss : MonoBehaviour, IInteractable
     private Vector3 modelPosition;
     private Quaternion modelRotation;
     private float wobbleLeft;
+    private bool isCaptured;
     private const float WobbleTime = 0.25f;
 
     public SeedDropEntry[] Drops => drops;
     public string DisplayName => displayName;
     public Health Health => health;
     public bool IsDead => health.IsDead;
+
+    public bool TryCapture()
+    {
+        if (isCaptured || health.IsDead || health.CurrentHealth * 3 > health.MaxHealth || inventory == null ||
+            !inventory.Add(ResourceType.CapturedBoss, 1))
+        {
+            return false;
+        }
+
+        isCaptured = true;
+        // Disabling a component leaves its coroutines running. Remove the captured
+        // boss so its attacks stop and BossCombat also cleans up its warning patches.
+        gameObject.SetActive(false);
+        Destroy(gameObject);
+        return true;
+    }
 
     // How BossCombat poses the model while it winds up and attacks, on top of the hit wobble.
     public Vector3 PoseScale { get; set; } = Vector3.one;

@@ -30,7 +30,11 @@ public enum ResourceType
     OnionOverlordSeed,
     BeetBaronSeed,
     CabbageColossusSeed,
-    WheatWarlordSeed
+    WheatWarlordSeed,
+    // A captured boss can be placed into one of the barn's seed tubes.
+    CapturedBoss,
+    Sword,
+    CaptureJar
 }
 
 public static class ResourceTypes
@@ -47,6 +51,10 @@ public static class ResourceTypes
                 return ToolType.Hatchet;
             case ResourceType.Pickaxe:
                 return ToolType.Pickaxe;
+            case ResourceType.Sword:
+                return ToolType.Sword;
+            case ResourceType.CaptureJar:
+                return ToolType.CaptureJar;
             default:
                 return ToolType.None;
         }
@@ -65,6 +73,10 @@ public static class ResourceTypes
                 return ResourceType.Hatchet;
             case ToolType.Pickaxe:
                 return ResourceType.Pickaxe;
+            case ToolType.Sword:
+                return ResourceType.Sword;
+            case ToolType.CaptureJar:
+                return ResourceType.CaptureJar;
             default:
                 throw new ArgumentException("Empty hands aren't an item.", nameof(tool));
         }
