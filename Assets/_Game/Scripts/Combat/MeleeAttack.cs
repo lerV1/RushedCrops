@@ -12,7 +12,12 @@ public class MeleeAttack : MonoBehaviour
     [SerializeField] private Transform viewPoint;
 
     [Header("Damage")]
-    [SerializeField, Min(1)] private int damage = 25;
+    [SerializeField, Min(1)] private int damage = 18;
+    [Tooltip("Each consecutive swing in the combo adds this much damage.")]
+    [SerializeField, Min(0)] private int comboDamageBonus = 6;
+    [Tooltip("Seconds between swings before the combo returns to its first hit.")]
+    [SerializeField, Min(0.1f)] private float comboWindow = 1.5f;
+    [SerializeField, Min(1)] private int comboSteps = 3;
     [Tooltip("How fast a hit pushes the target away, in metres per second. 0 means no push.")]
     [SerializeField, Min(0f)] private float knockbackStrength = 6f;
 
@@ -36,6 +41,10 @@ public class MeleeAttack : MonoBehaviour
 
     // Everything already hit by this swing. A target with several colliders is still one Health.
     private readonly HashSet<Health> hitThisSwing = new HashSet<Health>();
+    private Health attackerHealth;
+    private int swingDamage;
+    private int comboStep;
+    private float comboExpiresAt;
 
     public bool IsBusy { get; private set; }
 
@@ -48,6 +57,14 @@ public class MeleeAttack : MonoBehaviour
         // A swing stops halfway if the player is disabled, so it must not stay busy forever.
         StopAllCoroutines();
         IsBusy = false;
+        comboStep = 0;
+        comboExpiresAt = 0f;
+    }
+
+    private void Awake()
+    {
+        attackerHealth = GetComponent<Health>();
+        swingDamage = damage;
     }
 
     public bool TryAttack()
@@ -61,6 +78,17 @@ public class MeleeAttack : MonoBehaviour
             Debug.LogError("MeleeAttack needs the camera assigned as its View Point.", this);
             return false;
         }
+
+        if (comboExpiresAt <= 0f || Time.time > comboExpiresAt)
+        {
+            comboStep = 0;
+        }
+        else
+        {
+            comboStep = (comboStep + 1) % Mathf.Max(comboSteps, 1);
+        }
+        swingDamage = damage + comboStep * comboDamageBonus;
+        comboExpiresAt = Time.time + comboWindow;
 
         StartCoroutine(Swing());
         return true;
@@ -102,14 +130,14 @@ public class MeleeAttack : MonoBehaviour
         int hits = 0;
         foreach (Collider part in found)
         {
-            if (part.transform.IsChildOf(transform))
+            if (part.transform == transform || part.transform.IsChildOf(transform))
             {
                 continue;
             }
 
             // The collider may be on a child, so look up the parents.
             Health target = part.GetComponentInParent<Health>();
-            if (target == null || target.IsDead || hitThisSwing.Contains(target))
+            if (target == null || target == attackerHealth || target.IsDead || hitThisSwing.Contains(target))
             {
                 continue;
             }
@@ -144,7 +172,7 @@ public class MeleeAttack : MonoBehaviour
 
     private void Hit(Health target)
     {
-        target.TakeDamage(damage);
+        target.TakeDamage(swingDamage);
 
         var knockback = target.GetComponent<Knockback>();
         if (knockback != null && knockbackStrength > 0f)

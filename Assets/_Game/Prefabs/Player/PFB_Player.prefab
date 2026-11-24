@@ -586,7 +586,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MeleeAttack
   viewPoint: {fileID: 5761688239629393836}
-  damage: 25
+  damage: 18
   knockbackStrength: 6
   reach: 2
   hitboxSize: {x: 1, y: 1.2}
