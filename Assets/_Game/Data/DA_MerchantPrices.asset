@@ -30,17 +30,17 @@ MonoBehaviour:
   - item: 6
     basePrice: 10
   - item: 7
-    basePrice: 25
+    basePrice: 20
   - item: 8
-    basePrice: 30
+    basePrice: 25
   - item: 17
-    basePrice: 40
+    basePrice: 30
   - item: 18
-    basePrice: 50
+    basePrice: 35
   - item: 26
-    basePrice: 60
+    basePrice: 80
   - item: 27
-    basePrice: 75
+    basePrice: 125
   wanted:
   - item: 13
     basePrice: 3

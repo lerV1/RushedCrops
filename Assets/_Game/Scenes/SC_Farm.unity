@@ -57840,7 +57840,7 @@ MonoBehaviour:
   item: 5
   amount: 3
   hitsToBreak: 3
-  regrowSeconds: 120
+  regrowSeconds: 180
   whole: {fileID: 289117685}
   broken: {fileID: 1322992000}
   topples: 1
@@ -76472,8 +76472,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossTube
   seedOutput: 19
-  secondsPerSeed: 30
-  seedCapacity: 10
+  secondsPerSeed: 120
+  seedCapacity: 8
   bossVisual: {fileID: 830807540}
   tubeRenderer: {fileID: 2085198287}
   tubeTint: {r: 0.38, g: 0.72, b: 0.82, a: 0.3}
@@ -91347,7 +91347,7 @@ MonoBehaviour:
   item: 6
   amount: 2
   hitsToBreak: 4
-  regrowSeconds: 150
+  regrowSeconds: 210
   whole: {fileID: 299060089}
   broken: {fileID: 540986906}
   topples: 0
@@ -120733,7 +120733,7 @@ MonoBehaviour:
   item: 6
   amount: 2
   hitsToBreak: 4
-  regrowSeconds: 150
+  regrowSeconds: 210
   whole: {fileID: 666540351}
   broken: {fileID: 1562255357}
   topples: 0
@@ -138054,7 +138054,7 @@ MonoBehaviour:
     doneMessage: Barn unlocked
     cost:
     - type: 0
-      amount: 40
+      amount: 600
     needsBossBeaten: 0
     parts:
     - part: {fileID: 1064487323}
@@ -138077,9 +138077,9 @@ MonoBehaviour:
     doneMessage: Roof patched
     cost:
     - type: 0
-      amount: 20
+      amount: 1050
     - type: 5
-      amount: 4
+      amount: 30
     needsBossBeaten: 0
     parts:
     - part: {fileID: 1021408945}
@@ -138182,11 +138182,11 @@ MonoBehaviour:
     doneMessage: Wall straightened
     cost:
     - type: 0
-      amount: 25
+      amount: 2050
     - type: 5
-      amount: 3
+      amount: 30
     - type: 6
-      amount: 4
+      amount: 20
     needsBossBeaten: 1
     parts:
     - part: {fileID: 1021408931}
@@ -141493,7 +141493,7 @@ MonoBehaviour:
   item: 5
   amount: 3
   hitsToBreak: 3
-  regrowSeconds: 120
+  regrowSeconds: 180
   whole: {fileID: 1346506576}
   broken: {fileID: 636214965}
   topples: 1
@@ -142957,7 +142957,7 @@ MonoBehaviour:
   item: 5
   amount: 3
   hitsToBreak: 3
-  regrowSeconds: 120
+  regrowSeconds: 180
   whole: {fileID: 844229091}
   broken: {fileID: 1159185822}
   topples: 1
@@ -162100,7 +162100,7 @@ MonoBehaviour:
   item: 5
   amount: 3
   hitsToBreak: 3
-  regrowSeconds: 120
+  regrowSeconds: 180
   whole: {fileID: 465831176}
   broken: {fileID: 1936083037}
   topples: 1
@@ -286493,7 +286493,7 @@ MonoBehaviour:
   item: 6
   amount: 2
   hitsToBreak: 4
-  regrowSeconds: 150
+  regrowSeconds: 210
   whole: {fileID: 422911275}
   broken: {fileID: 499337235}
   topples: 0
@@ -304375,7 +304375,7 @@ MonoBehaviour:
   item: 6
   amount: 2
   hitsToBreak: 4
-  regrowSeconds: 150
+  regrowSeconds: 210
   whole: {fileID: 1016536232}
   broken: {fileID: 1508158217}
   topples: 0
@@ -316721,7 +316721,7 @@ MonoBehaviour:
   item: 5
   amount: 3
   hitsToBreak: 3
-  regrowSeconds: 120
+  regrowSeconds: 180
   whole: {fileID: 807417844}
   broken: {fileID: 342710549}
   topples: 1
@@ -341097,8 +341097,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossTube
   seedOutput: 21
-  secondsPerSeed: 30
-  seedCapacity: 10
+  secondsPerSeed: 60
+  seedCapacity: 16
   bossVisual: {fileID: 653471481}
   tubeRenderer: {fileID: 1907535733}
   tubeTint: {r: 0.38, g: 0.72, b: 0.82, a: 0.3}
@@ -350001,7 +350001,7 @@ MonoBehaviour:
   item: 5
   amount: 3
   hitsToBreak: 3
-  regrowSeconds: 120
+  regrowSeconds: 180
   whole: {fileID: 157273562}
   broken: {fileID: 1149662346}
   topples: 1
@@ -353941,7 +353941,7 @@ MonoBehaviour:
   item: 6
   amount: 2
   hitsToBreak: 4
-  regrowSeconds: 150
+  regrowSeconds: 210
   whole: {fileID: 1636006838}
   broken: {fileID: 962573835}
   topples: 0
@@ -361894,7 +361894,7 @@ MonoBehaviour:
   item: 5
   amount: 3
   hitsToBreak: 3
-  regrowSeconds: 120
+  regrowSeconds: 180
   whole: {fileID: 851629433}
   broken: {fileID: 1916437513}
   topples: 1
@@ -380764,7 +380764,7 @@ MonoBehaviour:
   item: 5
   amount: 3
   hitsToBreak: 3
-  regrowSeconds: 120
+  regrowSeconds: 180
   whole: {fileID: 959875709}
   broken: {fileID: 135838501}
   topples: 1
@@ -392870,7 +392870,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BossTube
   seedOutput: 22
   secondsPerSeed: 30
-  seedCapacity: 10
+  seedCapacity: 24
   bossVisual: {fileID: 1967818602}
   tubeRenderer: {fileID: 1148052127}
   tubeTint: {r: 0.38, g: 0.72, b: 0.82, a: 0.3}
@@ -404806,7 +404806,7 @@ MonoBehaviour:
   item: 5
   amount: 3
   hitsToBreak: 3
-  regrowSeconds: 120
+  regrowSeconds: 180
   whole: {fileID: 1984151866}
   broken: {fileID: 1264598864}
   topples: 1
@@ -434837,7 +434837,7 @@ MonoBehaviour:
   item: 6
   amount: 2
   hitsToBreak: 4
-  regrowSeconds: 150
+  regrowSeconds: 210
   whole: {fileID: 1748371034}
   broken: {fileID: 2043641950}
   topples: 0
@@ -435002,7 +435002,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossTube
   seedOutput: 20
-  secondsPerSeed: 30
+  secondsPerSeed: 90
   seedCapacity: 10
   bossVisual: {fileID: 1614884208}
   tubeRenderer: {fileID: 1065675940}
