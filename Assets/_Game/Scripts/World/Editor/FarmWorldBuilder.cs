@@ -700,29 +700,75 @@ namespace RushedCrops.Editor
             // Only conifers: the round-crowned oaks at the logging camp are the trees a hatchet can fell
             // (see GatheringSetup), so no look-alikes stand anywhere else.
             string[] conifer = { "Pine01", "Pine02", "Spruce01", "Spruce02" };
-            // Thick on the hills round the rim, in groves inside, and none past where the ridge hides them.
+            string[] undergrowth = { "Fern01", "Fern02", "Fern03", "Bush01" };
+            // An open forest: a few scattered trees where the meadow meets the woods, thickening in clumps up the
+            // hillside (gaps let the hills show through), small groves inside the valley and open meadow between.
             RimBounds(TreeReach, out Vector2Int min, out Vector2Int max);
-            for (float z = min.y; z < max.y; z += 4.6f)
-            for (float x = min.x; x < max.x; x += 4.6f)
+            for (float z = min.y; z < max.y; z += 5.4f)
+            for (float x = min.x; x < max.x; x += 5.4f)
             {
-                Vector2 p = V(x + R(-1.8f, 1.8f), z + R(-1.8f, 1.8f));
+                Vector2 p = V(x + R(-2f, 2f), z + R(-2f, 2f));
                 float rim = RimDistance(p);
                 if (rim > TreeReach || Blocked(p, 4f, 5.5f, 8.5f)) continue;
+                float clump = 0.45f + Mathf.PerlinNoise(p.x * 0.07f + 31f, p.y * 0.07f + 17f) * 0.9f;
                 float grove = Mathf.PerlinNoise(p.x * 0.045f + 11f, p.y * 0.045f + 7f);
-                float woods = Vector2.Distance(p, Logging) < 30f ? 0.85f : 0f;
-                float chance = rim > 10f ? 0.7f : rim > -12f ? 0.92f : Mathf.Max(woods, grove > 0.58f ? 0.75f : 0.06f);
+                float chance = rim > 10f ? 0.5f * clump          // the hilltops: a broken line against the sky
+                    : rim > 4f ? 0.65f * clump                   // the slope behind the edge of play
+                    : rim > -2f ? 0.8f                           // a steady tree line along the edge itself, so it never ends in open grass
+                    : rim > -12f ? 0.28f * clump                 // where the meadow meets the woods
+                    : Vector2.Distance(p, Logging) < 26f ? 0.5f  // the loggers' woods
+                    : grove > 0.62f ? 0.55f : 0.02f;             // groves and the odd lone tree
                 if (random.NextDouble() > chance) continue;
-                Prefab("Vegetation/" + conifer[random.Next(conifer.Length)], parent, p, R(0f, 360f), rim > 6f ? R(1.6f, 2.3f) : R(1.3f, 2.0f));
+                float size = rim > 6f ? R(1.6f, 2.3f) : rim > -12f ? R(1.4f, 2.1f) : R(1.1f, 1.9f);
+                Prefab("Vegetation/" + conifer[random.Next(conifer.Length)], parent, p, R(0f, 360f), size);
+
+                // Ferns and bushes at the feet of the trees along the forest edge.
+                if (rim < 2f && random.NextDouble() < 0.55)
+                {
+                    Vector2 at = p + V(R(-2.2f, 2.2f), R(-2.2f, 2.2f));
+                    if (!Blocked(at, 1.5f, 3.4f, 7f))
+                        Prefab("Vegetation/" + undergrowth[random.Next(undergrowth.Length)], parent, at, R(0f, 360f), R(1f, 1.6f), false);
+                }
             }
-            for (int group = 0; group < 6; group++)
+
+            // Wildflower patches out in the open meadow, away from the groves.
+            string[] flowers = { "Flowers01", "Flowers02", "Flowers03", "Flower01", "Flower02", "Flower03" };
+            for (int patch = 0, tries = 0; patch < 22 && tries < 400; tries++)
             {
-                Vector2 centre = InValley(8f);
-                if (Blocked(centre, 6f, 7f, 10f)) continue;
-                for (int i = 0; i < 3; i++)
-                    Prefab("Rocks/Stone0" + random.Next(1, 4), parent, centre + V(R(-1.6f, 1.6f), R(-1.6f, 1.6f)), R(0f, 360f), R(1.2f, 2.6f) / (i + 1));
+                Vector2 centre = InValley(10f);
+                if (Blocked(centre, 2f, 4.5f, 9f) || Mathf.PerlinNoise(centre.x * 0.045f + 11f, centre.y * 0.045f + 7f) > 0.5f) continue;
+                patch++;
+                int count = random.Next(4, 8);
+                for (int i = 0; i < count; i++)
+                {
+                    Vector2 at = centre + V(R(-2.6f, 2.6f), R(-2.6f, 2.6f));
+                    if (!Blocked(at, 1f, 3.4f, 7f))
+                        Prefab("Vegetation/" + flowers[random.Next(flowers.Length)], parent, at, R(0f, 360f), R(1.1f, 1.6f), false);
+                }
             }
+
+            // Rock outcrops breaking up the tree line at the valley's edge, and a few old stumps in the woods.
+            for (int outcrop = 0, tries = 0; outcrop < 9 && tries < 400; tries++)
+            {
+                Vector2 centre = InValley(3f);
+                float rim = RimDistance(centre);
+                if (rim < -10f || Blocked(centre, 4f, 6f, 10f)) continue;
+                outcrop++;
+                Prefab("Rocks/Rock0" + random.Next(1, 4), parent, centre, R(0f, 360f), R(1.1f, 1.7f));
+                for (int i = 0; i < 2; i++)
+                    Prefab("Rocks/Stone0" + random.Next(1, 4), parent, centre + V(R(-2.4f, 2.4f), R(-2.4f, 2.4f)), R(0f, 360f), R(0.9f, 1.6f));
+            }
+            for (int stump = 0, tries = 0; stump < 10 && tries < 400; tries++)
+            {
+                Vector2 at = InValley(10f);
+                bool woods = Vector2.Distance(at, Logging) < 26f || Mathf.PerlinNoise(at.x * 0.045f + 11f, at.y * 0.045f + 7f) > 0.6f;
+                if (!woods || Blocked(at, 3f, 4f, 9f)) continue;
+                stump++;
+                Prefab("Vegetation/" + (random.NextDouble() < 0.5 ? "PineStump0" : "SpruceStump0") + random.Next(1, 3), parent, at, R(0f, 360f), R(1.4f, 1.9f));
+            }
+
             string[] small = { "Grass01", "Grass02", "Fern01", "Bush01" };
-            for (int i = 0; i < 340; i++)
+            for (int i = 0; i < 220; i++)
             {
                 Vector2 p = InValley(3f);
                 if (Blocked(p, 1.5f, 3.4f, 7f)) continue;

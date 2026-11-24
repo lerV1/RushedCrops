@@ -132,6 +132,15 @@ namespace RushedCrops.Editor
             var prices = settings.FindProperty("prices").objectReferenceValue as MerchantPrices;
             Require(prices != null && prices.ForSale.Count > 0 && prices.Wanted.Count > 0,
                 "The merchant needs a price list with things to sell and crops to buy (DA_MerchantPrices).");
+            // Gathered wood and stone can be sold too, for less than he charges, on every day of the price swing,
+            // so buying and selling back never makes money.
+            foreach (ResourceType gathered in new[] { ResourceType.Wood, ResourceType.Stone })
+                for (int day = 1; day <= 30; day++)
+                {
+                    int pays = prices.PayFor(gathered, day), charges = prices.ChargeFor(gathered, day);
+                    Require(pays > 0, "The merchant doesn't buy " + gathered + ", so there's nothing to do with it once the barn is fixed (DA_MerchantPrices).");
+                    Require(charges == 0 || pays < charges, "On day " + day + " the merchant pays " + pays + " for " + gathered + " but sells it for " + charges + " (DA_MerchantPrices).");
+                }
             Require(settings.FindProperty("inventory").objectReferenceValue != null, "The merchant isn't linked to the Inventory." + fix);
             Require(settings.FindProperty("shop").objectReferenceValue != null, "The merchant isn't linked to his trading window." + fix);
 

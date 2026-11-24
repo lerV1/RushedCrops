@@ -42,6 +42,10 @@ MonoBehaviour:
     basePrice: 5
   - item: 14
     basePrice: 9
+  - item: 5
+    basePrice: 3
+  - item: 6
+    basePrice: 4
   forSaleSwing: 0.2
   wantedSwing: 0.3
   seed: 451
