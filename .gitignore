@@ -27,6 +27,11 @@
 *.blend1
 *.blend1.meta
 
+# Local playtest captures and Blender working sources are not runtime assets.
+/Assets/Screenshots/
+/Assets/Screenshots.meta
+/Assets/_Game/Models/**/Source~/
+
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
 /[Mm]emoryCaptures/
