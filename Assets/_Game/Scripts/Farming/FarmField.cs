@@ -31,6 +31,56 @@ public class FarmField : MonoBehaviour, IAreaTarget, IInteractable, IToolTarget,
 
     public FarmTile TileAt(Vector2Int square) => tiles.TryGetValue(square, out FarmTile tile) ? tile : null;
 
+    public SaveData.CropTileData[] GetSaveData()
+    {
+        var savedTiles = new List<SaveData.CropTileData>(tiles.Count);
+        foreach (KeyValuePair<Vector2Int, FarmTile> entry in tiles)
+        {
+            if (entry.Value != null)
+            {
+                savedTiles.Add(entry.Value.GetSaveData(entry.Key));
+            }
+        }
+        return savedTiles.ToArray();
+    }
+
+    public void RestoreSaveData(SaveData.CropTileData[] savedTiles)
+    {
+        foreach (FarmTile tile in tiles.Values)
+        {
+            if (tile != null)
+            {
+                Destroy(tile.gameObject);
+            }
+        }
+        tiles.Clear();
+
+        if (savedTiles == null)
+        {
+            return;
+        }
+
+        FarmPlot plot = GetComponent<FarmPlot>();
+        Vector2Int grid = GridSize;
+        foreach (SaveData.CropTileData saved in savedTiles)
+        {
+            if (saved == null)
+            {
+                continue;
+            }
+            Vector2Int square = new Vector2Int(saved.x, saved.y);
+            if (square.x < 0 || square.y < 0 || square.x >= grid.x || square.y >= grid.y || tiles.ContainsKey(square))
+            {
+                continue;
+            }
+
+            FarmTile tile = Instantiate(tilePrefab, SquareCentre(square), transform.rotation, transform);
+            tile.name = $"Tile {square.x},{square.y}";
+            tile.RestoreState(saved, plot);
+            tiles.Add(square, tile);
+        }
+    }
+
     private void Awake()
     {
         if (tilePrefab == null || cursor == null)

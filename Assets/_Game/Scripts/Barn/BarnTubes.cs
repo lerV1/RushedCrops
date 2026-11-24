@@ -13,6 +13,21 @@ public class BarnTubes : MonoBehaviour
 
     public int unlockedTubeCount { get; private set; }
 
+    public BossTube[] Tubes => tubes;
+
+    public void RestoreUnlockedTubeCount(int count, int repairStage)
+    {
+        unlockedTubeCount = Mathf.Clamp(count, 0, tubes.Length);
+        lastRepairStage = repairStage;
+        for (int i = 0; i < tubes.Length; i++)
+        {
+            if (tubes[i] != null)
+            {
+                tubes[i].Configure(inventory, i, i < unlockedTubeCount);
+            }
+        }
+    }
+
     private void Start()
     {
         if (barnRepair == null || inventory == null || tubes == null || tubes.Length == 0)

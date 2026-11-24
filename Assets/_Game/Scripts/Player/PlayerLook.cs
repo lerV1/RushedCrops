@@ -32,6 +32,15 @@ public class PlayerLook : MonoBehaviour
 
     public Vector2 LookDelta { get; private set; }
 
+    /// <summary>Aligns the camera's independent yaw after loading the player's pose.</summary>
+    public void RestoreFacing(Quaternion rotation)
+    {
+        yaw = rotation.eulerAngles.y;
+        pitch = 0f;
+        LookDelta = Vector2.zero;
+        cameraRoot.rotation = Quaternion.Euler(pitch, yaw, 0f);
+    }
+
     private void Awake()
     {
         yaw = transform.eulerAngles.y;

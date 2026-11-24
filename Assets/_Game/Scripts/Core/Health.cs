@@ -55,6 +55,12 @@ public class Health : MonoBehaviour
         HealthChanged?.Invoke(currentHealth, maxHealth);
     }
 
+    public void RestoreHealth(int amount)
+    {
+        currentHealth = Mathf.Clamp(amount, 1, maxHealth);
+        HealthChanged?.Invoke(currentHealth, maxHealth);
+    }
+
     // Fills health to the maximum. This also revives a dead object.
     public void RestoreFullHealth()
     {

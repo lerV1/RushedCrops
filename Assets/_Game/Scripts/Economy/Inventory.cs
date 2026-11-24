@@ -40,6 +40,43 @@ public class Inventory : MonoBehaviour
         Changed?.Invoke();
     }
 
+    public int[] GetSavedSlotTypes()
+    {
+        var savedTypes = new int[SlotCount];
+        for (int i = 0; i < SlotCount; i++)
+        {
+            savedTypes[i] = (int)slotItems[i];
+        }
+        return savedTypes;
+    }
+
+    public int[] GetSavedSlotCounts() => (int[])slotCounts.Clone();
+
+    public void RestoreState(int savedCoins, int[] savedTypes, int[] savedCounts, int selectedSlot)
+    {
+        Array.Clear(slotCounts, 0, SlotCount);
+        coins = Mathf.Max(0, savedCoins);
+        SelectedSlot = Mathf.Clamp(selectedSlot, 0, SlotCount - 1);
+
+        if (savedTypes != null && savedCounts != null && savedTypes.Length == SlotCount && savedCounts.Length == SlotCount)
+        {
+            for (int i = 0; i < SlotCount; i++)
+            {
+                ResourceType type = (ResourceType)savedTypes[i];
+                if (!Enum.IsDefined(typeof(ResourceType), type))
+                {
+                    continue;
+                }
+
+                int count = Mathf.Clamp(savedCounts[i], 0, MaxStackFor(type));
+                slotItems[i] = type;
+                slotCounts[i] = count;
+            }
+        }
+
+        Changed?.Invoke();
+    }
+
     public int GetCount(ResourceType type)
     {
         if (type == ResourceType.Coins)

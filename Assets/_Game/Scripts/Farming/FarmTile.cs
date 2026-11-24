@@ -31,6 +31,47 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
 
     public bool NeedsWater => State == TileState.Growing && !IsWet;
 
+    public SaveData.CropTileData GetSaveData(Vector2Int square)
+    {
+        return new SaveData.CropTileData
+        {
+            x = square.x,
+            y = square.y,
+            state = (int)State,
+            seedResource = Crop != null ? (int)Crop.SeedResource : -1,
+            progress = Progress,
+            waterings = waterings,
+            isWet = IsWet
+        };
+    }
+
+    public void RestoreState(SaveData.CropTileData saved, FarmPlot ownerPlot)
+    {
+        plot = ownerPlot;
+        State = (TileState)Mathf.Clamp(saved.state, (int)TileState.Tilled, (int)TileState.Ripe);
+        soil.SetActive(true);
+        Crop = saved.seedResource >= 0 ? plot.FindCrop((ResourceType)saved.seedResource) : null;
+        if (State == TileState.Tilled || Crop == null)
+        {
+            State = TileState.Tilled;
+            Crop = null;
+            growTime = 0f;
+            waterings = 0;
+            SetWet(false);
+            return;
+        }
+
+        growTime = Mathf.Clamp01(saved.progress) * Crop.GrowSeconds;
+        waterings = Mathf.Clamp(saved.waterings, 0, Crop.WaterNeeded);
+        SetWet(State == TileState.Growing && saved.isWet);
+        if (State == TileState.Ripe)
+        {
+            growTime = Crop.GrowSeconds;
+        }
+        ShowStage(State == TileState.Ripe ? Crop.StageCount - 1 :
+            Mathf.Clamp(Mathf.FloorToInt(Progress * (Crop.StageCount - 1)), 0, Crop.StageCount - 2));
+    }
+
     private void Awake()
     {
         plot = GetComponentInParent<FarmPlot>();

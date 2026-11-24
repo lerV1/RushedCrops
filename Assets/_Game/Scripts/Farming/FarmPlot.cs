@@ -37,6 +37,18 @@ public class FarmPlot : MonoBehaviour
 
     public bool CanGrow(CropData crop) => crop != null && Array.IndexOf(crops, crop) >= 0;
 
+    public CropData FindCrop(ResourceType seedResource)
+    {
+        foreach (CropData crop in crops)
+        {
+            if (crop != null && crop.SeedResource == seedResource)
+            {
+                return crop;
+            }
+        }
+        return null;
+    }
+
     // The crop whose seeds are in hand, or null.
     public CropData SelectedCrop()
     {

@@ -133,6 +133,12 @@ public class PlayerTools : MonoBehaviour
         Changed?.Invoke();
     }
 
+    public void RestoreWater(int amount)
+    {
+        WaterLeft = Mathf.Clamp(amount, 0, canCapacity);
+        Changed?.Invoke();
+    }
+
     private void OnUse(InputAction.CallbackContext context)
     {
         // One action at a time, so mashing the button doesn't stack swings.

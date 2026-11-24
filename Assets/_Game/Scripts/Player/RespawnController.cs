@@ -19,9 +19,20 @@ public class RespawnController : MonoBehaviour
     private PlayerTools tools;
     private MeleeAttack melee;
     private bool awaitingRespawn;
+    private bool hasSavedCheckpointPose;
+    private Vector3 savedCheckpointPosition;
+    private Quaternion savedCheckpointRotation;
 
     public Transform CurrentCheckpoint { get; private set; }
     public bool IsAwaitingRespawn => awaitingRespawn;
+    public bool HasCheckpoint => CurrentCheckpoint != null || hasSavedCheckpointPose;
+
+    public Vector3 CheckpointPosition => hasSavedCheckpointPose ? savedCheckpointPosition :
+        CurrentCheckpoint != null ? CurrentCheckpoint.position : startPosition;
+
+    public Quaternion CheckpointRotation => hasSavedCheckpointPose ? savedCheckpointRotation :
+        CurrentCheckpoint != null ? CurrentCheckpoint.rotation : startRotation;
+
     public event Action Respawned;
     public event Action DeathStarted;
 
@@ -58,6 +69,29 @@ public class RespawnController : MonoBehaviour
         }
 
         CurrentCheckpoint = checkpoint;
+        hasSavedCheckpointPose = false;
+    }
+
+    public void RestoreSaveState(Vector3 playerPosition, Quaternion playerRotation, Vector3 checkpointPosition, Quaternion checkpointRotation, bool hasCheckpoint)
+    {
+        bool wasAwaitingRespawn = awaitingRespawn;
+        CurrentCheckpoint = null;
+        hasSavedCheckpointPose = hasCheckpoint;
+        savedCheckpointPosition = checkpointPosition;
+        savedCheckpointRotation = checkpointRotation;
+        rb.isKinematic = false;
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        rb.position = playerPosition;
+        rb.rotation = playerRotation;
+        transform.SetPositionAndRotation(playerPosition, playerRotation);
+        if (look != null) look.RestoreFacing(playerRotation);
+        awaitingRespawn = false;
+        if (wasAwaitingRespawn)
+        {
+            SetControlsEnabled(true);
+            Respawned?.Invoke();
+        }
     }
 
     public void Respawn()
@@ -67,8 +101,8 @@ public class RespawnController : MonoBehaviour
             return;
         }
 
-        Vector3 position = CurrentCheckpoint != null ? CurrentCheckpoint.position : startPosition;
-        Quaternion rotation = CurrentCheckpoint != null ? CurrentCheckpoint.rotation : startRotation;
+        Vector3 position = CheckpointPosition;
+        Quaternion rotation = CheckpointRotation;
 
         // Clear motion while dynamic, then hold the body still for the position snap.
         rb.isKinematic = false;

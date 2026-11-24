@@ -26,6 +26,16 @@ public class BossTube : MonoBehaviour, IInteractable
     public float secondsToNextSeed => placed && storedSeeds < seedCapacity ? Mathf.Max(0f, nextSeedTimer) : 0f;
     public int StoredSeeds => storedSeeds;
 
+    public float SeedTimer => nextSeedTimer;
+
+    public void RestoreState(bool savedPlaced, int savedSeeds, float savedTimer)
+    {
+        placed = savedPlaced;
+        storedSeeds = placed ? Mathf.Clamp(savedSeeds, 0, seedCapacity) : 0;
+        nextSeedTimer = placed && storedSeeds < seedCapacity ? Mathf.Clamp(savedTimer, 0f, secondsPerSeed) : 0f;
+        UpdateVisual();
+    }
+
     private void Start()
     {
         if (tubeRenderer != null)

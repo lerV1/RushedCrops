@@ -62,6 +62,26 @@ public class GameManager : MonoBehaviour
         HasWon = false;
     }
 
+    public string[] GetSavedBosses() => bossesBeaten.ToArray();
+
+    public void RestoreProgress(int barnRepairs, string[] savedBosses, bool bossDefeated, bool hasWon)
+    {
+        BarnRepairs = Mathf.Clamp(barnRepairs, 0, barnRepairStages);
+        bossesBeaten.Clear();
+        if (savedBosses != null)
+        {
+            foreach (string boss in savedBosses)
+            {
+                if (!string.IsNullOrEmpty(boss) && !bossesBeaten.Contains(boss))
+                {
+                    bossesBeaten.Add(boss);
+                }
+            }
+        }
+        IsBossDefeated = bossDefeated || bossesBeaten.Count > 0;
+        HasWon = hasWon;
+    }
+
     public void RecordBarnRepair()
     {
         if (IsBarnRepaired)
