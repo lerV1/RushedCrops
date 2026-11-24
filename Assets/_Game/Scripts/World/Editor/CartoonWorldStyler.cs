@@ -113,7 +113,7 @@ namespace RushedCrops.Editor
             if (previous != null) Object.DestroyImmediate(previous.gameObject);
             foreach (Renderer renderer in imported.GetComponentsInChildren<Renderer>(true))
             {
-                if (renderer.GetComponent<TextMesh>() != null) continue;
+                if (renderer.GetComponent<TextMesh>() != null || renderer is ParticleSystemRenderer) continue; // effects keep their own look
                 if (tree || shrub || grass || flower || carrot || wheat) renderer.enabled = false;
                 else
                 {

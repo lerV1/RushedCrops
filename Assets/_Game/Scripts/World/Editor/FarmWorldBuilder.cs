@@ -21,7 +21,8 @@ namespace RushedCrops.Editor
         public const string HillsPath = "00_Terrain/Distant hills";
         public const string BridgePath = "02_River/River bridge";
         public const string FarmGroup = "03_Farm";
-        public static readonly string[] Groups = { "00_Terrain", "02_River", FarmGroup, "04_Market", "05_Quarry", "06_LoggingCamp", "07_Forest", "08_Boundary" };
+        public static readonly string[] Groups = { "00_Terrain", "02_River", FarmGroup, "04_Market", "05_Quarry", "06_LoggingCamp", "07_Forest", "08_Boundary", "09_Sky" };
+        public const string WindmillName = "Windmill", CampfireName = "Campfire";
 
         private const string Pack = "Assets/Holotna/Medieval Rural/Prefabs/";
         // Generated map assets. The meshes folder is emptied on every rebuild, so it holds nothing else.
@@ -41,6 +42,7 @@ namespace RushedCrops.Editor
         private static readonly Vector2 Logging = V(42, -22);
         private static readonly Vector2 Quarry = V(10, 49);
         private static readonly Vector2 Spawn = V(-31, -13);
+        private static readonly Vector2 Windmill = V(-50, 13);
 
         // Flat building pads: centre, radius. Terrain is exactly level inside each radius.
         private static readonly Vector3[] Pads = {
@@ -49,6 +51,7 @@ namespace RushedCrops.Editor
             new Vector3(4f, -6f, 14f),      // market
             new Vector3(42f, -22f, 15f),    // logging camp
             new Vector3(10f, 49f, 15f),     // quarry
+            new Vector3(-50f, 13f, 6f),     // windmill
         };
 
         // The valley's rim, clockwise from where the river leaves in the west. Its line is the edge of play.
@@ -112,12 +115,14 @@ namespace RushedCrops.Editor
             BuildLogging(Group("06_LoggingCamp"));
             BuildForest(Group("07_Forest"));
             BuildBoundaries(Group("08_Boundary"));
+            BuildSky(Group("09_Sky"));
             GatheringSetup.Place(world, false);
 
             CartoonWorldStyler.Apply();
             WorldGrounding.Apply();
             PlaceOnTops();
             ConnectEnvironment();
+            Optimise();
 
             // The template's flat ground plane, long replaced by the valley terrain.
             foreach (var root in EditorSceneManager.GetActiveScene().GetRootGameObjects())
@@ -155,6 +160,7 @@ namespace RushedCrops.Editor
             Mat("CanvasCream", new Color(0.92f, 0.83f, 0.62f));
             Mat("CanvasRed", new Color(0.53f, 0.19f, 0.12f));
             Mat("Moon", new Color(0.76f, 0.84f, 1f), true);
+            Mat("Cloud", new Color(0.97f, 0.98f, 1f));
         }
 
         private static Material Mat(string name, Color colour, bool emissive = false)
@@ -385,6 +391,45 @@ namespace RushedCrops.Editor
             Lantern(parent, crossing + V(3.4f, -10f), 0f);
             Lantern(parent, crossing + V(-3.4f, 10f), 180f);
             RiverExitRapids(parent);
+            RiverLife(parent);
+        }
+
+        // A fishing dock with a rowboat on the farm side of the river, and lily pads in the slack water by the banks.
+        // These sit on the water, not the ground, so their names keep the grounding pass away ("(on ...").
+        private const float WaterLevel = -0.65f;
+
+        private static void RiverLife(Transform parent)
+        {
+            Vector2 shore = V(-27f, 20f);
+            Vector2 centre = River[NearestIndex(River, shore)];
+            Vector2 toBank = (shore - centre).normalized;
+            Vector2 dockAt = centre + toBank * 6.6f; // its middle on the waterline, so half of it reaches out over the river
+            var dock = Prefab("Other/Dock01", parent, dockAt, YawTowards(dockAt, centre) + 90f, 1.9f);
+            dock.name = "Fishing dock (on posts)";
+            dock.transform.position = new Vector3(dockAt.x, WaterLevel + 0.35f, dockAt.y);
+
+            Vector2 along = V(-toBank.y, toBank.x);
+            Vector2 boatAt = centre + toBank * 4.4f + along * 3.6f;
+            var boat = Prefab("Transport/Rowboat01", parent, boatAt, YawTowards(boatAt, centre) + 75f, 1.3f);
+            boat.name = "Rowboat (on water)";
+            boat.transform.position = new Vector3(boatAt.x, WaterLevel - 0.12f, boatAt.y);
+            boat.AddComponent<Bobbing>();
+
+            foreach (float x in new[] { -46f, -10f, 34f, 54f })
+            {
+                int index = NearestIndex(River, V(x, 25f));
+                Vector2 c = River[index];
+                Vector2 flow = (River[Mathf.Min(index + 1, River.Length - 1)] - River[Mathf.Max(index - 1, 0)]).normalized;
+                Vector2 side = V(-flow.y, flow.x) * (x > 0f ? 1f : -1f);
+                for (int i = 0; i < 5; i++)
+                {
+                    Vector2 at = c + side * R(4.6f, 6.2f) + flow * R(-3f, 3f);
+                    bool flower = i == 2;
+                    var pad = Prefab(flower ? "Vegetation/LilyFlower01" : "Vegetation/LilyPad01", parent, at, R(0f, 360f), R(1.6f, 2.3f), false);
+                    pad.name += " (on water)";
+                    pad.transform.position = new Vector3(at.x, WaterLevel + 0.03f, at.y);
+                }
+            }
         }
 
         // Where the river leaves the valley a line of boulders crosses the banks and the shallows, so the
@@ -408,6 +453,11 @@ namespace RushedCrops.Editor
                     float scale = bank ? R(1.4f, 1.8f) : Mathf.Abs(side) < 4f ? R(3.6f, 4.2f) : R(2.8f, 3.4f); // deeper water needs bigger stones to show
                     Prefab(model, rapids, mouth + across * side + outward * R(-0.6f, 1.2f), R(0f, 360f), scale);
                 }
+                var foam = ParticleRecipes.Create("Rapids foam", rapids, Vector3.zero);
+                foam.transform.SetPositionAndRotation(new Vector3(mouth.x, WaterLevel + 0.05f, mouth.y),
+                    Quaternion.LookRotation(new Vector3(outward.x, 0f, outward.y)));
+                ParticleRecipes.Foam(foam, EffectMaterials.Soft(), 13f);
+                foam.Play();
             }
         }
 
@@ -479,9 +529,46 @@ namespace RushedCrops.Editor
             Lantern(parent, V(Garden.x + 1.6f, max.y + 0.6f), 180f);
             ToolStumpSetup.Place(parent);
             MeleeSetup.Place(parent);
+
+            BuildWindmill(parent);
             // No bosses on the map: they only come from boss seeds planted in the crop field.
         }
 
+
+        // A windmill on the meadow behind the barn, its sails turning in the breeze round their hub.
+        private static void BuildWindmill(Transform parent)
+        {
+            var mill = Prefab("Windmill01", parent, Windmill, YawTowards(Windmill, Yard), 1.1f);
+            mill.name = WindmillName;
+            Transform rotor = null;
+            foreach (Transform part in mill.GetComponentsInChildren<Transform>(true))
+                if (part.name.StartsWith("Rotor")) { rotor = part; break; }
+            if (rotor == null) throw new InvalidOperationException("The windmill has no Rotor part to turn.");
+
+            // The sails are flat, so they turn round their thinnest side; the middle of their bounds is the hub.
+            Bounds local = new Bounds();
+            bool found = false;
+            foreach (MeshFilter filter in rotor.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (filter.sharedMesh == null) continue;
+                Bounds mesh = filter.sharedMesh.bounds;
+                foreach (Vector3 corner in Corners(mesh))
+                {
+                    Vector3 p = rotor.InverseTransformPoint(filter.transform.TransformPoint(corner));
+                    if (!found) { local = new Bounds(p, Vector3.zero); found = true; }
+                    else local.Encapsulate(p);
+                }
+            }
+            Vector3 size = local.size;
+            Vector3 axis = size.x <= size.y && size.x <= size.z ? Vector3.right : size.y <= size.z ? Vector3.up : Vector3.forward;
+            rotor.gameObject.AddComponent<Spinner>().Configure(axis, local.center, 38f);
+        }
+
+        private static IEnumerable<Vector3> Corners(Bounds b)
+        {
+            for (int i = 0; i < 8; i++)
+                yield return new Vector3((i & 1) == 0 ? b.min.x : b.max.x, (i & 2) == 0 ? b.min.y : b.max.y, (i & 4) == 0 ? b.min.z : b.max.z);
+        }
 
         // ---------------------------------------------------------------- market
 
@@ -560,6 +647,24 @@ namespace RushedCrops.Editor
                 Prefab("Vegetation/PineStump0" + random.Next(1, 3), parent, spot, R(0f, 360f), R(1.6f, 2.1f));
             }
             Lantern(parent, Logging + V(-3f, -7.5f), 0f);
+
+            // The loggers' camp: a tent and a campfire with flames, smoke and a flickering light.
+            Vector2 fire = Logging + V(-2f, -1f), tent = Logging + V(-6.5f, -4.5f);
+            Prefab("Camping/Tent01", parent, tent, YawTowards(tent, fire), 1.3f);
+            var campfire = Prefab("Camping/Campfire01", parent, fire, 0f, 2.1f);
+            campfire.name = CampfireName;
+            var flames = ParticleRecipes.Create("Flames", campfire.transform, Vector3.up * 0.12f);
+            ParticleRecipes.Fire(flames, EffectMaterials.Glow());
+            var smoke = ParticleRecipes.Create("Smoke", campfire.transform, Vector3.up * 0.6f);
+            ParticleRecipes.Smoke(smoke, EffectMaterials.Soft());
+            var glow = new GameObject("Fire light").AddComponent<Light>();
+            glow.transform.SetParent(campfire.transform, false);
+            glow.transform.localPosition = Vector3.up * 0.7f;
+            glow.type = LightType.Point;
+            glow.color = new Color(1f, 0.55f, 0.2f);
+            glow.range = 9f;
+            glow.shadows = LightShadows.None;
+            campfire.AddComponent<FireFlicker>().Configure(glow);
         }
 
         // ---------------------------------------------------------------- forest and meadows
@@ -647,6 +752,87 @@ namespace RushedCrops.Editor
                 go.AddComponent<BoxCollider>().size = new Vector3(1.5f, 50f, Vector2.Distance(from, to) + 1f);
             }
         }
+
+        // ---------------------------------------------------------------- sky and air
+
+        // Low-poly clouds drifting overhead, and pollen by day and fireflies by night round the player.
+        private static void BuildSky(Transform parent)
+        {
+            var crown = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/_Game/Models/Cartoon/Crown.asset");
+            Mesh puff = crown != null ? crown : Resources.GetBuiltinResource<Mesh>("Sphere.fbx");
+            var clouds = new GameObject("Clouds").transform;
+            clouds.SetParent(parent, false);
+            clouds.position = new Vector3(5f, 0f, 10f);
+            for (int i = 0; i < 18; i++)
+            {
+                var cloud = new GameObject("Cloud").transform;
+                cloud.SetParent(clouds, false);
+                cloud.position = new Vector3(5f + R(-165f, 165f), R(62f, 84f), 10f + R(-165f, 165f));
+                cloud.rotation = Quaternion.Euler(0f, R(0f, 360f), 0f);
+                int puffs = random.Next(4, 8);
+                for (int p = 0; p < puffs; p++)
+                {
+                    var blob = MeshObject("Cloud puff", cloud, puff, new[] { Materials["Cloud"] });
+                    float side = (p - (puffs - 1) * 0.5f) * R(4.5f, 6f);
+                    blob.transform.localPosition = new Vector3(side, R(-1f, 2.2f) * (1f - Mathf.Abs(side) / 20f), R(-3f, 3f));
+                    blob.transform.localScale = new Vector3(R(9f, 14f), R(4f, 7f), R(7f, 11f)) * (1f - Mathf.Abs(side) / 40f);
+                    blob.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
+                }
+            }
+            clouds.gameObject.AddComponent<CloudDrift>();
+
+            var life = new GameObject("Ambient life").transform;
+            life.SetParent(parent, false);
+            var motes = ParticleRecipes.Create("Pollen", life, Vector3.up * 2f);
+            ParticleRecipes.Motes(motes, EffectMaterials.Soft());
+            var fireflies = ParticleRecipes.Create("Fireflies", life, Vector3.up * 1.2f);
+            ParticleRecipes.Fireflies(fireflies, EffectMaterials.Glow());
+            life.gameObject.AddComponent<AmbientLife>().Configure(motes, fireflies);
+        }
+
+        // ---------------------------------------------------------------- drawing cost
+
+        // Scenery that never moves is marked for static batching, so the GPU draws it in big shared batches, and
+        // small plants and stones are culled once they shrink to a few pixels (they cast no shadows either).
+        // Anything that moves, falls, grows, opens or can be picked up is left alone.
+        private static void Optimise()
+        {
+            int batched = 0, culled = 0;
+            foreach (Renderer renderer in world.GetComponentsInChildren<Renderer>(true))
+            {
+                if (Moves(renderer.transform)) continue;
+                var flags = GameObjectUtility.GetStaticEditorFlags(renderer.gameObject);
+                GameObjectUtility.SetStaticEditorFlags(renderer.gameObject, flags | StaticEditorFlags.BatchingStatic);
+                batched++;
+            }
+            foreach (string group in new[] { "07_Forest", "02_River", FarmGroup, "04_Market" })
+            foreach (Transform item in world.Find(group))
+            {
+                bool plant = item.name.StartsWith("Grass") || item.name.StartsWith("Fern") || item.name.StartsWith("Bush")
+                    || item.name.StartsWith("Flower") || item.name.StartsWith("Cattail") || item.name.StartsWith("Lily");
+                bool pebble = item.name.StartsWith("Stone0");
+                if (!plant && !pebble) continue;
+                var shown = new List<Renderer>();
+                foreach (Renderer renderer in item.GetComponentsInChildren<Renderer>(true))
+                    if (renderer.enabled && renderer.gameObject.activeInHierarchy) shown.Add(renderer);
+                if (shown.Count == 0) continue;
+                var lod = item.GetComponent<LODGroup>();
+                if (lod == null) lod = item.gameObject.AddComponent<LODGroup>();
+                lod.SetLODs(new[] { new LOD(plant ? 0.02f : 0.008f, shown.ToArray()) });
+                lod.enabled = true;
+                lod.RecalculateBounds();
+                if (plant) foreach (Renderer renderer in shown) renderer.shadowCastingMode = ShadowCastingMode.Off;
+                culled++;
+            }
+            Debug.Log($"Rushed Crops: {batched} scenery renderers batched, {culled} small plants and stones culled at a distance.");
+        }
+
+        private static bool Moves(Transform t) =>
+            t.GetComponentInParent<ResourceNode>(true) != null || t.GetComponentInParent<FarmField>(true) != null
+            || t.GetComponentInParent<BarnRepair>(true) != null || t.GetComponentInParent<ToolPickup>(true) != null
+            || t.GetComponentInParent<Merchant>(true) != null || t.GetComponentInParent<Spinner>(true) != null
+            || t.GetComponentInParent<Bobbing>(true) != null || t.GetComponentInParent<CloudDrift>(true) != null
+            || t.GetComponentInParent<ParticleSystem>(true) != null || t.GetComponentInParent<WaterSource>(true) != null;
 
         // ---------------------------------------------------------------- finishing
 

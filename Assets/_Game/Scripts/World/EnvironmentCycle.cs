@@ -98,11 +98,13 @@ public class EnvironmentCycle : MonoBehaviour
             moon.intensity = moonlightIntensity * (1f - daylight);
             moon.enabled = daylight < 0.99f;
         }
-        foreach (Light lantern in lanterns)
+        // Each flame flickers on its own, so the lanterns don't pulse in step.
+        for (int i = 0; i < lanterns.Length; i++)
         {
+            Light lantern = lanterns[i];
             if (lantern == null) continue;
             lantern.enabled = IsNight;
-            lantern.intensity = lanternIntensity;
+            lantern.intensity = lanternIntensity * (0.85f + 0.3f * Mathf.PerlinNoise(i * 3.7f, Time.time * 2.4f));
         }
 
         RenderSettings.ambientMode = AmbientMode.Trilight;

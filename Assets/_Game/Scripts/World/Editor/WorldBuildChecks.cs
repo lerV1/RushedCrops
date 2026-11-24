@@ -67,6 +67,7 @@ namespace RushedCrops.Editor
             ValidateBosses(player);
             ValidateMiniCrops(garden);
             ValidateBoundary(root.transform, player);
+            ValidateScenery(root.transform);
 
             var cycle =UnityEngine.Object.FindAnyObjectByType<EnvironmentCycle>();
             Require(cycle != null, "The day/night cycle is missing.");
@@ -249,6 +250,30 @@ namespace RushedCrops.Editor
                 Require(plot != null && plot.CanGrow(crop.BossSeed), "The crop field can't grow " + crop.BossSeed.name + "." + seedFix);
             }
             Require(droppers == FarmPlotSetup.BossSeedAssets.Length, "Only " + droppers + " mini crops drop a boss seed." + seedFix);
+        }
+
+        // The living scenery: the windmill's sails turn, the camp's fire burns and lights the night, clouds
+        // drift, pollen and fireflies fill the air, and the still scenery is set up to be drawn in batches.
+        private static void ValidateScenery(Transform world)
+        {
+            const string fix = " Rebuild the map.";
+            Transform mill = world.Find(FarmWorldBuilder.FarmGroup + "/" + FarmWorldBuilder.WindmillName);
+            Require(mill != null && mill.GetComponentInChildren<Spinner>(true) != null, "The windmill or its turning sails are missing." + fix);
+            Transform fire = world.Find("06_LoggingCamp/" + FarmWorldBuilder.CampfireName);
+            Require(fire != null && fire.GetComponent<FireFlicker>() != null && fire.GetComponentsInChildren<ParticleSystem>(true).Length >= 2
+                && fire.GetComponentInChildren<Light>(true) != null, "The campfire is missing its flames, smoke or light." + fix);
+            var drift = world.GetComponentInChildren<CloudDrift>(true);
+            Require(drift != null && drift.transform.childCount >= 10, "The sky has no drifting clouds." + fix);
+            var life = world.GetComponentInChildren<AmbientLife>(true);
+            Require(life != null && life.GetComponentsInChildren<ParticleSystem>(true).Length == 2, "The pollen and fireflies are missing." + fix);
+            foreach (ParticleSystemRenderer particles in world.GetComponentsInChildren<ParticleSystemRenderer>(true))
+                Require(particles.sharedMaterial != null && particles.sharedMaterial.name.StartsWith("MAT_Particle"),
+                    particles.name + " should use a particle material, not " + (particles.sharedMaterial != null ? particles.sharedMaterial.name : "none") + "." + fix);
+
+            int still = 0;
+            foreach (Renderer renderer in world.Find("07_Forest").GetComponentsInChildren<Renderer>(true))
+                if (GameObjectUtility.AreStaticEditorFlagsSet(renderer.gameObject, StaticEditorFlags.BatchingStatic)) still++;
+            Require(still > 100, "The forest isn't set up for static batching, so it costs far more draw calls." + fix);
         }
 
         // A wall runs all the way round the valley rim, and everything worth visiting stands well inside it.
