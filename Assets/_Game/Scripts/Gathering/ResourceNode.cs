@@ -115,6 +115,11 @@ public class ResourceNode : MonoBehaviour, IToolTarget, IInteractable
             return;
         }
         hits++;
+        // Chips fly from the side facing the player.
+        Vector3 toward = from - transform.position;
+        toward.y = 0f;
+        toward = toward.sqrMagnitude > 0.01f ? toward.normalized : transform.forward;
+        GameEffects.Play(topples ? Effect.WoodChips : Effect.StoneChips, transform.position + Vector3.up * (topples ? 1.1f : 0.6f) + toward * 0.5f);
         if (hits < hitsToBreak)
         {
             Play(Shake());
@@ -130,6 +135,15 @@ public class ResourceNode : MonoBehaviour, IToolTarget, IInteractable
         away = away.sqrMagnitude > 0.01f ? away.normalized : transform.forward;
         whole.localRotation = wholeRotation;
         Play(topples ? Topple(away) : Crumble());
+        if (topples)
+        {
+            GameEffects.Play(Effect.Leaves, transform.position + Vector3.up * 2.8f + away * 1.2f, 1.5f);
+        }
+        else
+        {
+            GameEffects.Play(Effect.StoneChips, transform.position + Vector3.up * 0.5f, 2.5f);
+            GameEffects.Play(Effect.Dust, transform.position + Vector3.up * 0.3f, 1.2f);
+        }
         ThrowDrops(-away);
     }
 
@@ -213,6 +227,8 @@ public class ResourceNode : MonoBehaviour, IToolTarget, IInteractable
             yield return null;
         }
         whole.rotation = Quaternion.AngleAxis(85f, axis) * start;
+        GameEffects.Play(Effect.Dust, transform.position + away * 2.5f + Vector3.up * 0.3f, 1.4f);
+        GameEffects.Play(Effect.Leaves, transform.position + away * 3.5f + Vector3.up * 0.6f);
         yield return Shrink(0.3f);
     }
 

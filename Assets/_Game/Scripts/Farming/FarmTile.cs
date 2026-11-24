@@ -187,6 +187,8 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
 
         State = TileState.Tilled;
         soil.SetActive(true);
+        GameEffects.Play(Effect.Dirt, transform.position + Vector3.up * 0.1f);
+        PopIn.On(soil, 0.25f);
         return true;
     }
 
@@ -203,6 +205,7 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
         SetWet(false); // a new seed waits for its first watering
         State = TileState.Growing;
         ShowStage(0);
+        GameEffects.Play(Effect.Dirt, transform.position + Vector3.up * 0.1f, 0.5f);
         return true;
     }
 
@@ -215,6 +218,7 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
 
         waterings++;
         SetWet(true);
+        GameEffects.Play(Effect.Water, transform.position + Vector3.up * 0.15f);
         return true;
     }
 
@@ -225,6 +229,8 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
             return false;
         }
 
+        GameEffects.Play(Effect.Leaves, transform.position + Vector3.up * 0.4f, 0.8f);
+        GameEffects.Play(Effect.Sparkle, transform.position + Vector3.up * 0.5f, 0.6f);
         ClearSquare();
         return true;
     }
@@ -234,6 +240,8 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
     {
         Quaternion facing = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
         CropBoss boss = Instantiate(Crop.GrownBoss, transform.position, facing, plot.transform.parent);
+        GameEffects.Play(Effect.Dirt, transform.position + Vector3.up * 0.2f, 3f);
+        GameEffects.Play(Effect.Dust, transform.position + Vector3.up * 0.3f, 1.5f);
         boss.Setup(plot.Inventory);
         ClearSquare();
         return boss;
@@ -266,6 +274,7 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
         // A fixed turn per square, so neighbours don't look copy-pasted but a plant keeps its turn as it grows.
         Quaternion turn = Quaternion.Euler(0f, (transform.GetSiblingIndex() * 137.5f) % 360f, 0f);
         plant = Instantiate(Crop.GetStageModel(stage), transform.position + Vector3.up * plantHeight, turn, transform);
+        PopIn.On(plant); // each new stage springs up rather than swapping in
     }
 
     private void RemovePlant()

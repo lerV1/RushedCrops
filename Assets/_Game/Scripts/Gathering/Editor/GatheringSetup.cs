@@ -27,12 +27,16 @@ namespace RushedCrops.Editor
         // Oaks, so they stand out from the pines and spruces of the forest round the camp.
         private static readonly string[] TreeModels = { "Oak01", "Oak02" };
 
-        // Along the back wall and the sides of the quarry floor, where boulders would fall, leaving the middle open.
+        // Spread over the quarry floor, clear of the rock faces (whose colliders reach well out from the cliff).
+        // If a spot has no room the rest of the floor is searched, edges first, until RockCount rocks fit.
+        private const int RockCount = 6;
+        private static readonly Vector2 QuarryFloor = new Vector2(10f, 48.5f);
         private static readonly Vector2[] RockSpots =
         {
-            new Vector2(4.5f, 53.5f), new Vector2(8.5f, 55.5f), new Vector2(12.5f, 55.5f), new Vector2(16f, 53.5f),
-            new Vector2(2.8f, 48.8f), new Vector2(18f, 48.5f), new Vector2(6f, 44.5f),
+            new Vector2(6f, 51f), new Vector2(10f, 52.5f), new Vector2(14f, 51f),
+            new Vector2(5.5f, 47.2f), new Vector2(12.5f, 46.2f), new Vector2(9f, 45f),
         };
+        private static readonly Vector2[] Nudges = { Vector2.zero, Vector2.right, Vector2.left, Vector2.up, Vector2.down };
 
         [MenuItem("Rushed Crops/World/Place gathering spots")]
         public static void PlaceInScene()
@@ -49,6 +53,9 @@ namespace RushedCrops.Editor
         {
             Transform camp = world.Find("06_LoggingCamp"), quarry = world.Find("05_Quarry"), terrain = world.Find("00_Terrain");
             if (camp == null || quarry == null || terrain == null) throw new InvalidOperationException("The map is missing the logging camp, the quarry or the terrain.");
+            // Outside Play, colliders only follow moved objects after a sync; without one the room checks below
+            // would see freshly placed props where they were spawned, not where they stand.
+            Physics.SyncTransforms();
             var inventory = UnityEngine.Object.FindAnyObjectByType<Inventory>();
             var drop = AssetDatabase.LoadAssetAtPath<ItemDrop>(ItemDropSetup.DropPath);
             if (drop == null) throw new InvalidOperationException("Missing " + ItemDropSetup.DropPath + ". Run Rushed Crops > Items > Set up item drops.");
@@ -78,24 +85,36 @@ namespace RushedCrops.Editor
                 if (!done) skipped++;
             }
 
-            for (int i = 0; i < RockSpots.Length; i++)
+            int rocksPlaced = 0;
+            foreach (Vector2 at in RockCandidates())
             {
-                bool done = false;
-                foreach (Vector2 nudge in new[] { Vector2.zero, Vector2.right, Vector2.left, Vector2.up, Vector2.down, new Vector2(1.5f, 1.5f), new Vector2(-1.5f, 1.5f) })
-                {
-                    if (!HasRoom(RockSpots[i] + nudge, 1.15f, terrain, placed, out Vector3 ground)) continue;
-                    var node = MakeNode(rocks, "Mineable rock " + (i + 1), ground + Vector3.down * 0.05f, i * 61f,
-                        Pack + "Rocks/Stone0" + (1 + i % 3), 1.8f, Pack + "Rocks/Rubble01", 1f, inventory, drop, added);
-                    node.Describe("rock", "Mine", ToolType.Pickaxe, ResourceType.Stone, 2, 4, 150f, false);
-                    placed.Add((ground, 1.15f));
-                    done = true;
-                    break;
-                }
-                if (!done) skipped++;
+                if (rocksPlaced >= RockCount) break;
+                if (!HasRoom(at, 1.15f, terrain, placed, out Vector3 ground)) continue;
+                var node = MakeNode(rocks, "Mineable rock " + (rocksPlaced + 1), ground + Vector3.down * 0.05f, rocksPlaced * 61f,
+                    Pack + "Rocks/Stone0" + (1 + rocksPlaced % 3), 1.8f, Pack + "Rocks/Rubble01", 1f, inventory, drop, added);
+                node.Describe("rock", "Mine", ToolType.Pickaxe, ResourceType.Stone, 2, 4, 150f, false);
+                placed.Add((ground, 1.15f));
+                rocksPlaced++;
             }
+            skipped += RockCount - rocksPlaced;
 
             if (style) CartoonWorldStyler.StyleAdded(added);
             Debug.Log($"Placed {trees.childCount} choppable trees and {rocks.childCount} mineable rocks" + (skipped > 0 ? $"; {skipped} spots had no room." : "."));
+        }
+
+        // The preferred spots, each nudged a little, then the rest of the quarry floor from the edges inwards.
+        private static IEnumerable<Vector2> RockCandidates()
+        {
+            foreach (Vector2 spot in RockSpots)
+            foreach (Vector2 nudge in Nudges)
+                yield return spot + nudge;
+            var floor = new List<Vector2>();
+            for (float x = -7f; x <= 7f; x += 1f)
+            for (float z = -6f; z <= 6f; z += 1f)
+                floor.Add(QuarryFloor + new Vector2(x, z));
+            floor.Sort((a, b) => Vector2.Distance(b, QuarryFloor).CompareTo(Vector2.Distance(a, QuarryFloor)));
+            foreach (Vector2 at in floor)
+                yield return at;
         }
 
         private static Transform NewGroup(Transform parent, string name)

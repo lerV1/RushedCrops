@@ -23,8 +23,9 @@ namespace RushedCrops.Editor
                 if (scene.isDirty) throw new BuildFailedException("Save the current scene before validating SC_Farm.");
                 scene = EditorSceneManager.OpenScene(FarmWorldBuilder.ScenePath);
             }
+            Physics.SyncTransforms(); // colliders where their objects really stand, even right after a rebuild
             Validate(scene);
-            Debug.Log("World validation passed: landmarks, player, crop field, tools, river water, merchant, hotbar pictures, barn repairs, gathering spots, bosses, mini crops, colliders, materials and environment references.");
+            Debug.Log("World validation passed: landmarks, player, crop field, tools, river water, merchant, hotbar pictures, barn repairs, gathering spots, bosses, mini crops, edge, scenery, effects, colliders, materials and environment references.");
         }
 
         private static void Validate(Scene scene)
@@ -68,6 +69,7 @@ namespace RushedCrops.Editor
             ValidateMiniCrops(garden);
             ValidateBoundary(root.transform, player);
             ValidateScenery(root.transform);
+            ValidateFeel(player);
 
             var cycle =UnityEngine.Object.FindAnyObjectByType<EnvironmentCycle>();
             Require(cycle != null, "The day/night cycle is missing.");
@@ -250,6 +252,22 @@ namespace RushedCrops.Editor
                 Require(plot != null && plot.CanGrow(crop.BossSeed), "The crop field can't grow " + crop.BossSeed.name + "." + seedFix);
             }
             Require(droppers == FarmPlotSetup.BossSeedAssets.Length, "Only " + droppers + " mini crops drop a boss seed." + seedFix);
+        }
+
+        // Hits throw chips, dirt and leaves, and the camera bobs, dips on landing and shakes when the player is hurt.
+        private static void ValidateFeel(GameObject player)
+        {
+            const string fix = " Run Rushed Crops > Effects > Set up game feel.";
+            var effects = UnityEngine.Object.FindAnyObjectByType<GameEffects>();
+            Require(effects != null, "The hit effects (GameEffects) are missing from the scene." + fix);
+            var settings = new SerializedObject(effects);
+            Require(settings.FindProperty("glow").objectReferenceValue != null && settings.FindProperty("soft").objectReferenceValue != null,
+                "GameEffects needs both particle materials." + fix);
+            var feel = player.GetComponentInChildren<CameraFeel>(true);
+            Require(feel != null, "The camera has no CameraFeel (bob, landing dip, hurt shake)." + fix);
+            var feelSettings = new SerializedObject(feel);
+            Require(feelSettings.FindProperty("body").objectReferenceValue != null && feelSettings.FindProperty("health").objectReferenceValue != null,
+                "CameraFeel needs the player's Rigidbody and Health." + fix);
         }
 
         // The living scenery: the windmill's sails turn, the camp's fire burns and lights the night, clouds

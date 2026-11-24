@@ -1,7 +1,8 @@
+using System.Collections;
 using UnityEngine;
 
 // Items lying on the ground (boss seeds or a hotbar drop). It flies out, lands, then bobs until the player
-// walks into it or presses Interact on it.
+// walks into it or presses Interact on it. It pops as it lands, and flies into the player when picked up.
 public class ItemDrop : MonoBehaviour, IInteractable
 {
     [Tooltip("The 3D model for each item.")]
@@ -23,6 +24,8 @@ public class ItemDrop : MonoBehaviour, IInteractable
     private float flown;
     private float walkPickupAt;
     private Transform player;
+    private bool landedShown;
+    private bool collected;
 
     public ResourceType Item => item;
     public int Amount => amount;
@@ -107,6 +110,18 @@ public class ItemDrop : MonoBehaviour, IInteractable
             return;
         }
 
+        if (collected)
+        {
+            return;
+        }
+        if (!landedShown)
+        {
+            landedShown = true;
+            GameEffects.Play(Effect.Dust, landing, 0.25f);
+            Transform look = transform.Find("Model");
+            if (look != null) PopIn.On(look.gameObject, 0.3f);
+        }
+
         transform.position = landing + Vector3.up * (0.15f + Mathf.Sin(Time.time * 3f) * 0.08f);
         transform.Rotate(0f, 90f * Time.deltaTime, 0f, Space.World);
 
@@ -117,11 +132,11 @@ public class ItemDrop : MonoBehaviour, IInteractable
         }
     }
 
-    public bool CanInteract => HasLanded && inventory.CanAdd(item, amount);
+    public bool CanInteract => HasLanded && !collected && inventory.CanAdd(item, amount);
 
     public string GetPrompt()
     {
-        if (!launched)
+        if (!launched || collected)
         {
             return null;
         }
@@ -137,11 +152,28 @@ public class ItemDrop : MonoBehaviour, IInteractable
 
     public bool TryCollect()
     {
-        if (!HasLanded || !inventory.Add(item, amount))
+        if (collected || !HasLanded || !inventory.Add(item, amount))
         {
             return false;
         }
-        Destroy(gameObject);
+        collected = true;
+        GameEffects.Play(Effect.Sparkle, transform.position + Vector3.up * 0.3f, 0.5f);
+        StartCoroutine(FlyToPlayer());
         return true;
+    }
+
+    // Already in the inventory: this just shows it being scooped up, then it is gone.
+    private IEnumerator FlyToPlayer()
+    {
+        Vector3 start = transform.position;
+        Vector3 size = transform.localScale;
+        for (float t = 0f; t < 1f; t += Time.deltaTime / 0.22f)
+        {
+            Vector3 target = player != null ? player.position + Vector3.up * 0.4f : start + Vector3.up;
+            transform.position = Vector3.Lerp(start, target, t * t);
+            transform.localScale = size * (1f - 0.8f * t);
+            yield return null;
+        }
+        Destroy(gameObject);
     }
 }

@@ -317,6 +317,7 @@ public class MiniCrop : MonoBehaviour, IInteractable
     {
         // Any hit makes it angry, so a grumpy crop now fights back.
         angry = true;
+        GameEffects.Play(Effect.Juice, transform.position + Vector3.up * 0.5f, 0.6f);
         if (state == State.Wander)
         {
             state = State.Chase;
@@ -340,6 +341,8 @@ public class MiniCrop : MonoBehaviour, IInteractable
             knockback.enabled = false;
         }
         body.isKinematic = true;
+        GameEffects.Play(Effect.Juice, transform.position + Vector3.up * 0.4f, 1.4f);
+        GameEffects.Play(Effect.Dust, transform.position + Vector3.up * 0.2f, 0.5f);
         DropCrop();
         StartCoroutine(ShrinkAway());
     }

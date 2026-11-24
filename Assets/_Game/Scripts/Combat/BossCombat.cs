@@ -232,6 +232,7 @@ public class BossCombat : MonoBehaviour
             yield return null;
         }
         boss.PoseScale = new Vector3(1.18f, 0.78f, 1.18f);
+        GameEffects.Play(Effect.Dust, centre + Vector3.up * 0.2f, 2f + attack.reach * 0.3f);
         if (FlatDistanceBetween(player.position, centre) <= attack.reach + PlayerRadius)
         {
             playerHealth.TakeDamage(attack.damage);
@@ -293,8 +294,10 @@ public class BossCombat : MonoBehaviour
         {
             if (!MoveTowards(transform.position + direction * 5f, runSpeed * Time.deltaTime))
             {
+                GameEffects.Play(Effect.Dust, transform.position + direction * bodyRadius + Vector3.up * 0.5f, 1.5f);
                 break; // ran into something
             }
+            if (Time.frameCount % 4 == 0) GameEffects.Play(Effect.Dust, Ground(transform.position) + Vector3.up * 0.1f, 0.25f);
             if (!hit && FlatDistance(player.position) <= bodyRadius + PlayerRadius)
             {
                 hit = true;
@@ -321,6 +324,7 @@ public class BossCombat : MonoBehaviour
         }
         boss.PoseOffset = Vector3.zero;
         boss.PoseScale = new Vector3(1.2f, 0.75f, 1.2f);
+        GameEffects.Play(Effect.Dust, centre + Vector3.up * 0.2f, 3f);
 
         bool hit = false;
         for (float t = 0f; t < 1f; t += Time.deltaTime / ShockwaveTime)

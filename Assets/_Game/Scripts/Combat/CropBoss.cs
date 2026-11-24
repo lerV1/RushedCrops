@@ -101,7 +101,11 @@ public class CropBoss : MonoBehaviour, IInteractable
 
     public void Interact(PlayerInteractor player) { }
 
-    private void OnDamaged(int amount) => wobbleLeft = WobbleTime;
+    private void OnDamaged(int amount)
+    {
+        wobbleLeft = WobbleTime;
+        GameEffects.Play(Effect.Juice, model.position + Vector3.up * 1.2f, 1.2f);
+    }
 
     private void Update()
     {
@@ -140,6 +144,8 @@ public class CropBoss : MonoBehaviour, IInteractable
         model.localScale = modelScale;
         model.localRotation = modelRotation;
         DropSeeds();
+        GameEffects.Play(Effect.Dust, transform.position + Vector3.up * 0.4f, 2.5f);
+        GameEffects.Play(Effect.Sparkle, transform.position + Vector3.up * 1.5f, 2.5f);
         // Every boss unlocks the barn's last repair; only the required ones count toward winning.
         if (GameManager.Instance != null)
         {
