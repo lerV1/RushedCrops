@@ -457522,6 +457522,76 @@ MonoBehaviour:
   autosaveSeconds: 30
   saveKey: 98
   deleteSaveKey: 71
+--- !u!1 &880175459
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 880175462}
+  - component: {fileID: 880175461}
+  - component: {fileID: 880175460}
+  m_Layer: 0
+  m_Name: HUD_ObjectiveGuide
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &880175462
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 880175459}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &880175461
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 880175459}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a120c98348ee844aaf0095f6118441e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GuideArrow
+  viewCamera: {fileID: 1654218474}
+  edgePadding: 52
+  targetOffset: 42
+--- !u!114 &880175460
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 880175459}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64c08f904b62dae49a90be2a593e65fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ObjectiveGuide
+  inventory: {fileID: 1423067451}
+  player: {fileID: 1706502559}
+  gatheringRoot: {fileID: 304870513}
+  farmField: {fileID: 966141774}
+  combatTarget: {fileID: 966141773}
+  barnRepair: {fileID: 683628261}
+  bossTube: {fileID: 373447114}
+  arrow: {fileID: 880175461}
+  skipKey: 94
+  refreshSeconds: 0.2
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -457542,3 +457612,4 @@ SceneRoots:
   - {fileID: 2084132383}
   - {fileID: 1290448387}
   - {fileID: 900644309}
+  - {fileID: 880175462}
