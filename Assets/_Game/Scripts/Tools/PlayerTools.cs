@@ -4,7 +4,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 // What the player holds: the tool in the selected hotbar slot, used with Use Tool on whatever is aimed at.
-// Empty hands punch, the hatchet chops trees (or swings at anything else) and the pickaxe mines rocks.
+// Empty hands punch and the watering can pours. Every other tool does its own work (the hoe tills, the hatchet chops,
+// the pickaxe mines, the jar catches a weakened boss) and is also a weapon against mini crops and bosses.
 public class PlayerTools : MonoBehaviour
 {
     [Header("Input")]
@@ -164,8 +165,7 @@ public class PlayerTools : MonoBehaviour
                 hands.PlayPunch();
                 break;
             case ToolType.Hoe:
-                hands.PlaySwing();
-                UseOnTarget(hoeHitDelay);
+                UseOrStrike(hoeHitDelay);
                 break;
             case ToolType.WateringCan:
                 // Water only runs out when it goes on something; filling at the river just dips the can.
@@ -175,37 +175,58 @@ public class PlayerTools : MonoBehaviour
                 UseOnTarget(pourDelay);
                 break;
             case ToolType.Hatchet:
-                // A tree under the crosshair is chopped; anything else gets the melee swing.
-                IToolTarget tree = interactor.FindToolTarget();
-                if (tree != null && tree.CanUseTool(this))
-                {
-                    hands.PlaySwing();
-                    UseOnTarget(swingHitDelay);
-                }
-                else if (melee.TryAttack())
-                {
-                    hands.PlaySwing();
-                }
-                break;
             case ToolType.Pickaxe:
-                hands.PlaySwing();
-                UseOnTarget(swingHitDelay);
+                UseOrStrike(swingHitDelay);
                 break;
             case ToolType.Sword:
-                if (melee.TryAttack())
+                Strike();
+                break;
+            case ToolType.CaptureJar:
+                // A boss worn down far enough is caught in the jar; anything else just gets hit with it.
+                interactor.FindToolTarget();
+                if (interactor.Target is CropBoss boss && boss.TryCapture())
                 {
                     hands.PlaySwing();
                 }
-                break;
-            case ToolType.CaptureJar:
-                hands.PlaySwing();
-                interactor.FindToolTarget();
-                if (interactor.Target is CropBoss boss)
+                else
                 {
-                    boss.TryCapture();
+                    Strike();
                 }
                 break;
         }
+    }
+
+    // Every tool but the watering can is also a weapon. Aimed at a mini crop or a boss it hits it; aimed at its
+    // own work (soil for the hoe, a tree for the hatchet, a rock for the pickaxe) it does that work; at
+    // anything else it swings and hits whatever is in front.
+    private void UseOrStrike(float delay)
+    {
+        IToolTarget target = interactor.FindToolTarget();
+        if (!AimingAtFoe() && target != null && target.CanUseTool(this))
+        {
+            hands.PlaySwing();
+            StartCoroutine(UseAfter(target, delay));
+        }
+        else
+        {
+            Strike();
+        }
+    }
+
+    private void Strike()
+    {
+        if (melee.TryAttack())
+        {
+            hands.PlaySwing();
+        }
+    }
+
+    // A living mini crop or boss under the crosshair: anything with Health that isn't the player.
+    private bool AimingAtFoe()
+    {
+        Collider looked = interactor.LookedAt;
+        Health foe = looked != null ? looked.GetComponentInParent<Health>() : null;
+        return foe != null && !foe.IsDead && !foe.transform.IsChildOf(transform);
     }
 
     private void UseOnTarget(float delay)

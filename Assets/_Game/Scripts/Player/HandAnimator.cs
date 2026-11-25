@@ -2,21 +2,16 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// Plays the first-person arm animations: the right arm holds, swings and pours the tool in hand (or punches),
-// the left arm grabs on Interact. Changing tools drops the arm out of view to swap the model.
+// Plays the first-person arm animations, made in Blender and played straight from the arm models (ClipPlayer):
+// the right arm holds, swings and pours the tool in hand (or punches), the left arm grabs on Interact.
+// Changing tools drops the arm out of view to swap the model. Each move blends back into its idle when it ends.
 public class HandAnimator : MonoBehaviour
 {
-    private static readonly int EquippedParam = Animator.StringToHash("Equipped");
-    private static readonly int AttackTrigger = Animator.StringToHash("Attack");
-    private static readonly int SwapTrigger = Animator.StringToHash("Swap");
-    private static readonly int PourTrigger = Animator.StringToHash("Pour");
-    private static readonly int InteractTrigger = Animator.StringToHash("Interact");
-    private static readonly int IdleState = Animator.StringToHash("Idle");
-    private static readonly int GripIdleState = Animator.StringToHash("GripIdle");
+    private const string Idle = "Idle", GripIdle = "GripIdle";
 
     [Header("Arms")]
-    [SerializeField] private Animator rightArm;
-    [SerializeField] private Animator leftArm;
+    [SerializeField] private ClipPlayer rightArm;
+    [SerializeField] private ClipPlayer leftArm;
 
     [Header("Tools")]
     [Tooltip("The tool models in the right hand, in ToolType order. Leave element 0 (None) empty.")]
@@ -44,15 +39,14 @@ public class HandAnimator : MonoBehaviour
     {
         if (rightArm == null || leftArm == null)
         {
-            Debug.LogError("HandAnimator needs both arm Animators assigned.", this);
+            Debug.LogError("HandAnimator needs both arms' ClipPlayers assigned.", this);
             enabled = false;
         }
     }
 
     private void Start()
     {
-        rightArm.SetBool(EquippedParam, false);
-        rightArm.Play(IdleState, 0, 0f);
+        rightArm.Play(Idle, 0f);
         ShowTool(ToolType.None);
     }
 
@@ -74,25 +68,24 @@ public class HandAnimator : MonoBehaviour
         }
     }
 
+    // A tool in hand swings; an empty hand punches.
     public void PlaySwing()
     {
-        PlayRight(AttackTrigger);
+        if (!IsResting(rightArm)) return;
+        bool holding = rightArm.Current == GripIdle;
+        rightArm.Play(holding ? "ToolSwing" : "Punch", 0.04f, holding ? GripIdle : Idle, 0.1f);
         GameAudio.Play2D(Sfx.Swing);
     }
 
-    public void PlayPunch()
-    {
-        PlayRight(AttackTrigger);
-        GameAudio.Play2D(Sfx.Swing);
-    }
+    public void PlayPunch() => PlaySwing();
 
     public void PlayPour(bool withWater)
     {
-        if (!IsResting(rightArm))
+        if (!IsResting(rightArm) || rightArm.Current != GripIdle)
         {
             return;
         }
-        rightArm.SetTrigger(PourTrigger);
+        rightArm.Play("Pour", 0.05f, GripIdle, 0.1f);
         if (withWater && waterStream != null)
         {
             StartCoroutine(RunWater());
@@ -111,7 +104,7 @@ public class HandAnimator : MonoBehaviour
     {
         if (IsResting(leftArm))
         {
-            leftArm.SetTrigger(InteractTrigger);
+            leftArm.Play("Interact", 0.04f, Idle, 0.1f);
         }
     }
 
@@ -124,15 +117,15 @@ public class HandAnimator : MonoBehaviour
 
         if (shownTool == ToolType.None)
         {
-            rightArm.SetBool(EquippedParam, true);      // open hand -> gripping
+            rightArm.Play("Equip", 0.05f, GripIdle, 0.05f);     // open hand -> gripping
         }
         else if (next == ToolType.None)
         {
-            rightArm.SetBool(EquippedParam, false);     // gripping -> open hand
+            rightArm.Play("Unequip", 0.05f, Idle, 0.05f);       // gripping -> open hand
         }
         else
         {
-            rightArm.SetTrigger(SwapTrigger);           // one tool for another
+            rightArm.Play("Swap", 0.05f, GripIdle, 0.05f);      // one tool for another
         }
 
         shownTool = next;
@@ -162,23 +155,9 @@ public class HandAnimator : MonoBehaviour
         }
     }
 
-    private void PlayRight(int trigger)
-    {
-        if (IsResting(rightArm))
-        {
-            rightArm.SetTrigger(trigger);
-        }
-    }
-
-    private static bool IsResting(Animator arm)
-    {
-        if (arm.IsInTransition(0))
-        {
-            return false;
-        }
-        int state = arm.GetCurrentAnimatorStateInfo(0).shortNameHash;
-        return state == IdleState || state == GripIdleState;
-    }
+    // Resting: settled in an idle, not partway through a move or a blend.
+    private static bool IsResting(ClipPlayer arm) =>
+        !arm.IsBlending && (arm.Current == Idle || arm.Current == GripIdle);
 
     private void OnInteract(InputAction.CallbackContext context) => PlayInteract();
 }

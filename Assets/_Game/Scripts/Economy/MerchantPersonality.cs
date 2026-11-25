@@ -6,11 +6,9 @@ using UnityEngine.UI;
 [RequireComponent(typeof(Merchant))]
 public class MerchantPersonality : MonoBehaviour
 {
-    private static readonly int GreetTrigger = Animator.StringToHash("Greet");
-    private static readonly int RubHandsTrigger = Animator.StringToHash("RubHands");
-
     [Header("References")]
-    [SerializeField] private Animator animator;
+    [Tooltip("Plays his Blender animations (Idle, Greet, RubHands) straight from his model.")]
+    [SerializeField] private ClipPlayer moves;
     [Tooltip("The player he watches and greets.")]
     [SerializeField] private Transform player;
     [Tooltip("The trading window, so he can talk while it is open.")]
@@ -145,7 +143,8 @@ public class MerchantPersonality : MonoBehaviour
         if (near && !playerWasNear && Time.time - lastGreeting >= greetCooldown)
         {
             lastGreeting = Time.time;
-            Play(GreetTrigger);
+            // A wave only from standing idle, so it never cuts a hand-rub short.
+            if (moves != null && moves.Current == "Idle" && !moves.IsBlending) moves.Play("Greet", 0.15f, "Idle", 0.2f);
             Say(greetings);
         }
         playerWasNear = near;
@@ -169,7 +168,7 @@ public class MerchantPersonality : MonoBehaviour
 
     private void OnTraded(ResourceType item, int amount, bool playerBought)
     {
-        Play(RubHandsTrigger);
+        if (moves != null) moves.Play("RubHands", 0.12f, "Idle", 0.2f);
         Say(playerBought ? boughtLines : soldLines);
     }
 
@@ -182,14 +181,6 @@ public class MerchantPersonality : MonoBehaviour
         else if (result == TradeResult.NoRoom)
         {
             Say(noRoomLines);
-        }
-    }
-
-    private void Play(int trigger)
-    {
-        if (animator != null)
-        {
-            animator.SetTrigger(trigger);
         }
     }
 

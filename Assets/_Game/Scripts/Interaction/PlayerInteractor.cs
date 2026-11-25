@@ -34,6 +34,8 @@ public class PlayerInteractor : MonoBehaviour
 
     public IInteractable Target { get; private set; }
     public IToolTarget ToolTarget { get; private set; }
+    // Whatever the crosshair rests on within reach, usable or not (null for nothing).
+    public Collider LookedAt { get; private set; }
 
     private void OnEnable()
     {
@@ -89,6 +91,7 @@ public class PlayerInteractor : MonoBehaviour
             }
         }
 
+        LookedAt = hit;
         Target = hit != null ? hit.GetComponentInParent<IInteractable>() : null;
         ToolTarget = hit != null ? hit.GetComponentInParent<IToolTarget>() : null;
         IHighlightable highlight = hit != null ? hit.GetComponentInParent<IHighlightable>() : null;
