@@ -13,3 +13,5 @@ ambience files are loops cut from longer recordings.
 | Till | Shovel sound | themightyglider | https://opengameart.org/content/shovel-sound |
 | Ambience: Birds, Wind, River | Park ambiences | thimras | https://opengameart.org/content/park-ambiences |
 | Ambience: Crickets | Crickets ambient noise (loopable) | wolfgang | https://opengameart.org/content/crickets-ambient-noise-loopable |
+| Music: Peaceful (farming) | Fields of Cabbage | aroachifoundonmypillow | https://opengameart.org/content/fields-of-cabbage |
+| Music: Battle (fighting crops and bosses) | Battle Theme A | cynicmusic | https://opengameart.org/content/battle-theme-a |
