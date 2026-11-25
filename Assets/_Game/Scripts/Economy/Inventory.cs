@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-// The coin wallet and 5-slot hotbar shared by farming, the merchant and the barn.
+// The coin wallet and hotbar shared by farming, the merchant and the barn.
 // Every change goes through these methods, which refuse bad amounts, so nothing is half added or spent.
 [DefaultExecutionOrder(-100)]
 public class Inventory : MonoBehaviour
@@ -211,7 +211,7 @@ public class Inventory : MonoBehaviour
         return IsValidAmount(amount) && GetCount(type) >= amount;
     }
 
-    public bool CanAfford(IReadOnlyList<ResourceAmount> cost)
+    public bool CanAfford(ResourceAmount[] cost)
     {
         Dictionary<ResourceType, long> totals = TotalCost(cost);
         if (totals == null)
@@ -242,7 +242,7 @@ public class Inventory : MonoBehaviour
     }
 
     // Either the whole cost is spent or none of it.
-    public bool TrySpend(IReadOnlyList<ResourceAmount> cost)
+    public bool TrySpend(ResourceAmount[] cost)
     {
         if (!CanAfford(cost))
         {
@@ -286,9 +286,9 @@ public class Inventory : MonoBehaviour
     }
 
     // Totals per item, so "3 Wood" listed twice is 6. Null when the list is empty or an amount is bad.
-    private Dictionary<ResourceType, long> TotalCost(IReadOnlyList<ResourceAmount> cost)
+    private Dictionary<ResourceType, long> TotalCost(ResourceAmount[] cost)
     {
-        if (cost == null || cost.Count == 0)
+        if (cost == null || cost.Length == 0)
         {
             Debug.LogWarning("A cost needs at least one item.", this);
             return null;

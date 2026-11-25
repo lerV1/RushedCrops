@@ -118,7 +118,7 @@ public class MerchantShopUI : MonoBehaviour
         openedOnFrame = Time.frameCount;
         BuildRows();
         merchant.Inventory.Changed += Refresh;
-        message.text = "";
+        ShowMessage("");
         ShowRemark("");
         panel.SetActive(true);
         SetPlayerPaused(true);
@@ -234,12 +234,31 @@ public class MerchantShopUI : MonoBehaviour
         copy.transform.Find("Name").GetComponent<Text>().text = ResourcesName(item);
         row.one.GetComponentInChildren<Text>().text = playerSells ? "Sell 1" : "Buy 1";
         row.more.GetComponentInChildren<Text>().text = playerSells ? "Sell all" : "Buy 5";
-        row.one.onClick.AddListener(() => Trade(row, 1));
-        row.more.onClick.AddListener(() => Trade(row, playerSells ? merchant.Inventory.GetCount(item) : 5));
         rows.Add(row);
+
+        row.one.gameObject.AddComponent<MerchantTradeButton>().Configure(this, item, playerSells, false);
+        row.more.gameObject.AddComponent<MerchantTradeButton>().Configure(this, item, playerSells, true);
     }
 
     private static string ResourcesName(ResourceType item) => ResourceTypes.DisplayName(item);
+
+    public void TradeItem(ResourceType item, bool playerSells, bool more)
+    {
+        if (!IsOpen || merchant == null)
+        {
+            return;
+        }
+
+        foreach (Row row in rows)
+        {
+            if (row.item == item && row.playerSells == playerSells)
+            {
+                int amount = more ? (playerSells ? merchant.Inventory.GetCount(item) : 5) : 1;
+                Trade(row, amount);
+                return;
+            }
+        }
+    }
 
     private void Trade(Row row, int amount)
     {

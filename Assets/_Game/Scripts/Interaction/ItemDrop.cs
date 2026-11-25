@@ -3,7 +3,7 @@ using UnityEngine;
 
 // Items lying on the ground (boss seeds or a hotbar drop). It flies out, lands, then bobs until the player
 // walks into it or presses Interact on it. It pops as it lands, and flies into the player when picked up.
-public class ItemDrop : MonoBehaviour, IInteractable
+public class ItemDrop : MonoBehaviour
 {
     /// <summary>Raised once when a ground item successfully enters the inventory.</summary>
     public static event System.Action Collected;

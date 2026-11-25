@@ -41,7 +41,7 @@ public class MiniCropSpawner : MonoBehaviour
         }
     }
 
-    public IReadOnlyList<MiniCrop> CropPrefabs => cropPrefabs;
+    public MiniCrop[] CropPrefabs => cropPrefabs;
 
     private void Start()
     {

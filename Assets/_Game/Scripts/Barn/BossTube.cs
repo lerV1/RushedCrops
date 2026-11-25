@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // Holds one captured boss and stores its seeds for the player to collect.
-public class BossTube : MonoBehaviour, IInteractable
+public class BossTube : MonoBehaviour
 {
     [Tooltip("Seed type used only for occupied tubes from older saves. New captures supply their own species.")]
     [SerializeField] private ResourceType seedOutput = ResourceType.CarrotKingSeed;
@@ -34,12 +34,12 @@ public class BossTube : MonoBehaviour, IInteractable
     public float SeedTimer => nextSeedTimer;
 
     /// <summary>Restores the resident boss species, accumulated seeds, and countdown.</summary>
-    public void RestoreState(bool savedPlaced, int savedSeeds, float savedTimer, ResourceType? savedSeed = null)
+    public void RestoreState(bool savedPlaced, int savedSeeds, float savedTimer, ResourceType savedSeed = (ResourceType)(-1))
     {
-        if (savedSeed.HasValue)
+        if ((int)savedSeed >= 0)
         {
-            if ((int)ResourceTypes.CapturedBossForSeed(savedSeed.Value) >= 0)
-                seedOutput = savedSeed.Value;
+            if ((int)ResourceTypes.CapturedBossForSeed(savedSeed) >= 0)
+                seedOutput = savedSeed;
             else
                 savedPlaced = false;
         }

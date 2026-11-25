@@ -1,11 +1,7 @@
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Animations;
-using UnityEngine.Playables;
 
-// Plays a model's Blender animations straight from its FBX, with no Animator Controller: one clip at a time,
-// blending from the last over a short fade. A clip that doesn't loop can name the clip that follows it, so a
-// swing blends back into the idle once it ends.
+// Plays clips by name through an Animator Controller. Each state in the controller
+// uses the same name as its AnimationClip.
 [RequireComponent(typeof(Animator))]
 public class ClipPlayer : MonoBehaviour
 {
@@ -14,42 +10,23 @@ public class ClipPlayer : MonoBehaviour
     [Tooltip("The looping clip it starts in.")]
     [SerializeField] private string startClip = "Idle";
 
-    private PlayableGraph graph;
-    private AnimationMixerPlayable mixer;
-    private AnimationClipPlayable[] players;
-    private float[] weights;
+    private Animator animator;
     private int current = -1;
-    private float fadeSpeed;
     private int following = -1;
+    private float clipEndsAt;
     private float followingFade;
+    private float blendEndsAt;
 
     // The clip playing now (or being blended to).
     public string Current => current >= 0 ? clips[current].name : null;
     // True while one clip is still blending into the next.
     public bool IsBlending { get; private set; }
-    public IReadOnlyList<AnimationClip> Clips => clips;
+    public AnimationClip[] Clips => clips;
 
     private void Awake()
     {
-        var animator = GetComponent<Animator>();
-        graph = PlayableGraph.Create(name + " clips");
-        graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
-        mixer = AnimationMixerPlayable.Create(graph, clips.Length);
-        players = new AnimationClipPlayable[clips.Length];
-        weights = new float[clips.Length];
-        for (int i = 0; i < clips.Length; i++)
-        {
-            players[i] = AnimationClipPlayable.Create(graph, clips[i]);
-            graph.Connect(players[i], 0, mixer, i);
-        }
-        AnimationPlayableOutput.Create(graph, "Animation", animator).SetSourcePlayable(mixer);
+        animator = GetComponent<Animator>();
         Play(startClip, 0f);
-        graph.Play();
-    }
-
-    private void OnDestroy()
-    {
-        if (graph.IsValid()) graph.Destroy();
     }
 
     // Starts a clip from its beginning, blending in over fade seconds. thenClip, if given, follows once it ends.
@@ -61,46 +38,58 @@ public class ClipPlayer : MonoBehaviour
             Debug.LogWarning($"{name} has no animation called {clip}.", this);
             return;
         }
-        players[index].SetTime(0);
+
+        bool sameClip = current == index;
+        bool wasBlending = IsBlending;
         current = index;
-        fadeSpeed = fade > 0f ? 1f / fade : float.PositiveInfinity;
         following = thenClip != null ? IndexOf(thenClip) : -1;
         followingFade = thenFade;
-        if (float.IsPositiveInfinity(fadeSpeed)) Blend(0f);
+        clipEndsAt = Time.time + clips[index].length;
+
+        if (fade > 0f)
+        {
+            animator.CrossFadeInFixedTime(clip, fade, 0, 0f);
+            IsBlending = !sameClip || wasBlending;
+            blendEndsAt = Time.time + fade;
+        }
+        else
+        {
+            animator.Play(clip, 0, 0f);
+            IsBlending = false;
+            blendEndsAt = Time.time;
+        }
     }
 
     private void Update()
     {
-        if (current < 0) return;
-        // A move that has played to its end hands over to the clip that follows it.
-        if (following >= 0 && players[current].GetTime() >= clips[current].length)
+        if (current < 0)
         {
-            Play(clips[following].name, followingFade);
+            return;
         }
-        Blend(Time.deltaTime);
-    }
 
-    private void Blend(float deltaTime)
-    {
-        float total = 0f;
-        bool blending = false;
-        for (int i = 0; i < weights.Length; i++)
+        if (IsBlending && Time.time >= blendEndsAt)
         {
-            float target = i == current ? 1f : 0f;
-            weights[i] = float.IsPositiveInfinity(fadeSpeed) ? target : Mathf.MoveTowards(weights[i], target, deltaTime * fadeSpeed);
-            blending |= !Mathf.Approximately(weights[i], target);
-            total += weights[i];
+            IsBlending = false;
         }
-        // Keep the weights adding up to one, even when a new clip starts halfway through a blend.
-        for (int i = 0; i < weights.Length; i++)
-            mixer.SetInputWeight(i, total > 0f ? weights[i] / total : 0f);
-        IsBlending = blending;
+
+        if (following >= 0 && Time.time >= clipEndsAt)
+        {
+            int next = following;
+            float fade = followingFade;
+            following = -1;
+            Play(clips[next].name, fade);
+        }
     }
 
     private int IndexOf(string clip)
     {
         for (int i = 0; i < clips.Length; i++)
-            if (clips[i] != null && clips[i].name == clip) return i;
+        {
+            if (clips[i] != null && clips[i].name == clip)
+            {
+                return i;
+            }
+        }
         return -1;
     }
 }

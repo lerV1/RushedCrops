@@ -519,7 +519,7 @@ MonoBehaviour:
   reach: 3.5
   lookMask:
     serializedVersion: 2
-    m_Bits: 4294967291
+    m_Bits: 115
   longReachLayers:
     serializedVersion: 2
     m_Bits: 16
@@ -605,10 +605,10 @@ MonoBehaviour:
   hitboxSize: {x: 1, y: 1.2}
   hitLayers:
     serializedVersion: 2
-    m_Bits: 4294967291
+    m_Bits: 115
   blockingLayers:
     serializedVersion: 2
-    m_Bits: 4294967291
+    m_Bits: 115
   windup: 0.3
   activeTime: 0.15
   recovery: 0.35
@@ -630,7 +630,7 @@ MonoBehaviour:
   walkPickupDelay: 1.5
   blockingLayers:
     serializedVersion: 2
-    m_Bits: 4294967291
+    m_Bits: 115
   dropAction: {fileID: -1433999996633476000, guid: f5efa458efab1e94091419e01d045740, type: 3}
   dropStackModifier: {fileID: 6595677683431240965, guid: f5efa458efab1e94091419e01d045740, type: 3}
 --- !u!1 &1775677701392528369
@@ -7651,7 +7651,7 @@ PrefabInstance:
     - target: {fileID: 5866666021909216657, guid: a3621aa7dea20a44e8fad510e85684ad, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 9100000, guid: 67e33aeb8c12e89468a3344f2236102a, type: 2}
     - target: {fileID: 5866666021909216657, guid: a3621aa7dea20a44e8fad510e85684ad, type: 3}
       propertyPath: m_CullingMode
       value: 0
@@ -8201,7 +8201,7 @@ PrefabInstance:
     - target: {fileID: 5866666021909216657, guid: 8990d37c13b7b414b8ebae64b97c97ef, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 9100000, guid: f2744629930ae6b469b2fab87b87656b, type: 2}
     - target: {fileID: 5866666021909216657, guid: 8990d37c13b7b414b8ebae64b97c97ef, type: 3}
       propertyPath: m_CullingMode
       value: 0

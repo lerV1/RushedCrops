@@ -34,23 +34,35 @@ public class BossProjectile : MonoBehaviour
 
         velocity += Physics.gravity * Time.deltaTime;
         Vector3 step = velocity * Time.deltaTime;
+        RaycastHit nearestHit = default;
+        bool hasHit = false;
         foreach (RaycastHit hit in Physics.SphereCastAll(transform.position, radius, step.normalized, step.magnitude, ~0, QueryTriggerInteraction.Ignore))
         {
             if (shooter != null && hit.collider.transform.IsChildOf(shooter))
             {
                 continue;
             }
-            if (hit.collider.GetComponentInParent<PlayerController>() != null)
+            if (!hasHit || hit.distance < nearestHit.distance)
             {
-                Health player = hit.collider.GetComponentInParent<Health>();
+                nearestHit = hit;
+                hasHit = true;
+            }
+        }
+
+        if (hasHit)
+        {
+            PlayerController controller = nearestHit.collider.GetComponentInParent<PlayerController>();
+            if (controller != null)
+            {
+                Health player = nearestHit.collider.GetComponentInParent<Health>();
                 if (player != null)
                 {
                     CropBoss boss = shooter != null ? shooter.GetComponentInParent<CropBoss>() : null;
                     player.TakeDamage(damage, boss != null ? boss.DisplayName : "Boss projectile");
                 }
             }
-            GameAudio.Play(Sfx.ShotLand, hit.point);
-            GameEffects.Play(Effect.Juice, hit.point + Vector3.up * 0.1f, 0.6f);
+            GameAudio.Play(Sfx.ShotLand, nearestHit.point);
+            GameEffects.Play(Effect.Juice, nearestHit.point + Vector3.up * 0.1f, 0.6f);
             Destroy(gameObject);
             return;
         }

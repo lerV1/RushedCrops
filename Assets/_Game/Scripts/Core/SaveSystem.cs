@@ -264,7 +264,7 @@ public class SaveSystem : MonoBehaviour
             sceneTubes[i].RestoreState(saved != null && saved.placed,
                 saved != null ? saved.storedSeeds : 0,
                 saved != null ? saved.seedTimer : 0f,
-                saved != null && saveVersion >= 3 ? (ResourceType?)saved.seedResource : null);
+                saved != null && saveVersion >= 3 ? (ResourceType)saved.seedResource : (ResourceType)(-1));
         }
     }
 

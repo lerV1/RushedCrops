@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // A tool lying in the world, like the hoe in the stump. Press Interact to put it in the hotbar.
-public class ToolPickup : MonoBehaviour, IInteractable
+public class ToolPickup : MonoBehaviour
 {
     [SerializeField] private ToolType tool = ToolType.Hoe;
     [SerializeField] private string displayName = "hoe";

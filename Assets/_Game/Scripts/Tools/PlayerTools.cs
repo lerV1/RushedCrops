@@ -33,8 +33,8 @@ public class PlayerTools : MonoBehaviour
     [SerializeField, Min(1)] private int canCapacity = 6;
 
     public ToolType Equipped { get; private set; } = ToolType.None;
-    // The item shown in the hand when it isn't a tool (seeds, crops, wood...), or null.
-    public ResourceType? HeldItem { get; private set; }
+    // The item shown in the hand when it isn't a tool; -1 means empty hands.
+    public ResourceType HeldItem { get; private set; } = (ResourceType)(-1);
 
     public Inventory Inventory => inventory;
 
@@ -119,8 +119,8 @@ public class PlayerTools : MonoBehaviour
 
         bool holding = inventory.TryGetSelectedItem(out ResourceType item);
         ToolType wanted = holding ? ResourceTypes.ToTool(item) : ToolType.None;
-        ResourceType? held = holding && wanted == ToolType.None ? item : (ResourceType?)null;
-        if ((wanted != Equipped || !Nullable.Equals(held, HeldItem)) && hands.SwitchHeld(wanted, held))
+        ResourceType held = holding && wanted == ToolType.None ? item : (ResourceType)(-1);
+        if ((wanted != Equipped || held != HeldItem) && hands.SwitchHeld(wanted, held))
         {
             Equipped = wanted;
             HeldItem = held;
@@ -181,8 +181,8 @@ public class PlayerTools : MonoBehaviour
                 break;
             case ToolType.WateringCan:
                 // Water only runs out when it goes on something; filling at the river just dips the can.
-                IToolTarget target = interactor.FindToolTarget();
-                bool watering = WaterLeft > 0 && target != null && !(target is WaterSource) && target.CanUseTool(this);
+                Component target = interactor.FindToolTarget();
+                bool watering = WaterLeft > 0 && target != null && !(target is WaterSource) && ToolTargets.CanUse(target, this);
                 hands.PlayPour(watering);
                 UseOnTarget(pourDelay);
                 break;
@@ -213,8 +213,8 @@ public class PlayerTools : MonoBehaviour
     // anything else it swings and hits whatever is in front.
     private void UseOrStrike(float delay)
     {
-        IToolTarget target = interactor.FindToolTarget();
-        if (!AimingAtFoe() && target != null && target.CanUseTool(this))
+        Component target = interactor.FindToolTarget();
+        if (!AimingAtFoe() && target != null && ToolTargets.CanUse(target, this))
         {
             hands.PlaySwing();
             StartCoroutine(UseAfter(target, delay));
@@ -243,20 +243,20 @@ public class PlayerTools : MonoBehaviour
 
     private void UseOnTarget(float delay)
     {
-        IToolTarget target = interactor.FindToolTarget();
-        if (target != null && target.CanUseTool(this))
+        Component target = interactor.FindToolTarget();
+        if (target != null && ToolTargets.CanUse(target, this))
         {
             StartCoroutine(UseAfter(target, delay));
         }
     }
 
-    private IEnumerator UseAfter(IToolTarget target, float delay)
+    private IEnumerator UseAfter(Component target, float delay)
     {
         yield return new WaitForSeconds(delay);
         // Check again: the target could have been removed, or changed, during the swing.
-        if (target as UnityEngine.Object != null && target.CanUseTool(this))
+        if (target != null && ToolTargets.CanUse(target, this))
         {
-            target.UseTool(this);
+            ToolTargets.Use(target, this);
         }
     }
 }

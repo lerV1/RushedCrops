@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // The garden's crop field: any square of its soil can be tilled, and an outline shows the aimed square.
-// It has no collider: PlayerInteractor hands it the ground point (IAreaTarget). Squares exist once tilled.
+// It has no collider: PlayerInteractor hands it the ground point. Squares exist once tilled.
 [RequireComponent(typeof(FarmPlot))]
-public class FarmField : MonoBehaviour, IAreaTarget, IInteractable, IToolTarget, IHighlightable
+public class FarmField : MonoBehaviour
 {
     [Tooltip("Size of the field in metres: x across, y along. The field's position is its centre.")]
     [SerializeField] private Vector2 size = new Vector2(20f, 16f);

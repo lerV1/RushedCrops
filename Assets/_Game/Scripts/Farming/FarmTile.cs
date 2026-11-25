@@ -2,7 +2,7 @@ using UnityEngine;
 
 // One tilled square of the crop field: plant it (Interact), water it (Use Tool) and harvest it when ripe.
 // A crop that needs two waterings grows half way, dries out and waits for the second.
-public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
+public class FarmTile : MonoBehaviour
 {
     public enum TileState { Untilled, Tilled, Growing, Ripe }
 

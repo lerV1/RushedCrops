@@ -80,7 +80,7 @@ public class BossCombat : MonoBehaviour
 
     public bool IsFighting => engaged && !boss.IsDead;
     public bool IsAngry => angryBelow > 0f && boss.Health.CurrentHealth <= boss.Health.MaxHealth * angryBelow;
-    public IReadOnlyList<Attack> Attacks => attacks;
+    public Attack[] Attacks => attacks;
     public Vector3 HomePosition => home;
     public Quaternion HomeRotation => homeRotation;
 
@@ -471,7 +471,18 @@ public class BossCombat : MonoBehaviour
     private static RaycastHit[] SortedDown(Vector3 at)
     {
         RaycastHit[] hits = Physics.RaycastAll(at + Vector3.up * 4f, Vector3.down, 10f, 1 << 6, QueryTriggerInteraction.Ignore);
-        Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+        for (int i = 0; i < hits.Length - 1; i++)
+        {
+            for (int j = i + 1; j < hits.Length; j++)
+            {
+                if (hits[j].distance < hits[i].distance)
+                {
+                    RaycastHit swap = hits[i];
+                    hits[i] = hits[j];
+                    hits[j] = swap;
+                }
+            }
+        }
         return hits;
     }
 

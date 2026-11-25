@@ -42,7 +42,7 @@ public class HandAnimator : MonoBehaviour
     [SerializeField] private InputActionReference interactAction;
 
     private ToolType shownTool = ToolType.None;
-    private ResourceType? shownItem;
+    private ResourceType shownItem = (ResourceType)(-1);
     private GameObject heldModel;
     private Coroutine toolSwap;
 
@@ -121,19 +121,19 @@ public class HandAnimator : MonoBehaviour
         }
     }
 
-    public bool SwitchTool(ToolType next) => SwitchHeld(next, null);
+    public bool SwitchTool(ToolType next) => SwitchHeld(next, (ResourceType)(-1));
 
-    // Puts a tool, or else an item (null for nothing), in the right hand. False while the arm is busy.
-    public bool SwitchHeld(ToolType tool, ResourceType? item)
+    // Puts a tool, or else an item (-1 for nothing), in the right hand. False while the arm is busy.
+    public bool SwitchHeld(ToolType tool, ResourceType item)
     {
-        if (tool != ToolType.None) item = null;
-        if ((tool == shownTool && Nullable.Equals(item, shownItem)) || !IsResting(rightArm))
+        if (tool != ToolType.None) item = (ResourceType)(-1);
+        if ((tool == shownTool && item == shownItem) || !IsResting(rightArm))
         {
             return false;
         }
 
-        bool wasHolding = shownTool != ToolType.None || shownItem.HasValue;
-        bool willHold = tool != ToolType.None || item.HasValue;
+        bool wasHolding = shownTool != ToolType.None || (int)shownItem >= 0;
+        bool willHold = tool != ToolType.None || (int)item >= 0;
         if (!wasHolding)
         {
             rightArm.Play("Equip", 0.05f, GripIdle, 0.05f);     // open hand -> gripping
@@ -157,7 +157,7 @@ public class HandAnimator : MonoBehaviour
         return true;
     }
 
-    private IEnumerator ShowWhileHidden(ToolType tool, ResourceType? item)
+    private IEnumerator ShowWhileHidden(ToolType tool, ResourceType item)
     {
         yield return new WaitForSeconds(toolSwapDelay);
         ShowTool(tool);
@@ -166,21 +166,21 @@ public class HandAnimator : MonoBehaviour
     }
 
     // The item's model, sized to fit the palm, with its colliders off so it never gets in the way.
-    private void ShowItem(ResourceType? item)
+    private void ShowItem(ResourceType item)
     {
         if (heldModel != null)
         {
             Destroy(heldModel);
             heldModel = null;
         }
-        GameObject source = item.HasValue && itemModels != null ? itemModels.Get(item.Value) : null;
+        GameObject source = (int)item >= 0 && itemModels != null ? itemModels.Get(item) : null;
         if (source == null || heldItemAnchor == null)
         {
             return;
         }
         heldModel = Instantiate(source, heldItemAnchor);
-        heldModel.name = "Held " + item.Value;
-        heldModel.transform.localRotation = Quaternion.Euler(itemModels.TurnFor(item.Value));
+        heldModel.name = "Held " + item;
+        heldModel.transform.localRotation = Quaternion.Euler(itemModels.TurnFor(item));
         foreach (Collider part in heldModel.GetComponentsInChildren<Collider>(true)) part.enabled = false;
         foreach (Renderer part in heldModel.GetComponentsInChildren<Renderer>(true))
             part.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;

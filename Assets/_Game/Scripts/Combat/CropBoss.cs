@@ -6,7 +6,7 @@ using UnityEngine;
 // The hatchet hurts it and BossCombat makes it fight back. When it dies it sinks, throws out seeds (ItemDrop)
 // and GameManager counts the boss as beaten. If the player dies first, it heals back to full.
 [RequireComponent(typeof(Health))]
-public class CropBoss : MonoBehaviour, IInteractable
+public class CropBoss : MonoBehaviour
 {
     [SerializeField] private string displayName = "Carrot King";
 

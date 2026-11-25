@@ -52,7 +52,7 @@ public class CheatMenu : MonoBehaviour
 
     private void Start()
     {
-        tools = FindFirstObjectByType<PlayerTools>();
+        tools = FindAnyObjectByType<PlayerTools>();
         if (tools == null || tools.Inventory == null)
         {
             enabled = false;
@@ -61,7 +61,7 @@ public class CheatMenu : MonoBehaviour
         inventory = tools.Inventory;
         health = tools.GetComponent<Health>();
         respawn = tools.GetComponent<RespawnController>();
-        shop = FindFirstObjectByType<MerchantShopUI>();
+        shop = FindAnyObjectByType<MerchantShopUI>();
         controls = new Behaviour[] { tools.GetComponent<PlayerController>(), tools.GetComponent<PlayerLook>(),
             tools.GetComponent<PlayerInteractor>(), tools, tools.GetComponent<MeleeAttack>() };
         BuildMenu();
@@ -173,6 +173,22 @@ public class CheatMenu : MonoBehaviour
         amountLabel.text = ResourceTypes.IsTool(items[selectedItem]) ? "1" : amounts[selectedAmount].ToString();
     }
 
+    private void PreviousItem()
+    {
+        SelectItem(-1);
+    }
+
+    private void NextItem()
+    {
+        SelectItem(1);
+    }
+
+    private void NextAmount()
+    {
+        selectedAmount = (selectedAmount + 1) % amounts.Length;
+        UpdateSelection();
+    }
+
     private void BuildMenu()
     {
         font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
@@ -205,14 +221,10 @@ public class CheatMenu : MonoBehaviour
         Button(card, $"+{coinGrant:N0} coins", 24, 72, 412, 40, GrantCoins);
         Button(card, "Heal", 24, 124, 200, 40, HealPlayer);
         Button(card, "Refill water", 236, 124, 200, 40, RefillWater);
-        Button(card, "<", 24, 184, 44, 40, () => SelectItem(-1));
+        Button(card, "<", 24, 184, 44, 40, PreviousItem);
         itemLabel = Label(card, "", 76, 184, 308, 40, 20);
-        Button(card, ">", 392, 184, 44, 40, () => SelectItem(1));
-        var amount = Button(card, "", 24, 236, 80, 40, () =>
-        {
-            selectedAmount = (selectedAmount + 1) % amounts.Length;
-            UpdateSelection();
-        });
+        Button(card, ">", 392, 184, 44, 40, NextItem);
+        var amount = Button(card, "", 24, 236, 80, 40, NextAmount);
         amountLabel = amount.GetComponentInChildren<Text>();
         Button(card, "Give item", 116, 236, 320, 40, GrantItem);
         message = Label(card, "", 24, 292, 412, 32, 15);

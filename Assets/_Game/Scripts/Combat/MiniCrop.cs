@@ -7,7 +7,7 @@ using UnityEngine;
 // away or dies. The hatchet hurts it through its Health; when it dies it drops some of its crop.
 [RequireComponent(typeof(Health))]
 [RequireComponent(typeof(Rigidbody))]
-public class MiniCrop : MonoBehaviour, IInteractable
+public class MiniCrop : MonoBehaviour
 {
     public enum Temper
     {

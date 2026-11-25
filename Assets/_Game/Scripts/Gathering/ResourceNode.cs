@@ -4,7 +4,7 @@ using UnityEngine;
 
 // A tree to chop with the hatchet, or a rock to mine with the pickaxe. Each hit shakes it; after a few hits it
 // breaks, throws out its wood or stone to pick up, and leaves a stump or rubble that grows back after two in-game days.
-public class ResourceNode : MonoBehaviour, IToolTarget, IInteractable
+public class ResourceNode : MonoBehaviour
 {
     [Tooltip("The scene's shared Inventory. Picked-up wood and stone go into it.")]
     [SerializeField] private Inventory inventory;

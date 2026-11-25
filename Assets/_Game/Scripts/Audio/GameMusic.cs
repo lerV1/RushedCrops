@@ -67,7 +67,7 @@ public class GameMusic : MonoBehaviour
             var combat = boss != null ? boss.GetComponent<BossCombat>() : null;
             if (combat != null && combat.IsFighting) return true;
         }
-        foreach (MiniCrop crop in FindObjectsByType<MiniCrop>(FindObjectsSortMode.None))
+        foreach (MiniCrop crop in FindObjectsByType<MiniCrop>())
         {
             MiniCrop.State state = crop.CurrentState;
             if (state == MiniCrop.State.Chase || state == MiniCrop.State.Attack) return true;

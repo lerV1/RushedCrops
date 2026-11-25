@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // Water the can can be filled from, like the river. Needs a collider the look ray can hit.
-public class WaterSource : MonoBehaviour, IToolTarget
+public class WaterSource : MonoBehaviour
 {
     public string GetToolPrompt(PlayerTools tools)
     {

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,16 +8,16 @@ public class ObjectiveGuide : MonoBehaviour
 {
     private const string CompletedKey = "RushedCrops.ObjectiveGuide.Completed";
     private const string LessonsKey = "RushedCrops.ObjectiveGuide.Lessons";
+    private const string LessonKeyPrefix = "RushedCrops.ObjectiveGuide.Lesson.";
 
-    [System.Flags]
     private enum Lesson
     {
-        None = 0, HoePickup = 1, CanPickup = 1 << 1, HatchetPickup = 1 << 2,
-        PickaxePickup = 1 << 3, SwordPickup = 1 << 4, JarPickup = 1 << 5,
-        Chop = 1 << 6, Mine = 1 << 7, Till = 1 << 8, Plant = 1 << 9,
-        Refill = 1 << 10, Grow = 1 << 11, Harvest = 1 << 12, Trade = 1 << 13,
-        Food = 1 << 14, Fight = 1 << 15, BossSeed = 1 << 16, Capture = 1 << 17,
-        Repair = 1 << 18, Tube = 1 << 19, Ground = 1 << 20, Space = 1 << 21
+        None = 0, HoePickup = 1, CanPickup = 2, HatchetPickup = 4,
+        PickaxePickup = 8, SwordPickup = 16, JarPickup = 32,
+        Chop = 64, Mine = 128, Till = 256, Plant = 512,
+        Refill = 1024, Grow = 2048, Harvest = 4096, Trade = 8192,
+        Food = 16384, Fight = 32768, BossSeed = 65536, Capture = 131072,
+        Repair = 262144, Tube = 524288, Ground = 1048576, Space = 2097152
     }
 
     /// <summary>Lets a new farm introduce each mechanic again.</summary>
@@ -24,6 +25,11 @@ public class ObjectiveGuide : MonoBehaviour
     {
         PlayerPrefs.DeleteKey(CompletedKey);
         PlayerPrefs.DeleteKey(LessonsKey);
+        foreach (Lesson lesson in System.Enum.GetValues(typeof(Lesson)))
+        {
+            if (lesson != Lesson.None) PlayerPrefs.DeleteKey(LessonKey(lesson));
+        }
+        PlayerPrefs.Save();
     }
 
     [Header("Progress")]
@@ -49,7 +55,7 @@ public class ObjectiveGuide : MonoBehaviour
     private WaterSource[] waterSources;
     private Merchant merchant;
     private float nextRefresh;
-    private Lesson completedLessons;
+    private readonly List<Lesson> completedLessons = new List<Lesson>();
     private Lesson visibleLesson;
     private FarmPlot plot;
     private FoodEater foodEater;
@@ -80,7 +86,7 @@ public class ObjectiveGuide : MonoBehaviour
 
     private void Start()
     {
-        completedLessons = (Lesson)PlayerPrefs.GetInt(LessonsKey, 0);
+        LoadCompletedLessons();
         initialized = true;
         Subscribe();
         RefreshObjective();
@@ -298,7 +304,14 @@ public class ObjectiveGuide : MonoBehaviour
         {
             if (source == null || !source.isActiveAndEnabled) continue;
             Collider area = source.GetComponent<Collider>();
-            Vector3 point = area != null ? area.ClosestPoint(player.position) : source.transform.position;
+            Vector3 point = source.transform.position;
+            if (area != null)
+            {
+                MeshCollider mesh = area as MeshCollider;
+                point = mesh != null && !mesh.convex
+                    ? area.bounds.ClosestPoint(player.position)
+                    : area.ClosestPoint(player.position);
+            }
             float candidate = (point - player.position).sqrMagnitude;
             if (candidate < distance) { nearest = source; distance = candidate; }
         }
@@ -321,13 +334,13 @@ public class ObjectiveGuide : MonoBehaviour
         else arrow.Clear();
     }
 
-    private bool IsComplete(Lesson lesson) => lesson != Lesson.None && (completedLessons & lesson) == lesson;
+    private bool IsComplete(Lesson lesson) => lesson != Lesson.None && completedLessons.Contains(lesson);
 
     private void Complete(Lesson lesson)
     {
         if (lesson == Lesson.None || IsComplete(lesson)) return;
-        completedLessons |= lesson;
-        PlayerPrefs.SetInt(LessonsKey, (int)completedLessons);
+        completedLessons.Add(lesson);
+        PlayerPrefs.SetInt(LessonKey(lesson), 1);
         PlayerPrefs.Save();
         if (IsComplete(visibleLesson))
         {
@@ -361,7 +374,13 @@ public class ObjectiveGuide : MonoBehaviour
             if (!inventory.IsSlotEmpty(slot) && ResourceTypes.IsCapturedBoss(inventory.GetSlotItem(slot))) Complete(Lesson.Capture);
         if (barnRepair != null && barnRepair.JobsDone > 0) Complete(Lesson.Repair);
         foreach (BossTube tube in FindObjectsByType<BossTube>())
-            if (tube.isPlaced) Complete(Lesson.Capture | Lesson.Tube);
+        {
+            if (tube.isPlaced)
+            {
+                Complete(Lesson.Capture);
+                Complete(Lesson.Tube);
+            }
+        }
         if (visibleLesson == Lesson.Space)
             for (int slot = 0; slot < Inventory.SlotCount; slot++)
                 if (inventory.IsSlotEmpty(slot)) { Complete(Lesson.Space); break; }
@@ -369,9 +388,45 @@ public class ObjectiveGuide : MonoBehaviour
 
     private void OnInventoryChanged() => RecordProgress();
     private void OnGroundItemCollected() => Complete(Lesson.Ground);
-    private void OnHarvested() => Complete(Lesson.Till | Lesson.Plant | Lesson.Grow | Lesson.Harvest);
+    private void OnHarvested()
+    {
+        Complete(Lesson.Till);
+        Complete(Lesson.Plant);
+        Complete(Lesson.Grow);
+        Complete(Lesson.Harvest);
+    }
     private void OnTraded(ResourceType item, int amount, bool bought) => Complete(Lesson.Trade);
     private void OnAteFood() => Complete(Lesson.Food);
+
+    private void LoadCompletedLessons()
+    {
+        int oldLessons = PlayerPrefs.GetInt(LessonsKey, 0);
+        foreach (Lesson lesson in System.Enum.GetValues(typeof(Lesson)))
+        {
+            if (lesson == Lesson.None) continue;
+
+            string key = LessonKey(lesson);
+            bool completed = PlayerPrefs.GetInt(key, 0) != 0;
+            int oldValue = (int)lesson;
+            if (!completed && oldLessons > 0 && oldValue > 0)
+            {
+                completed = oldLessons / oldValue % 2 == 1;
+            }
+            if (completed)
+            {
+                completedLessons.Add(lesson);
+                PlayerPrefs.SetInt(key, 1);
+            }
+        }
+
+        if (PlayerPrefs.HasKey(LessonsKey))
+        {
+            PlayerPrefs.DeleteKey(LessonsKey);
+            PlayerPrefs.Save();
+        }
+    }
+
+    private static string LessonKey(Lesson lesson) => LessonKeyPrefix + lesson;
 
     private static Lesson PickupLesson(ToolType tool)
     {
@@ -421,7 +476,7 @@ public class ObjectiveGuide : MonoBehaviour
         }
     }
 
-    private static string SpaceHint() => "Only five hotbar slots. Sell items or drop a selected stack (Shift + Backspace) to make room. Dropped tools can be recovered.";
+    private static string SpaceHint() => $"Only {Inventory.SlotCount} hotbar slots. Sell items or drop a selected stack (Shift + Backspace) to make room. Dropped tools can be recovered.";
     private static bool IsBossSeed(ResourceType item) => item >= ResourceType.CarrotKingSeed && item <= ResourceType.WheatWarlordSeed;
     private static string ToolName(ToolType tool) => ResourceTypes.DisplayName(ResourceTypes.FromTool(tool));
     private static string ToolPurpose(ToolType tool)

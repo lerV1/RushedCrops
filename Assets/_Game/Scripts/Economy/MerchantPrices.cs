@@ -28,8 +28,8 @@ public class MerchantPrices : ScriptableObject
     [Tooltip("Picks which way prices move each day. The same number always gives the same prices.")]
     [SerializeField] private int seed = 451;
 
-    public IReadOnlyList<Offer> ForSale => forSale;
-    public IReadOnlyList<Offer> Wanted => wanted;
+    public Offer[] ForSale => forSale;
+    public Offer[] Wanted => wanted;
 
     /// <summary>What the merchant charges for one of this item on a day, or 0 if he doesn't sell it.</summary>
     public int ChargeFor(ResourceType item, int day) => Price(forSale, item, day, forSaleSwing, 1);

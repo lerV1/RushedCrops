@@ -30,10 +30,10 @@ public class PlayerInteractor : MonoBehaviour
     [Tooltip("The player's tools, for tool prompts. Optional.")]
     [SerializeField] private PlayerTools tools;
 
-    private IHighlightable highlighted;
+    private FarmField highlighted;
 
-    public IInteractable Target { get; private set; }
-    public IToolTarget ToolTarget { get; private set; }
+    public Component Target { get; private set; }
+    public Component ToolTarget { get; private set; }
     // Whatever the crosshair rests on within reach, usable or not (null for nothing).
     public Collider LookedAt { get; private set; }
 
@@ -71,7 +71,7 @@ public class PlayerInteractor : MonoBehaviour
         UpdatePrompt();
     }
 
-    public IToolTarget FindToolTarget()
+    public Component FindToolTarget()
     {
         Look();
         return ToolTarget;
@@ -92,20 +92,20 @@ public class PlayerInteractor : MonoBehaviour
         }
 
         LookedAt = hit;
-        Target = hit != null ? hit.GetComponentInParent<IInteractable>() : null;
-        ToolTarget = hit != null ? hit.GetComponentInParent<IToolTarget>() : null;
-        IHighlightable highlight = hit != null ? hit.GetComponentInParent<IHighlightable>() : null;
+        Target = InteractionTargets.Find(hit);
+        ToolTarget = ToolTargets.Find(hit);
+        FarmField highlight = hit != null ? hit.GetComponentInParent<FarmField>() : null;
 
         // Plain ground (nothing usable was hit): it may lie inside an area like the crop field.
         if (hit != null && Target == null && ToolTarget == null)
         {
-            foreach (IAreaTarget area in AreaTargets.All)
+            foreach (FarmField area in AreaTargets.All)
             {
                 if (area.TryAim(info.point))
                 {
-                    Target = area as IInteractable;
-                    ToolTarget = area as IToolTarget;
-                    highlight = area as IHighlightable;
+                    Target = area;
+                    ToolTarget = area;
+                    highlight = area;
                     break;
                 }
             }
@@ -113,14 +113,13 @@ public class PlayerInteractor : MonoBehaviour
         SetHighlight(highlight);
     }
 
-    private void SetHighlight(IHighlightable next)
+    private void SetHighlight(FarmField next)
     {
         if (next == highlighted)
         {
             return;
         }
-        // "as Object" catches a highlight that was destroyed while aimed at.
-        if (highlighted != null && highlighted as Object != null)
+        if (highlighted != null)
         {
             highlighted.SetHighlighted(false);
         }
@@ -137,22 +136,22 @@ public class PlayerInteractor : MonoBehaviour
 
         if (tools != null && tools.Equipped != ToolType.None && ToolTarget != null)
         {
-            string toolText = ToolTarget.GetToolPrompt(tools);
+            string toolText = ToolTargets.GetPrompt(ToolTarget, tools);
             if (!string.IsNullOrEmpty(toolText))
             {
-                prompt.Show(ToolTarget.CanUseTool(tools) ? $"[{KeyName(useToolAction)}] {toolText}" : toolText);
+                prompt.Show(ToolTargets.CanUse(ToolTarget, tools) ? $"[{KeyName(useToolAction)}] {toolText}" : toolText);
                 return;
             }
         }
 
-        string text = Target != null ? Target.GetPrompt() : null;
+        string text = InteractionTargets.GetPrompt(Target);
         if (string.IsNullOrEmpty(text))
         {
             prompt.Hide();
         }
         else
         {
-            prompt.Show(Target.CanInteract ? $"[{KeyName(interactAction)}] {text}" : text);
+            prompt.Show(InteractionTargets.CanInteract(Target) ? $"[{KeyName(interactAction)}] {text}" : text);
         }
     }
 
@@ -163,9 +162,9 @@ public class PlayerInteractor : MonoBehaviour
     {
         // Look again so the press always uses what is under the crosshair right now.
         Look();
-        if (Target != null && Target.CanInteract)
+        if (Target != null && InteractionTargets.CanInteract(Target))
         {
-            Target.Interact(this);
+            InteractionTargets.Interact(Target, this);
             UpdatePrompt();
         }
     }

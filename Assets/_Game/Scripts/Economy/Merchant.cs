@@ -15,7 +15,7 @@ public enum TradeResult
 
 // The merchant at the market stall: he sells seeds and supplies and buys crops at daily prices.
 // Trades are all or nothing. Look at him and press Interact to open the trading window.
-public class Merchant : MonoBehaviour, IInteractable
+public class Merchant : MonoBehaviour
 {
     [Tooltip("The scene's shared Inventory. Coins and goods move in and out of it.")]
     [SerializeField] private Inventory inventory;

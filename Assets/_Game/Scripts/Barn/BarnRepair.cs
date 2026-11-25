@@ -5,7 +5,7 @@ using UnityEngine;
 
 // The inherited barn. Press Interact on it to pay for the next job: unlock it (coins), patch the roof
 // (coins, wood), then straighten the east wall (coins, wood, stone, after beating a boss). GameManager counts jobs.
-public class BarnRepair : MonoBehaviour, IInteractable
+public class BarnRepair : MonoBehaviour
 {
     // A barn piece that changes when its job is done. Positions and rotations are local to its parent.
     [Serializable]
@@ -56,7 +56,7 @@ public class BarnRepair : MonoBehaviour, IInteractable
     private float messageUntil = float.NegativeInfinity;
     private bool listening;
 
-    public IReadOnlyList<Job> Jobs => jobs;
+    public Job[] Jobs => jobs;
     public int JobsDone => gameManager != null ? gameManager.BarnRepairs : 0;
     public Job NextJob => JobsDone < jobs.Length ? jobs[JobsDone] : null;
     private bool BossBeaten => gameManager != null && gameManager.IsBossDefeated;
@@ -152,7 +152,7 @@ public class BarnRepair : MonoBehaviour, IInteractable
         gameManager.RecordBarnRepair();
     }
 
-    private static string CostText(IReadOnlyList<ResourceAmount> cost)
+    private static string CostText(ResourceAmount[] cost)
     {
         var lines = new List<string>();
         foreach (ResourceAmount line in cost)
@@ -162,7 +162,7 @@ public class BarnRepair : MonoBehaviour, IInteractable
         return string.Join(", ", lines);
     }
 
-    private string MissingText(IReadOnlyList<ResourceAmount> cost)
+    private string MissingText(ResourceAmount[] cost)
     {
         var lines = new List<string>();
         foreach (ResourceAmount line in cost)
