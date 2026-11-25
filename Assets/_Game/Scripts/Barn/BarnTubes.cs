@@ -17,15 +17,8 @@ public class BarnTubes : MonoBehaviour
 
     public void RestoreUnlockedTubeCount(int count, int repairStage)
     {
-        unlockedTubeCount = Mathf.Clamp(count, 0, tubes.Length);
-        lastRepairStage = repairStage;
-        for (int i = 0; i < tubes.Length; i++)
-        {
-            if (tubes[i] != null)
-            {
-                tubes[i].Configure(inventory, i, i < unlockedTubeCount);
-            }
-        }
+        // Repairs own unlocks. Older saves may contain a stale tube count.
+        ApplyUnlocks(repairStage);
     }
 
     private void Start()
@@ -50,8 +43,13 @@ public class BarnTubes : MonoBehaviour
 
     private void RefreshUnlocks()
     {
-        lastRepairStage = barnRepair.JobsDone;
-        unlockedTubeCount = Mathf.Clamp(startingUnlockedTubeCount + lastRepairStage * tubesPerRepair, 0, tubes.Length);
+        ApplyUnlocks(barnRepair.JobsDone);
+    }
+
+    private void ApplyUnlocks(int repairStage)
+    {
+        lastRepairStage = Mathf.Max(0, repairStage);
+        unlockedTubeCount = Mathf.Clamp(startingUnlockedTubeCount + lastRepairStage * tubesPerRepair, 1, tubes.Length);
 
         for (int i = 0; i < tubes.Length; i++)
         {

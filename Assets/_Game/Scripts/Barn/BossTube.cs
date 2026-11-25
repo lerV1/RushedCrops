@@ -25,6 +25,7 @@ public class BossTube : MonoBehaviour, IInteractable
     public bool isPlaced => placed;
     public float secondsToNextSeed => placed && storedSeeds < seedCapacity ? Mathf.Max(0f, nextSeedTimer) : 0f;
     public int StoredSeeds => storedSeeds;
+    public bool IsUnlocked => isUnlocked;
 
     public float SeedTimer => nextSeedTimer;
 
@@ -127,6 +128,8 @@ public class BossTube : MonoBehaviour, IInteractable
     public void SetUnlocked(bool unlocked)
     {
         isUnlocked = unlocked;
+        // Hide the whole tube, including its frame, contents, and colliders.
+        gameObject.SetActive(unlocked);
     }
 
     private void UpdateVisual()
