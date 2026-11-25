@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 /// <summary>Rebuilds the small title scene and its overhead photograph from the current farm.</summary>
@@ -96,11 +97,26 @@ public static class MainMenuSceneBuilder
         Assign(serialized, "volumeValue", value);
         Assign(serialized, "fullscreenToggle", toggle);
         Assign(serialized, "fullscreenHint", fullscreenHint);
+        var actions = AssetDatabase.LoadAssetAtPath<InputActionAsset>("Assets/_Game/Input/IA_PlayerControls.inputactions");
+        var references = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(actions))
+            .OfType<InputActionReference>().ToArray();
+        Assign(serialized, "backAction", references.First(r => r.action.id == actions.FindAction("UI/Cancel", true).id));
         serialized.ApplyModifiedPropertiesWithoutUndo();
         settings.gameObject.SetActive(false);
         reset.gameObject.SetActive(false);
         var events = new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
-        events.GetComponent<InputSystemUIInputModule>().AssignDefaultActions();
+        var input = events.GetComponent<InputSystemUIInputModule>();
+        input.actionsAsset = actions;
+        input.point = references.First(r => r.action.name == "Point");
+        input.leftClick = references.First(r => r.action.name == "Click");
+        input.rightClick = references.First(r => r.action.name == "RightClick");
+        input.middleClick = references.First(r => r.action.name == "MiddleClick");
+        input.scrollWheel = references.First(r => r.action.name == "ScrollWheel");
+        input.move = references.First(r => r.action.name == "Navigate");
+        input.submit = references.First(r => r.action.name == "Submit");
+        input.cancel = references.First(r => r.action.name == "Cancel");
+        input.trackedDevicePosition = references.First(r => r.action.name == "TrackedDevicePosition");
+        input.trackedDeviceOrientation = references.First(r => r.action.name == "TrackedDeviceOrientation");
         events.GetComponent<EventSystem>().firstSelectedGameObject = play.gameObject;
         EditorSceneManager.SaveScene(scene, MenuPath);
         EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(MenuPath, true),

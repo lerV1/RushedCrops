@@ -341135,6 +341135,7 @@ GameObject:
   - component: {fileID: 1423067447}
   - component: {fileID: 1423067451}
   - component: {fileID: 1423067452}
+  - component: {fileID: 1423067453}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -341209,6 +341210,22 @@ MonoBehaviour:
   autosaveSeconds: 30
   saveAction: {fileID: 4872094074733735819, guid: f5efa458efab1e94091419e01d045740, type: 3}
   deleteSaveAction: {fileID: 3543782512353029314, guid: f5efa458efab1e94091419e01d045740, type: 3}
+--- !u!114 &1423067453
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1423067446}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75db18c45df9465588cb9aae51dfd947, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FarmMenu
+  openMenuAction: {fileID: -6854856288068525418, guid: f5efa458efab1e94091419e01d045740, type: 3}
+  saveSystem: {fileID: 1423067452}
+  shop: {fileID: 969835969}
+  menuScene: SC_Menu
 --- !u!1 &1423374356
 GameObject:
   m_ObjectHideFlags: 0

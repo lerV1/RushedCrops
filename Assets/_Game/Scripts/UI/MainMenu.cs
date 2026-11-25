@@ -20,7 +20,19 @@ public class MainMenu : MonoBehaviour
     [SerializeField] private Toggle fullscreenToggle;
     [SerializeField] private Text fullscreenHint;
 
+    [SerializeField] private InputActionReference backAction;
+
     private bool loading;
+
+    private void OnEnable()
+    {
+        if (backAction != null) backAction.action.Enable();
+    }
+
+    private void OnDisable()
+    {
+        if (backAction != null) backAction.action.Disable();
+    }
 
     private void Start()
     {
@@ -40,9 +52,7 @@ public class MainMenu : MonoBehaviour
 
     private void Update()
     {
-        bool back = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ||
-            (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);
-        if (back && !loading) ShowHome();
+        if (backAction != null && backAction.action.WasPressedThisFrame() && !loading) ShowHome();
     }
 
     /// <summary>Continues saved progress, or starts the first session when no save exists.</summary>
