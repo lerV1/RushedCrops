@@ -283,7 +283,7 @@ public class MiniCrop : MonoBehaviour, IInteractable
         if (state != State.Dead && !playerHealth.IsDead
             && CanBite(attackRange + LeaveAttackGap))
         {
-            playerHealth.TakeDamage(damage);
+            playerHealth.TakeDamage(damage, displayName);
         }
         biting = false;
     }

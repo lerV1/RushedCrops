@@ -237,7 +237,7 @@ public class BossCombat : MonoBehaviour
         GameAudio.Play(Sfx.BossSlam, centre);
         if (FlatDistanceBetween(player.position, centre) <= attack.reach + PlayerRadius)
         {
-            playerHealth.TakeDamage(attack.damage);
+            playerHealth.TakeDamage(attack.damage, boss.DisplayName);
         }
         yield return new WaitForSeconds(0.2f);
         HideMarkers();
@@ -306,7 +306,7 @@ public class BossCombat : MonoBehaviour
             if (!hit && FlatDistance(player.position) <= bodyRadius + PlayerRadius)
             {
                 hit = true;
-                playerHealth.TakeDamage(attack.damage);
+                playerHealth.TakeDamage(attack.damage, boss.DisplayName);
             }
             yield return null;
         }
@@ -342,7 +342,7 @@ public class BossCombat : MonoBehaviour
             if (!hit && gap <= 0.8f && PlayerOnGround())
             {
                 hit = true;
-                playerHealth.TakeDamage(attack.damage);
+                playerHealth.TakeDamage(attack.damage, boss.DisplayName);
             }
             yield return null;
         }

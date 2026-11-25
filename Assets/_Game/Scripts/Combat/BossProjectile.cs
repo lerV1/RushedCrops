@@ -45,7 +45,8 @@ public class BossProjectile : MonoBehaviour
                 Health player = hit.collider.GetComponentInParent<Health>();
                 if (player != null)
                 {
-                    player.TakeDamage(damage);
+                    CropBoss boss = shooter != null ? shooter.GetComponentInParent<CropBoss>() : null;
+                    player.TakeDamage(damage, boss != null ? boss.DisplayName : "Boss projectile");
                 }
             }
             GameAudio.Play(Sfx.ShotLand, hit.point);

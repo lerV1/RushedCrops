@@ -12,6 +12,7 @@ public class Health : MonoBehaviour
     public int MaxHealth => maxHealth;
     public int CurrentHealth => currentHealth;
     public bool IsDead => currentHealth <= 0;
+    public string LastDamageCause { get; private set; } = "Unknown";
 
     // Current health, then max health.
     public event Action<int, int> HealthChanged;
@@ -26,12 +27,18 @@ public class Health : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
+        TakeDamage(amount, "Unknown");
+    }
+
+    public void TakeDamage(int amount, string cause)
+    {
         // A dead object can't be hurt again, which also stops Died firing twice.
         if (amount <= 0 || IsDead)
         {
             return;
         }
 
+        LastDamageCause = string.IsNullOrWhiteSpace(cause) ? "Unknown" : cause;
         int before = currentHealth;
         currentHealth = Mathf.Max(currentHealth - amount, 0);
         HealthChanged?.Invoke(currentHealth, maxHealth);

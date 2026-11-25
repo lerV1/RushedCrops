@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class ObjectiveGuide : MonoBehaviour
 {
@@ -16,15 +16,12 @@ public class ObjectiveGuide : MonoBehaviour
 
     [Header("Display")]
     [SerializeField] private GuideArrow arrow;
-    [SerializeField] private Key skipKey = Key.F1;
+    [SerializeField] private Text objectiveText;
     [SerializeField, Min(0.05f)] private float refreshSeconds = 0.2f;
 
     private int step;
     private int harvestCountAtFarmStart;
     private float nextRefresh;
-    private GUIStyle panelStyle;
-    private GUIStyle objectiveStyle;
-    private GUIStyle skipStyle;
 
     private void Awake()
     {
@@ -35,7 +32,7 @@ public class ObjectiveGuide : MonoBehaviour
         }
 
         if (inventory == null || player == null || gatheringRoot == null || farmField == null
-            || combatTarget == null || barnRepair == null || bossTube == null || arrow == null)
+            || combatTarget == null || barnRepair == null || bossTube == null || arrow == null || objectiveText == null)
         {
             Debug.LogError("ObjectiveGuide needs its scene targets and GuideArrow assigned.", this);
             enabled = false;
@@ -47,12 +44,6 @@ public class ObjectiveGuide : MonoBehaviour
 
     private void Update()
     {
-        if (Keyboard.current != null && Keyboard.current[skipKey].wasPressedThisFrame)
-        {
-            FinishGuide();
-            return;
-        }
-
         if (Time.unscaledTime < nextRefresh)
         {
             return;
@@ -115,11 +106,9 @@ public class ObjectiveGuide : MonoBehaviour
                 break;
         }
 
-        currentObjective = objective;
+        objectiveText.text = objective;
         arrow.SetTarget(target);
     }
-
-    private string currentObjective;
 
     private bool HasWoodAndStone()
     {
@@ -239,37 +228,5 @@ public class ObjectiveGuide : MonoBehaviour
         PlayerPrefs.Save();
         arrow.Clear();
         gameObject.SetActive(false);
-    }
-
-    private void OnGUI()
-    {
-        if (!enabled || string.IsNullOrEmpty(currentObjective))
-        {
-            return;
-        }
-
-        if (panelStyle == null)
-        {
-            panelStyle = new GUIStyle(GUI.skin.box);
-            objectiveStyle = new GUIStyle(GUI.skin.label)
-            {
-                alignment = TextAnchor.MiddleCenter,
-                fontSize = 18,
-                fontStyle = FontStyle.Bold,
-                wordWrap = false
-            };
-            objectiveStyle.normal.textColor = Color.white;
-            skipStyle = new GUIStyle(GUI.skin.label)
-            {
-                alignment = TextAnchor.MiddleCenter,
-                fontSize = 11
-            };
-            skipStyle.normal.textColor = new Color(1f, 1f, 1f, 0.72f);
-        }
-
-        Rect panel = new Rect(Screen.width * 0.5f - 310f, 62f, 620f, 72f);
-        GUI.Box(panel, GUIContent.none, panelStyle);
-        GUI.Label(new Rect(panel.x + 16f, panel.y + 5f, panel.width - 32f, 42f), currentObjective, objectiveStyle);
-        GUI.Label(new Rect(panel.x + 16f, panel.y + 43f, panel.width - 32f, 20f), "F1 — skip guide", skipStyle);
     }
 }

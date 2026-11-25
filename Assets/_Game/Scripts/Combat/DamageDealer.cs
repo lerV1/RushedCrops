@@ -5,6 +5,7 @@ using UnityEngine;
 public class DamageDealer : MonoBehaviour
 {
     [SerializeField, Min(1)] private int damage = 10;
+    [SerializeField] private string deathCause = "Hazard";
 
     public int Damage => damage;
 
@@ -31,6 +32,6 @@ public class DamageDealer : MonoBehaviour
             return;
         }
 
-        target.TakeDamage(damage);
+        target.TakeDamage(damage, deathCause);
     }
 }
