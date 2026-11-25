@@ -27,8 +27,12 @@ public class InventoryHud : MonoBehaviour
 
     [Header("Hotbar")]
     [SerializeField] private HotbarSlot[] slots = new HotbarSlot[Inventory.SlotCount];
-    [SerializeField] private Color normalColor = new Color(0.08f, 0.07f, 0.05f, 0.72f);
-    [SerializeField] private Color selectedColor = new Color(0.62f, 0.43f, 0.12f, 0.92f);
+    [SerializeField] private Color normalColor = new Color(0.16f, 0.13f, 0.1f, 0.86f);
+    [SerializeField] private Color selectedColor = new Color(0.86f, 0.62f, 0.22f, 0.95f);
+    [Tooltip("How much bigger the selected slot grows, so it is easy to spot.")]
+    [SerializeField, Min(1f)] private float selectedScale = 1.12f;
+    [Tooltip("How fast slots grow and shrink when the selection changes.")]
+    [SerializeField, Min(1f)] private float popSpeed = 14f;
     [Tooltip("Optional text above the hotbar with the name of the selected item.")]
     [SerializeField] private Text selectedItemText;
 
@@ -50,6 +54,20 @@ public class InventoryHud : MonoBehaviour
         if (inventory != null)
         {
             inventory.Changed -= Refresh;
+        }
+    }
+
+    // The selected slot eases up to its bigger size and the others back down.
+    private void Update()
+    {
+        int shown = Mathf.Min(slots.Length, Inventory.SlotCount);
+        for (int i = 0; i < shown; i++)
+        {
+            if (slots[i] == null || slots[i].background == null) continue;
+            Transform slot = slots[i].background.transform;
+            float target = i == inventory.SelectedSlot ? selectedScale : 1f;
+            float now = Mathf.MoveTowards(slot.localScale.x, target, Time.unscaledDeltaTime * popSpeed * (selectedScale - 1f));
+            slot.localScale = new Vector3(now, now, 1f);
         }
     }
 
