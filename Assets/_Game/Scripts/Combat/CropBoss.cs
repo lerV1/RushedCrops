@@ -43,6 +43,7 @@ public class CropBoss : MonoBehaviour, IInteractable
     // Every living boss in the scene, for the boss health bar.
     public static readonly List<CropBoss> All = new List<CropBoss>();
 
+    private GameManager gameManager;
     private Health health;
     private Vector3 modelScale;
     private Vector3 modelPosition;
@@ -55,6 +56,8 @@ public class CropBoss : MonoBehaviour, IInteractable
     public string DisplayName => displayName;
     public Health Health => health;
     public bool IsDead => health.IsDead;
+    public bool IsGrownBoss => removeAfterDeath;
+    public ResourceType SeedResource { get; private set; } = (ResourceType)(-1);
 
     public bool TryCapture()
     {
@@ -112,6 +115,14 @@ public class CropBoss : MonoBehaviour, IInteractable
         inventory = sharedInventory;
     }
 
+    /// <summary>Connects a grown boss to its inventory and remembers the seed used to grow it.</summary>
+    public void Setup(Inventory sharedInventory, ResourceType seedResource, GameManager progress)
+    {
+        inventory = sharedInventory;
+        SeedResource = seedResource;
+        gameManager = progress;
+    }
+
     public bool CanInteract => false;
 
     public string GetPrompt() => health.IsDead ? null : $"{displayName} ({health.CurrentHealth}/{health.MaxHealth} HP)";
@@ -166,9 +177,9 @@ public class CropBoss : MonoBehaviour, IInteractable
         GameAudio.Play(Sfx.BossDie, transform.position + Vector3.up);
         GameEffects.Play(Effect.Sparkle, transform.position + Vector3.up * 1.5f, 2.5f);
         // Every boss unlocks the barn's last repair; only the required ones count toward winning.
-        if (GameManager.Instance != null)
+        if (gameManager != null)
         {
-            GameManager.Instance.RecordBossDefeat(displayName, countsTowardVictory);
+            gameManager.RecordBossDefeat(displayName, countsTowardVictory);
         }
         StartCoroutine(Sink());
     }

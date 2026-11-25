@@ -13,6 +13,7 @@ public class FoodEater : MonoBehaviour
         [Min(1)] public int healing;
     }
 
+    [SerializeField] private InputActionReference eatAction;
     [SerializeField] private Health health;
     [SerializeField] private Inventory inventory;
     [SerializeField] private Text hintText;
@@ -32,19 +33,21 @@ public class FoodEater : MonoBehaviour
 
     private void OnEnable()
     {
-        if (health == null || inventory == null)
+        if (eatAction == null || health == null || inventory == null)
         {
-            Debug.LogError("FoodEater needs the player's Health and shared Inventory assigned.", this);
+            Debug.LogError("FoodEater needs the Eat Food action, player Health and shared Inventory assigned.", this);
             enabled = false;
             return;
         }
 
+        eatAction.action.Enable();
         health.HealthChanged += OnStateChanged;
         inventory.Changed += OnStateChanged;
     }
 
     private void OnDisable()
     {
+        if (eatAction != null) eatAction.action.Disable();
         if (health != null)
         {
             health.HealthChanged -= OnStateChanged;
@@ -63,7 +66,7 @@ public class FoodEater : MonoBehaviour
 
     private void Update()
     {
-        if (Keyboard.current != null && Keyboard.current.hKey.wasPressedThisFrame)
+        if (eatAction.action.WasPressedThisFrame())
         {
             TryEat();
         }
@@ -140,7 +143,7 @@ public class FoodEater : MonoBehaviour
             FoodHealing food = foodValues[i];
             if (food.healing > 0 && inventory.GetCount(food.food) > 0)
             {
-                SetHint($"[H] Eat {ResourceTypes.DisplayName(food.food)} (+{food.healing} HP)");
+                SetHint($"[{eatAction.action.GetBindingDisplayString(0)}] Eat {ResourceTypes.DisplayName(food.food)} (+{food.healing} HP)");
                 return;
             }
         }

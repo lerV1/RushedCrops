@@ -9,6 +9,7 @@ public class PlayerTools : MonoBehaviour
 {
     [Header("Input")]
     [SerializeField] private InputActionReference useAction;
+    [SerializeField] private InputActionReference[] slotActions = new InputActionReference[Inventory.SlotCount];
 
     [Header("References")]
     [Tooltip("The scene's shared Inventory. Its selected hotbar slot is what the player holds.")]
@@ -30,8 +31,6 @@ public class PlayerTools : MonoBehaviour
     [Tooltip("How many squares one full can waters. It starts empty; fill it at the river.")]
     [SerializeField, Min(1)] private int canCapacity = 6;
 
-    private static readonly Key[] SlotKeys = { Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5 };
-
     public ToolType Equipped { get; private set; } = ToolType.None;
 
     public Inventory Inventory => inventory;
@@ -50,6 +49,22 @@ public class PlayerTools : MonoBehaviour
             return;
         }
 
+        if (slotActions == null || slotActions.Length != Inventory.SlotCount)
+        {
+            Debug.LogError("PlayerTools needs one Select Slot action per hotbar slot.", this);
+            enabled = false;
+            return;
+        }
+        foreach (InputActionReference action in slotActions)
+        {
+            if (action == null)
+            {
+                Debug.LogError("PlayerTools has a missing Select Slot action.", this);
+                enabled = false;
+                return;
+            }
+        }
+        foreach (InputActionReference action in slotActions) action.action.Enable();
         useAction.action.Enable();
         useAction.action.performed += OnUse;
     }
@@ -58,6 +73,11 @@ public class PlayerTools : MonoBehaviour
     {
         // Death disables tools; a pending harvest or watering action must stop too.
         StopAllCoroutines();
+        if (slotActions != null)
+        {
+            foreach (InputActionReference action in slotActions)
+                if (action != null) action.action.Disable();
+        }
         if (useAction != null)
         {
             useAction.action.performed -= OnUse;
@@ -66,24 +86,15 @@ public class PlayerTools : MonoBehaviour
 
     private void Update()
     {
-        ReadSlotKeys();
+        ReadSlotActions();
         HoldSelectedTool();
     }
 
-    private void ReadSlotKeys()
+    private void ReadSlotActions()
     {
-        Keyboard keyboard = Keyboard.current;
-        if (keyboard == null)
+        for (int i = 0; i < slotActions.Length; i++)
         {
-            return;
-        }
-
-        for (int i = 0; i < SlotKeys.Length; i++)
-        {
-            if (keyboard[SlotKeys[i]].wasPressedThisFrame)
-            {
-                inventory.SelectSlot(i);
-            }
+            if (slotActions[i].action.WasPressedThisFrame()) inventory.SelectSlot(i);
         }
     }
 

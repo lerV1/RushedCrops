@@ -8,12 +8,11 @@ public class FireFlicker : MonoBehaviour
     [SerializeField, Min(0f)] private float nightIntensity = 3.2f;
     [SerializeField, Range(0f, 1f)] private float flicker = 0.3f;
 
-    private EnvironmentCycle cycle;
+    [SerializeField] private EnvironmentCycle cycle;
     private float seed;
 
     private void Awake()
     {
-        cycle = FindAnyObjectByType<EnvironmentCycle>();
         seed = Random.value * 100f;
     }
 

@@ -41,6 +41,7 @@ public class BarnRepair : MonoBehaviour, IInteractable
 
     [Tooltip("The scene's shared Inventory. Jobs are paid from it.")]
     [SerializeField] private Inventory inventory;
+    [SerializeField] private GameManager gameManager;
 
     [Tooltip("The jobs in the order they are done. GameManager's Barn Repair Stages must match the count.")]
     [SerializeField] private Job[] jobs = Array.Empty<Job>();
@@ -56,9 +57,9 @@ public class BarnRepair : MonoBehaviour, IInteractable
     private bool listening;
 
     public IReadOnlyList<Job> Jobs => jobs;
-    public int JobsDone => GameManager.Instance != null ? GameManager.Instance.BarnRepairs : 0;
+    public int JobsDone => gameManager != null ? gameManager.BarnRepairs : 0;
     public Job NextJob => JobsDone < jobs.Length ? jobs[JobsDone] : null;
-    private bool BossBeaten => GameManager.Instance != null && GameManager.Instance.IsBossDefeated;
+    private bool BossBeaten => gameManager != null && gameManager.IsBossDefeated;
 
     private void Awake()
     {
@@ -69,34 +70,34 @@ public class BarnRepair : MonoBehaviour, IInteractable
         }
     }
 
-    // GameManager's Awake runs first (DefaultExecutionOrder), so it exists by now.
+    // The assigned GameManager initializes its progress before Start.
     private void Start()
     {
         if (!enabled)
         {
             return;
         }
-        if (GameManager.Instance == null)
+        if (gameManager == null)
         {
             Debug.LogError("BarnRepair needs a GameManager in the scene to count the repairs.", this);
             enabled = false;
             return;
         }
-        if (GameManager.Instance.BarnRepairStages != jobs.Length)
+        if (gameManager.BarnRepairStages != jobs.Length)
         {
-            Debug.LogWarning($"The barn has {jobs.Length} jobs but GameManager expects {GameManager.Instance.BarnRepairStages} repairs.", this);
+            Debug.LogWarning($"The barn has {jobs.Length} jobs but GameManager expects {gameManager.BarnRepairStages} repairs.", this);
         }
 
-        GameManager.Instance.BarnRepaired += OnBarnRepaired;
+        gameManager.BarnRepaired += OnBarnRepaired;
         listening = true;
         ShowRepairs(JobsDone);
     }
 
     private void OnDestroy()
     {
-        if (listening && GameManager.Instance != null)
+        if (listening && gameManager != null)
         {
-            GameManager.Instance.BarnRepaired -= OnBarnRepaired;
+            gameManager.BarnRepaired -= OnBarnRepaired;
         }
     }
 
@@ -148,7 +149,7 @@ public class BarnRepair : MonoBehaviour, IInteractable
         GameEffects.Play(Effect.Sparkle, transform.position + Vector3.up * 3f, 3f);
         GameAudio.Play(Sfx.Repair, transform.position + Vector3.up * 2f);
         messageUntil = Time.time + messageSeconds;
-        GameManager.Instance.RecordBarnRepair();
+        gameManager.RecordBarnRepair();
     }
 
     private static string CostText(IReadOnlyList<ResourceAmount> cost)

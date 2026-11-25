@@ -17,7 +17,14 @@ public class FarmPlot : MonoBehaviour
     [Tooltip("The soil colour of a watered square.")]
     [SerializeField] private Material wetSoil;
 
+    public event Action Harvested;
+
+    [SerializeField] private Health playerHealth;
+    [SerializeField] private GameManager gameManager;
+
     public Inventory Inventory => inventory;
+    public Health PlayerHealth => playerHealth;
+    public GameManager GameManager => gameManager;
     public Material WetSoil => wetSoil;
 
     public float GrowthSpeed
@@ -33,6 +40,12 @@ public class FarmPlot : MonoBehaviour
             Debug.LogError($"{name} needs the Inventory dragged into its Inventory field.", this);
             enabled = false;
         }
+    }
+
+    // Only FarmTile calls this after a successful harvest, so buying produce does not count.
+    public void RecordHarvest()
+    {
+        Harvested?.Invoke();
     }
 
     public bool CanGrow(CropData crop) => crop != null && Array.IndexOf(crops, crop) >= 0;

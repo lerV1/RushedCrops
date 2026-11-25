@@ -7,7 +7,6 @@ using UnityEngine;
 [DefaultExecutionOrder(-100)]
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance { get; private set; }
 
     [Header("Barn")]
     [SerializeField, Min(1)] private int barnRepairStages = 3;
@@ -35,23 +34,7 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Debug.LogWarning("A second GameManager was removed. Keep only one in the scene.", this);
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
         ResetState();
-    }
-
-    private void OnDestroy()
-    {
-        if (Instance == this)
-        {
-            Instance = null;
-        }
     }
 
     public void ResetState()

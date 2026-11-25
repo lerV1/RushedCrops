@@ -7,6 +7,7 @@ public class ObjectiveGuide : MonoBehaviour
 
     [Header("Progress")]
     [SerializeField] private Inventory inventory;
+    [SerializeField] private GameManager gameManager;
     [SerializeField] private Transform player;
     [SerializeField] private Transform gatheringRoot;
     [SerializeField] private FarmField farmField;
@@ -20,7 +21,7 @@ public class ObjectiveGuide : MonoBehaviour
     [SerializeField, Min(0.05f)] private float refreshSeconds = 0.2f;
 
     private int step;
-    private int harvestCountAtFarmStart;
+    private FarmPlot plot;
     private float nextRefresh;
 
     private void Awake()
@@ -39,6 +40,31 @@ public class ObjectiveGuide : MonoBehaviour
             return;
         }
 
+        plot = farmField.GetComponent<FarmPlot>();
+        if (plot == null)
+        {
+            Debug.LogError("ObjectiveGuide needs a FarmPlot on its FarmField.", this);
+            enabled = false;
+            return;
+        }
+        RefreshObjective();
+    }
+
+    private void OnEnable()
+    {
+        if (plot != null) plot.Harvested += OnHarvested;
+    }
+
+    private void OnDisable()
+    {
+        if (plot != null) plot.Harvested -= OnHarvested;
+        if (arrow != null) arrow.Clear();
+    }
+
+    private void OnHarvested()
+    {
+        if (step != 1) return;
+        step = 2;
         RefreshObjective();
     }
 
@@ -58,14 +84,9 @@ public class ObjectiveGuide : MonoBehaviour
         if (step == 0 && HasWoodAndStone())
         {
             step = 1;
-            harvestCountAtFarmStart = GetHarvestCount();
-        }
-        else if (step == 1 && GetHarvestCount() > harvestCountAtFarmStart)
-        {
-            step = 2;
         }
         else if (step == 2 && (HasDefeatedMiniCrop()
-            || (GameManager.Instance != null && GameManager.Instance.IsBossDefeated)))
+            || (gameManager != null && gameManager.IsBossDefeated)))
         {
             step = 3;
         }
@@ -200,16 +221,6 @@ public class ObjectiveGuide : MonoBehaviour
         return objective;
     }
 
-    private int GetHarvestCount()
-    {
-        return inventory.GetCount(ResourceType.Carrots)
-            + inventory.GetCount(ResourceType.Tomatoes)
-            + inventory.GetCount(ResourceType.Beets)
-            + inventory.GetCount(ResourceType.Cabbages)
-            + inventory.GetCount(ResourceType.Onions)
-            + inventory.GetCount(ResourceType.Wheat);
-    }
-
     private static bool HasDefeatedMiniCrop()
     {
         foreach (MiniCrop crop in FindObjectsByType<MiniCrop>(FindObjectsSortMode.None))
@@ -229,4 +240,5 @@ public class ObjectiveGuide : MonoBehaviour
         arrow.Clear();
         gameObject.SetActive(false);
     }
+
 }

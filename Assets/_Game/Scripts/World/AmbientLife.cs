@@ -9,18 +9,13 @@ public class AmbientLife : MonoBehaviour
     [SerializeField, Min(0f)] private float dayRate = 6f;
     [SerializeField, Min(0f)] private float nightRate = 14f;
 
-    private EnvironmentCycle cycle;
-    private Transform follow;
+    [SerializeField] private EnvironmentCycle cycle;
+    [SerializeField] private Transform follow;
     private float night;
 
-    private void Awake() => cycle = FindAnyObjectByType<EnvironmentCycle>();
 
     private void LateUpdate()
     {
-        if (follow == null && Camera.main != null)
-        {
-            follow = Camera.main.transform;
-        }
         if (follow != null)
         {
             transform.position = new Vector3(follow.position.x, follow.position.y - 1f, follow.position.z);

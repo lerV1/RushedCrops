@@ -17,6 +17,7 @@ public class MerchantShopUI : MonoBehaviour
     [Tooltip("What the merchant says while the window is open. Optional.")]
     [SerializeField] private Text remark;
     [SerializeField] private Button closeButton;
+    [SerializeField] private InputActionReference closeShopAction;
 
     [Header("Rows")]
     [Tooltip("Where the crops he buys are listed.")]
@@ -27,6 +28,7 @@ public class MerchantShopUI : MonoBehaviour
     [SerializeField] private GameObject rowTemplate;
 
     [Header("Player")]
+    [SerializeField] private RespawnController respawn;
     [Tooltip("Player scripts switched off while the window is open (movement, looking, tools...).")]
     [SerializeField] private Behaviour[] pauseWhileOpen = new Behaviour[0];
 
@@ -34,6 +36,7 @@ public class MerchantShopUI : MonoBehaviour
     private Merchant merchant;
     private int openedOnFrame;
     private int shownDay;
+    private bool[] previousEnabled;
 
     public bool IsOpen => panel != null && panel.activeSelf;
     public Merchant Merchant => merchant;
@@ -52,9 +55,9 @@ public class MerchantShopUI : MonoBehaviour
 
     private void Awake()
     {
-        if (panel == null || rowTemplate == null || sellList == null || buyList == null)
+        if (panel == null || rowTemplate == null || sellList == null || buyList == null || respawn == null || closeShopAction == null)
         {
-            Debug.LogError("MerchantShopUI needs its panel, lists and row template assigned.", this);
+            Debug.LogError("MerchantShopUI needs its panel, lists, row template and player RespawnController assigned.", this);
             enabled = false;
             return;
         }
@@ -64,6 +67,23 @@ public class MerchantShopUI : MonoBehaviour
         {
             closeButton.onClick.AddListener(Close);
         }
+    }
+
+    private void OnEnable()
+    {
+        if (closeShopAction != null) closeShopAction.action.Enable();
+        if (respawn == null) return;
+        respawn.DeathStarted += Close;
+        respawn.Respawned += RestorePlayerControls;
+    }
+
+    private void OnDisable()
+    {
+        if (closeShopAction != null) closeShopAction.action.Disable();
+        Close();
+        if (respawn == null) return;
+        respawn.DeathStarted -= Close;
+        respawn.Respawned -= RestorePlayerControls;
     }
 
     private void Update()
@@ -89,7 +109,7 @@ public class MerchantShopUI : MonoBehaviour
 
     public void Open(Merchant trader)
     {
-        if (IsOpen || trader == null)
+        if (IsOpen || trader == null || (respawn != null && respawn.IsAwaitingRespawn))
         {
             return;
         }
@@ -124,7 +144,7 @@ public class MerchantShopUI : MonoBehaviour
         panel.SetActive(false);
         GameAudio.Play2D(Sfx.ShopClose);
         SetPlayerPaused(false);
-        if (EventSystem.current != null)
+        if (EventSystem.current != null && (respawn == null || !respawn.IsAwaitingRespawn))
         {
             EventSystem.current.SetSelectedGameObject(null);
         }
@@ -149,22 +169,35 @@ public class MerchantShopUI : MonoBehaviour
 
     private void SetPlayerPaused(bool paused)
     {
-        // Turning PlayerLook off also frees the mouse cursor; turning it back on locks it again.
-        foreach (Behaviour behaviour in pauseWhileOpen)
+        if (!paused)
         {
-            if (behaviour != null)
-            {
-                behaviour.enabled = !paused;
-            }
+            RestorePlayerControls();
+            return;
+        }
+
+        previousEnabled = new bool[pauseWhileOpen.Length];
+        for (int i = 0; i < pauseWhileOpen.Length; i++)
+        {
+            if (pauseWhileOpen[i] == null) continue;
+            previousEnabled[i] = pauseWhileOpen[i].enabled;
+            pauseWhileOpen[i].enabled = false;
         }
     }
 
-    private static bool ClosePressed()
+    private void RestorePlayerControls()
     {
-        Keyboard keyboard = Keyboard.current;
-        Gamepad gamepad = Gamepad.current;
-        return (keyboard != null && (keyboard.escapeKey.wasPressedThisFrame || keyboard.eKey.wasPressedThisFrame))
-            || (gamepad != null && gamepad.buttonEast.wasPressedThisFrame);
+        // Death still owns the controls. Restore the shop's changes after respawning.
+        if (previousEnabled == null || (respawn != null && respawn.IsAwaitingRespawn)) return;
+        for (int i = 0; i < pauseWhileOpen.Length; i++)
+        {
+            if (pauseWhileOpen[i] != null) pauseWhileOpen[i].enabled = previousEnabled[i];
+        }
+        previousEnabled = null;
+    }
+
+    private bool ClosePressed()
+    {
+        return closeShopAction.action.WasPressedThisFrame();
     }
 
     private void BuildRows()

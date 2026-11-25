@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 [Serializable]
 public class SaveData
 {
-    public int version = 1;
+    public int version = 2;
     public int coins;
     public int selectedSlot;
     public int[] slotTypes;
@@ -17,6 +18,7 @@ public class SaveData
     public int unlockedTubeCount;
     public TubeData[] tubes;
     public CropTileData[] cropTiles;
+    public BossData[] activeBosses;
     public int waterLeft;
     public int playerHealth;
     public Vector3 playerPosition;
@@ -31,6 +33,17 @@ public class SaveData
         public bool placed;
         public int storedSeeds;
         public float seedTimer;
+    }
+
+    [Serializable]
+    public class BossData
+    {
+        public int seedResource;
+        public Vector3 position;
+        public Quaternion rotation;
+        public int health;
+        public Vector3 homePosition;
+        public Quaternion homeRotation;
     }
 
     [Serializable]
@@ -64,10 +77,28 @@ public class SaveSystem : MonoBehaviour
 
     [Header("Save controls")]
     [SerializeField, Min(1f)] private float autosaveSeconds = 30f;
-    [SerializeField] private Key saveKey = Key.F5;
-    [SerializeField] private Key deleteSaveKey = Key.Delete;
+    [SerializeField] private InputActionReference saveAction;
+    [SerializeField] private InputActionReference deleteSaveAction;
 
     private float autosaveTimer;
+
+    private void OnEnable()
+    {
+        if (saveAction == null || deleteSaveAction == null)
+        {
+            Debug.LogError("SaveSystem needs its Save Game and Delete Save actions assigned.", this);
+            enabled = false;
+            return;
+        }
+        saveAction.action.Enable();
+        deleteSaveAction.action.Enable();
+    }
+
+    private void OnDisable()
+    {
+        if (saveAction != null) saveAction.action.Disable();
+        if (deleteSaveAction != null) deleteSaveAction.action.Disable();
+    }
 
     private void Start()
     {
@@ -84,12 +115,11 @@ public class SaveSystem : MonoBehaviour
 
     private void Update()
     {
-        Keyboard keyboard = Keyboard.current;
-        if (keyboard != null && keyboard[saveKey].wasPressedThisFrame)
+        if (saveAction.action.WasPressedThisFrame())
         {
             SaveNow();
         }
-        if (keyboard != null && keyboard[deleteSaveKey].wasPressedThisFrame)
+        if (deleteSaveAction.action.WasPressedThisFrame())
         {
             DeleteSave();
         }
@@ -132,6 +162,7 @@ public class SaveSystem : MonoBehaviour
             unlockedTubeCount = barnTubes.unlockedTubeCount,
             tubes = CaptureTubes(),
             cropTiles = farmField.GetSaveData(),
+            activeBosses = CaptureBosses(),
             waterLeft = playerTools.WaterLeft,
             // A closed death screen resumes at the checkpoint, never at the fatal position.
             playerHealth = savingAfterDeath ? playerHealth.MaxHealth : playerHealth.CurrentHealth,
@@ -163,7 +194,7 @@ public class SaveSystem : MonoBehaviour
         {
             return false;
         }
-        if (data == null || data.version != 1 || data.slotTypes == null || data.slotCounts == null ||
+        if (data == null || data.version < 1 || data.version > 2 || data.slotTypes == null || data.slotCounts == null ||
             data.slotTypes.Length != Inventory.SlotCount || data.slotCounts.Length != Inventory.SlotCount)
         {
             return false;
@@ -175,6 +206,7 @@ public class SaveSystem : MonoBehaviour
         barnTubes.RestoreUnlockedTubeCount(data.unlockedTubeCount, gameManager.BarnRepairs);
         RestoreTubes(data.tubes);
         farmField.RestoreSaveData(data.cropTiles);
+        RestoreBosses(data.activeBosses);
         playerTools.RestoreWater(data.waterLeft);
         playerHealth.RestoreHealth(data.playerHealth);
         respawnController.RestoreSaveState(data.playerPosition, data.playerRotation, data.checkpointPosition, data.checkpointRotation, data.hasCheckpoint);
@@ -220,6 +252,73 @@ public class SaveSystem : MonoBehaviour
             sceneTubes[i].RestoreState(saved != null && saved.placed,
                 saved != null ? saved.storedSeeds : 0,
                 saved != null ? saved.seedTimer : 0f);
+        }
+    }
+
+    private SaveData.BossData[] CaptureBosses()
+    {
+        var savedBosses = new List<SaveData.BossData>();
+        foreach (CropBoss boss in CropBoss.All)
+        {
+            if (!boss.IsGrownBoss || boss.IsDead || (int)boss.SeedResource < 0)
+            {
+                continue;
+            }
+
+            BossCombat combat = boss.GetComponent<BossCombat>();
+            savedBosses.Add(new SaveData.BossData
+            {
+                seedResource = (int)boss.SeedResource,
+                position = boss.transform.position,
+                rotation = boss.transform.rotation,
+                health = boss.Health.CurrentHealth,
+                homePosition = combat != null ? combat.HomePosition : boss.transform.position,
+                homeRotation = combat != null ? combat.HomeRotation : boss.transform.rotation
+            });
+        }
+        return savedBosses.ToArray();
+    }
+
+    private void RestoreBosses(SaveData.BossData[] savedBosses)
+    {
+        // Loading replaces the current fights. Disabling first removes them from All
+        // immediately, without killing them, dropping loot or recording a victory.
+        foreach (CropBoss boss in CropBoss.All.ToArray())
+        {
+            if (boss.IsGrownBoss && !boss.IsDead)
+            {
+                boss.gameObject.SetActive(false);
+                Destroy(boss.gameObject);
+            }
+        }
+        // Version 1 saves have no active-boss list.
+        if (savedBosses == null)
+        {
+            return;
+        }
+
+        FarmPlot plot = farmField.GetComponent<FarmPlot>();
+        foreach (SaveData.BossData saved in savedBosses)
+        {
+            if (saved == null || saved.health <= 0)
+            {
+                continue;
+            }
+            CropData seed = plot.FindCrop((ResourceType)saved.seedResource);
+            if (seed == null || !seed.IsBossSeed)
+            {
+                continue;
+            }
+
+            CropBoss boss = Instantiate(seed.GrownBoss, saved.position, saved.rotation, plot.transform.parent);
+            boss.Setup(inventory, seed.SeedResource, gameManager);
+            boss.Health.RestoreHealth(saved.health);
+            BossCombat combat = boss.GetComponent<BossCombat>();
+            if (combat != null)
+            {
+                combat.SetPlayer(playerHealth);
+                combat.RestoreHome(saved.homePosition, saved.homeRotation);
+            }
         }
     }
 

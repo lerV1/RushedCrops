@@ -277,6 +277,7 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
         GameEffects.Play(Effect.Sparkle, transform.position + Vector3.up * 0.5f, 0.6f);
         GameAudio.Play(Sfx.Harvest, transform.position);
         ClearSquare();
+        plot.RecordHarvest();
         return true;
     }
 
@@ -288,7 +289,8 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
         GameEffects.Play(Effect.Dirt, transform.position + Vector3.up * 0.2f, 3f);
         GameEffects.Play(Effect.Dust, transform.position + Vector3.up * 0.3f, 1.5f);
         GameAudio.Play(Sfx.BossEmerge, transform.position + Vector3.up);
-        boss.Setup(plot.Inventory);
+        boss.Setup(plot.Inventory, Crop.SeedResource, plot.GameManager);
+        boss.GetComponent<BossCombat>().SetPlayer(plot.PlayerHealth);
         ClearSquare();
         return boss;
     }

@@ -539,6 +539,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerTools
   useAction: {fileID: 4088291247242398431, guid: f5efa458efab1e94091419e01d045740, type: 3}
+  slotActions:
+  - {fileID: 8793711796043367285, guid: f5efa458efab1e94091419e01d045740, type: 3}
+  - {fileID: 3435359906842964738, guid: f5efa458efab1e94091419e01d045740, type: 3}
+  - {fileID: -4988941543799580769, guid: f5efa458efab1e94091419e01d045740, type: 3}
+  - {fileID: 2217491394910506717, guid: f5efa458efab1e94091419e01d045740, type: 3}
+  - {fileID: 1354812399346111164, guid: f5efa458efab1e94091419e01d045740, type: 3}
   inventory: {fileID: 0}
   interactor: {fileID: 2143054289736561575}
   hands: {fileID: 2305179911293612690}
@@ -587,6 +593,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MeleeAttack
   viewPoint: {fileID: 5761688239629393836}
   damage: 18
+  comboDamageBonus: 6
+  comboWindow: 1.5
+  comboSteps: 3
   knockbackStrength: 6
   reach: 2
   hitboxSize: {x: 1, y: 1.2}
@@ -618,6 +627,8 @@ MonoBehaviour:
   blockingLayers:
     serializedVersion: 2
     m_Bits: 4294967291
+  dropAction: {fileID: -1433999996633476000, guid: f5efa458efab1e94091419e01d045740, type: 3}
+  dropStackModifier: {fileID: 6595677683431240965, guid: f5efa458efab1e94091419e01d045740, type: 3}
 --- !u!1 &1775677701392528369
 GameObject:
   m_ObjectHideFlags: 0

@@ -2,64 +2,61 @@ using UnityEngine;
 
 // The little bursts that make actions feel solid: wood chips off a chopped tree, stone chips off a rock,
 // dirt from the hoe, water from the can, leaves from a harvest, dust from a boss's slam. One particle system
-// per kind is made at start and reused, so a burst costs nothing to spawn. Call GameEffects.Play from
-// anywhere; with no GameEffects in the scene (as in some tests) it does nothing.
+// per kind is assigned in the Inspector and reused. Call GameEffects.Play from
+// anywhere; with no active GameEffects in the scene it does nothing.
 public enum Effect { WoodChips, StoneChips, Dirt, Leaves, Water, Dust, Sparkle, Juice }
 
 public class GameEffects : MonoBehaviour
 {
-    [Tooltip("Particles that add light: sparkles.")]
-    [SerializeField] private Material glow;
-    [Tooltip("Particles that blend over the scene: chips, dirt, leaves, water, dust.")]
-    [SerializeField] private Material soft;
+    [Tooltip("One saved particle system per Effect, in the enum's order.")]
+    [SerializeField] private ParticleSystem[] systems;
+    [Tooltip("Particles emitted by a normal burst of each Effect, in the same order.")]
+    [SerializeField] private int[] counts;
 
-    private static GameEffects instance;
-    private ParticleSystem[] systems;
-    private int[] counts;
+    private static event System.Action<Effect, Vector3, float> EffectRequested;
 
     private void Awake()
     {
-        instance = this;
         int kinds = System.Enum.GetValues(typeof(Effect)).Length;
-        systems = new ParticleSystem[kinds];
-        counts = new int[kinds];
-        Make(Effect.WoodChips, soft, new Color(0.62f, 0.4f, 0.2f), 0.13f, 3.6f, 1.4f, 10);
-        Make(Effect.StoneChips, soft, new Color(0.62f, 0.62f, 0.6f), 0.13f, 3.8f, 1.6f, 10);
-        Make(Effect.Dirt, soft, new Color(0.45f, 0.31f, 0.17f), 0.24f, 2.2f, 1.1f, 12);
-        Make(Effect.Leaves, soft, new Color(0.38f, 0.62f, 0.2f), 0.2f, 3f, 0.3f, 16);
-        Make(Effect.Water, soft, new Color(0.55f, 0.8f, 1f), 0.11f, 2.2f, 1.5f, 10);
-        Make(Effect.Dust, soft, new Color(0.82f, 0.75f, 0.6f), 0.55f, 2.6f, 0.08f, 16);
-        Make(Effect.Sparkle, glow, new Color(1f, 0.88f, 0.4f), 0.14f, 1.6f, -0.25f, 12);
-        Make(Effect.Juice, soft, new Color(0.95f, 0.45f, 0.18f), 0.13f, 3f, 1.4f, 10);
+        if (systems == null || counts == null || systems.Length != kinds || counts.Length != kinds)
+        {
+            Debug.LogError("GameEffects needs one particle system and burst count for each Effect.", this);
+            enabled = false;
+            return;
+        }
+        for (int i = 0; i < kinds; i++)
+        {
+            if (systems[i] == null || counts[i] <= 0)
+            {
+                Debug.LogError("GameEffects has a missing particle system or an invalid burst count.", this);
+                enabled = false;
+                return;
+            }
+            systems[i].Play();
+        }
     }
 
-    private void OnDestroy()
+    private void OnEnable()
     {
-        if (instance == this) instance = null;
+        EffectRequested += OnEffectRequested;
     }
 
-    private void Make(Effect kind, Material material, Color colour, float size, float speed, float gravity, int count)
+    private void OnDisable()
     {
-        var system = ParticleRecipes.Create(kind + " burst", transform, Vector3.zero);
-        ParticleRecipes.Spray(system, material, colour, size, speed, gravity, count);
-        system.Play();
-        systems[(int)kind] = system;
-        counts[(int)kind] = count;
+        EffectRequested -= OnEffectRequested;
     }
 
     // A burst at a point. scale multiplies how many particles fly (2 for a big moment, 0.5 for a small one).
     public static void Play(Effect kind, Vector3 position, float scale = 1f)
     {
-        if (instance == null || instance.systems == null) return;
-        ParticleSystem system = instance.systems[(int)kind];
-        if (system == null) return;
-        system.transform.position = position;
-        ParticleRecipes.Burst(system, Mathf.Max(1, Mathf.RoundToInt(instance.counts[(int)kind] * scale)));
+        EffectRequested?.Invoke(kind, position, scale);
     }
 
-    public void Configure(Material glowMaterial, Material softMaterial)
+    private void OnEffectRequested(Effect kind, Vector3 position, float scale)
     {
-        glow = glowMaterial;
-        soft = softMaterial;
+        ParticleSystem system = systems[(int)kind];
+        if (system == null) return;
+        system.transform.position = position;
+        system.Emit(Mathf.Max(1, Mathf.RoundToInt(counts[(int)kind] * scale)));
     }
 }

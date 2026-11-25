@@ -8,7 +8,7 @@ public class RiverSound : MonoBehaviour
     [SerializeField] private Vector3[] course = new Vector3[0];
 
     private AudioSource source;
-    private Transform listener;
+    [SerializeField] private Transform listener;
 
     private void Awake()
     {
@@ -17,12 +17,7 @@ public class RiverSound : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (listener == null)
-        {
-            var found = FindAnyObjectByType<AudioListener>();
-            if (found == null) return;
-            listener = found.transform;
-        }
+        if (listener == null) return;
         if (course.Length < 2) return;
         Vector3 at = listener.position, nearest = course[0];
         float best = float.MaxValue;

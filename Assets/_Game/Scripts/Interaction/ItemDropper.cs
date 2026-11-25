@@ -15,6 +15,10 @@ public class ItemDropper : MonoBehaviour
     [Tooltip("Things that stop a throw, like walls, so items don't land behind them.")]
     [SerializeField] private LayerMask blockingLayers = Physics.DefaultRaycastLayers;
 
+    [Header("Input")]
+    [SerializeField] private InputActionReference dropAction;
+    [SerializeField] private InputActionReference dropStackModifier;
+
     private PlayerTools tools;
     private Inventory inventory;
 
@@ -23,14 +27,30 @@ public class ItemDropper : MonoBehaviour
         tools = GetComponent<PlayerTools>();
     }
 
-    private void Update()
+    private void OnEnable()
     {
-        Keyboard keyboard = Keyboard.current;
-        if (keyboard == null || !tools.isActiveAndEnabled || !keyboard.backspaceKey.wasPressedThisFrame)
+        if (dropAction == null || dropStackModifier == null)
         {
+            Debug.LogError("ItemDropper needs its Drop Item and Drop Stack Modifier actions assigned.", this);
+            enabled = false;
             return;
         }
-        Drop(keyboard.shiftKey.isPressed);
+        dropAction.action.Enable();
+        dropStackModifier.action.Enable();
+    }
+
+    private void OnDisable()
+    {
+        if (dropAction != null) dropAction.action.Disable();
+        if (dropStackModifier != null) dropStackModifier.action.Disable();
+    }
+
+    private void Update()
+    {
+        if (tools.isActiveAndEnabled && dropAction.action.WasPressedThisFrame())
+        {
+            Drop(dropStackModifier.action.IsPressed());
+        }
     }
 
     public ItemDrop Drop(bool wholeStack)

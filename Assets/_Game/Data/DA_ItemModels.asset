@@ -85,3 +85,12 @@ MonoBehaviour:
   - item: 24
     model: {fileID: 919132149155446097, guid: 089ad7a74232cbb4eaa118029f6fdc42, type: 3}
     turn: {x: 0, y: 0, z: 0}
+  - item: 25
+    model: {fileID: 6127426904675605142, guid: 69afda91ef3e7e741ab0611dccccafc6, type: 3}
+    turn: {x: 0, y: 0, z: 0}
+  - item: 26
+    model: {fileID: 5617079439816320594, guid: 3191ed6d6ba96f14d95dbf5d0ec21475, type: 3}
+    turn: {x: 0, y: 0, z: 90}
+  - item: 27
+    model: {fileID: 2888953382395765467, guid: 479700fffd3488043b33d561771680d2, type: 3}
+    turn: {x: 0, y: 0, z: 0}

@@ -76,14 +76,27 @@ public class BossCombat : MonoBehaviour
     private bool facingLocked;
     private bool walking;
     private Coroutine fight;
-    private Transform warnings;
-    private Transform fillPatch, edgeRing, stripe;
-    private readonly List<Transform> spots = new List<Transform>();
-    private static Mesh disc, ring, strip;
+    [SerializeField] private BossWarnings warnings;
 
     public bool IsFighting => engaged && !boss.IsDead;
     public bool IsAngry => angryBelow > 0f && boss.Health.CurrentHealth <= boss.Health.MaxHealth * angryBelow;
     public IReadOnlyList<Attack> Attacks => attacks;
+    public Vector3 HomePosition => home;
+    public Quaternion HomeRotation => homeRotation;
+
+    public void RestoreHome(Vector3 position, Quaternion rotation)
+    {
+        home = position;
+        homeRotation = rotation;
+    }
+
+    public void SetPlayer(Health target)
+    {
+        playerHealth = target;
+        player = target != null ? target.transform : null;
+        playerBody = target != null ? target.GetComponent<Collider>() : null;
+    }
+
     private float Speed => IsAngry ? angrySpeedUp : 1f;
 
     private void Awake()
@@ -91,25 +104,17 @@ public class BossCombat : MonoBehaviour
         boss = GetComponent<CropBoss>();
         home = transform.position;
         homeRotation = transform.rotation;
-        warnings = new GameObject(name + " warnings").transform;
-        warnings.SetParent(transform.parent, false);
-        fillPatch = MakeMarker("Warning fill", Disc());
-        edgeRing = MakeMarker("Warning edge", Ring());
-        stripe = MakeMarker("Warning stripe", Strip());
+        if (warnings != null) warnings.Detach();
     }
 
     private void Start()
     {
-        var controller = FindAnyObjectByType<PlayerController>();
-        if (controller == null || attacks.Length == 0)
+        if (playerHealth == null || attacks.Length == 0 || warnings == null)
         {
             Debug.LogError($"{name} needs a player in the scene and at least one attack to fight.", this);
             enabled = false;
             return;
         }
-        player = controller.transform;
-        playerHealth = controller.GetComponent<Health>();
-        playerBody = controller.GetComponent<Collider>();
         if (playerHealth != null)
         {
             playerHealth.Died += OnPlayerDied;
@@ -224,12 +229,12 @@ public class BossCombat : MonoBehaviour
     private IEnumerator Slam(Attack attack)
     {
         Vector3 centre = Ground(transform.position);
-        Show(edgeRing, centre, attack.reach);
+        warnings.ShowEdge(centre, attack.reach);
         GameAudio.Play(Sfx.BossRoar, transform.position + Vector3.up);
         for (float t = 0f; t < 1f; t += Time.deltaTime * Speed / attack.windUp)
         {
             boss.PoseScale = new Vector3(1f - 0.08f * t, 1f + 0.2f * t, 1f - 0.08f * t);
-            Show(fillPatch, centre, attack.reach * t);
+            warnings.ShowFill(centre, attack.reach * t);
             yield return null;
         }
         boss.PoseScale = new Vector3(1.18f, 0.78f, 1.18f);
@@ -240,7 +245,7 @@ public class BossCombat : MonoBehaviour
             playerHealth.TakeDamage(attack.damage, boss.DisplayName);
         }
         yield return new WaitForSeconds(0.2f);
-        HideMarkers();
+        warnings.HideAll();
     }
 
     // Puffs up, then throws a fan of shots at where the player stands. Red spots show where each will land.
@@ -262,7 +267,7 @@ public class BossCombat : MonoBehaviour
         {
             float offset = (i - (attack.shots - 1) / 2f) * attack.reach;
             Vector3 landing = Ground(target + across * offset);
-            Show(Spot(i), landing, 0.8f);
+            warnings.ShowSpot(i, landing, 0.8f);
             if (projectilePrefab != null)
             {
                 BossProjectile shot = Instantiate(projectilePrefab, from, Quaternion.identity, transform.parent);
@@ -270,7 +275,7 @@ public class BossCombat : MonoBehaviour
             }
         }
         yield return new WaitForSeconds(SpitFlightTime);
-        HideMarkers();
+        warnings.HideAll();
     }
 
     // Leans back while a red lane fills towards the player, then runs straight down it. The direction is
@@ -287,7 +292,7 @@ public class BossCombat : MonoBehaviour
         for (float t = 0f; t < 1f; t += Time.deltaTime * Speed / attack.windUp)
         {
             boss.PoseTilt = Quaternion.Euler(-14f * t, 0f, 0f);
-            ShowLane(start, direction, attack.reach * t, bodyRadius * 2f);
+            warnings.ShowLane(start, direction, attack.reach * t, bodyRadius * 2f);
             yield return null;
         }
         boss.PoseTilt = Quaternion.Euler(10f, 0f, 0f);
@@ -310,7 +315,7 @@ public class BossCombat : MonoBehaviour
             }
             yield return null;
         }
-        HideMarkers();
+        warnings.HideAll();
         yield return new WaitForSeconds(0.3f);
         facingLocked = false;
     }
@@ -321,7 +326,7 @@ public class BossCombat : MonoBehaviour
     {
         facingLocked = true;
         Vector3 centre = Ground(transform.position);
-        Show(edgeRing, centre, attack.reach);
+        warnings.ShowEdge(centre, attack.reach);
         GameAudio.Play(Sfx.BossRoar, transform.position + Vector3.up);
         for (float t = 0f; t < 1f; t += Time.deltaTime * Speed / attack.windUp)
         {
@@ -337,7 +342,7 @@ public class BossCombat : MonoBehaviour
         for (float t = 0f; t < 1f; t += Time.deltaTime / ShockwaveTime)
         {
             float radius = Mathf.Lerp(bodyRadius, attack.reach, t);
-            Show(fillPatch, centre, radius);
+            warnings.ShowFill(centre, radius);
             float gap = Mathf.Abs(FlatDistanceBetween(player.position, centre) - radius);
             if (!hit && gap <= 0.8f && PlayerOnGround())
             {
@@ -346,7 +351,7 @@ public class BossCombat : MonoBehaviour
             }
             yield return null;
         }
-        HideMarkers();
+        warnings.HideAll();
         facingLocked = false;
     }
 
@@ -362,7 +367,7 @@ public class BossCombat : MonoBehaviour
         {
             StopCoroutine(fight);
         }
-        HideMarkers();
+        warnings.HideAll();
         boss.ResetFight();
         ResetPose();
         engaged = false;
@@ -376,7 +381,7 @@ public class BossCombat : MonoBehaviour
         {
             StopCoroutine(fight);
         }
-        HideMarkers();
+        warnings.HideAll();
         engaged = false;
     }
 
@@ -470,100 +475,4 @@ public class BossCombat : MonoBehaviour
         return hits;
     }
 
-    // ---------- Warning patches ----------
-
-    private Transform MakeMarker(string label, Mesh mesh)
-    {
-        var marker = new GameObject(label, typeof(MeshFilter), typeof(MeshRenderer));
-        marker.transform.SetParent(warnings, false);
-        marker.GetComponent<MeshFilter>().sharedMesh = mesh;
-        var renderer = marker.GetComponent<MeshRenderer>();
-        renderer.sharedMaterial = warningMaterial;
-        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        renderer.receiveShadows = false;
-        marker.SetActive(false);
-        return marker.transform;
-    }
-
-    private Transform Spot(int index)
-    {
-        while (spots.Count <= index)
-        {
-            spots.Add(MakeMarker("Warning spot", Disc()));
-        }
-        return spots[index];
-    }
-
-    private static void Show(Transform marker, Vector3 at, float radius)
-    {
-        marker.gameObject.SetActive(true);
-        marker.SetPositionAndRotation(at + Vector3.up * 0.06f, Quaternion.identity);
-        marker.localScale = new Vector3(Mathf.Max(radius, 0.01f), 1f, Mathf.Max(radius, 0.01f));
-    }
-
-    private void ShowLane(Vector3 start, Vector3 direction, float length, float width)
-    {
-        stripe.gameObject.SetActive(true);
-        stripe.SetPositionAndRotation(start + Vector3.up * 0.07f, Quaternion.LookRotation(direction));
-        stripe.localScale = new Vector3(width, 1f, Mathf.Max(length, 0.01f));
-    }
-
-    private void HideMarkers()
-    {
-        foreach (Transform marker in warnings)
-        {
-            marker.gameObject.SetActive(false);
-        }
-    }
-
-    // A flat circle of radius 1.
-    private static Mesh Disc()
-    {
-        if (disc != null) return disc;
-        disc = Circle(0f, 1f);
-        return disc;
-    }
-
-    // A flat outline circle of radius 1.
-    private static Mesh Ring()
-    {
-        if (ring != null) return ring;
-        ring = Circle(0.9f, 1f);
-        return ring;
-    }
-
-    // A flat 1 by 1 lane starting at its pivot and running along +Z.
-    private static Mesh Strip()
-    {
-        if (strip != null) return strip;
-        strip = new Mesh { name = "Warning strip" };
-        strip.vertices = new[] { new Vector3(-0.5f, 0f, 0f), new Vector3(0.5f, 0f, 0f), new Vector3(-0.5f, 0f, 1f), new Vector3(0.5f, 0f, 1f) };
-        strip.triangles = new[] { 0, 2, 1, 1, 2, 3 };
-        strip.RecalculateNormals();
-        return strip;
-    }
-
-    private static Mesh Circle(float inner, float outer)
-    {
-        const int sides = 40;
-        var vertices = new List<Vector3>();
-        var triangles = new List<int>();
-        for (int i = 0; i <= sides; i++)
-        {
-            float a = i * Mathf.PI * 2f / sides;
-            var direction = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
-            vertices.Add(direction * inner);
-            vertices.Add(direction * outer);
-        }
-        for (int i = 0; i < sides; i++)
-        {
-            int k = i * 2;
-            triangles.AddRange(new[] { k, k + 3, k + 1, k, k + 2, k + 3 });
-        }
-        var mesh = new Mesh { name = "Warning circle" };
-        mesh.SetVertices(vertices);
-        mesh.SetTriangles(triangles, 0);
-        mesh.RecalculateNormals();
-        return mesh;
-    }
 }
