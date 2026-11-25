@@ -33,6 +33,8 @@ public class PlayerTools : MonoBehaviour
     [SerializeField, Min(1)] private int canCapacity = 6;
 
     public ToolType Equipped { get; private set; } = ToolType.None;
+    // The item shown in the hand when it isn't a tool (seeds, crops, wood...), or null.
+    public ResourceType? HeldItem { get; private set; }
 
     public Inventory Inventory => inventory;
 
@@ -115,10 +117,13 @@ public class PlayerTools : MonoBehaviour
             return;
         }
 
-        ToolType wanted = inventory.TryGetSelectedItem(out ResourceType item) ? ResourceTypes.ToTool(item) : ToolType.None;
-        if (wanted != Equipped && hands.SwitchTool(wanted))
+        bool holding = inventory.TryGetSelectedItem(out ResourceType item);
+        ToolType wanted = holding ? ResourceTypes.ToTool(item) : ToolType.None;
+        ResourceType? held = holding && wanted == ToolType.None ? item : (ResourceType?)null;
+        if ((wanted != Equipped || !Nullable.Equals(held, HeldItem)) && hands.SwitchHeld(wanted, held))
         {
             Equipped = wanted;
+            HeldItem = held;
             Changed?.Invoke();
         }
     }

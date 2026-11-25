@@ -1,10 +1,13 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 // Plays the first-person arm animations, made in Blender and played straight from the arm models (ClipPlayer):
 // the right arm holds, swings and pours the tool in hand (or punches), the left arm grabs on Interact.
-// Changing tools drops the arm out of view to swap the model. Each move blends back into its idle when it ends.
+// Changing what is held drops the arm out of view to swap the model. Each move blends back into its idle when it
+// ends. Tools have their own fitted models; anything else in the selected slot (seeds, crops, wood, stone, boss
+// seeds...) shows its item model held in the palm.
 public class HandAnimator : MonoBehaviour
 {
     private const string Idle = "Idle", GripIdle = "GripIdle";
@@ -19,6 +22,14 @@ public class HandAnimator : MonoBehaviour
     [Tooltip("Seconds into the equip, unequip and swap animations when the arm is below the screen.")]
     [SerializeField, Min(0f)] private float toolSwapDelay = 0.3f;
 
+    [Header("Other held items")]
+    [Tooltip("The model for each item (DA_ItemModels, the same ones dropped items show).")]
+    [SerializeField] private ItemModels itemModels;
+    [Tooltip("Where a held item sits in the right hand.")]
+    [SerializeField] private Transform heldItemAnchor;
+    [Tooltip("How big, in metres, a held item is at its longest side.")]
+    [SerializeField, Min(0.02f)] private float heldItemSize = 0.15f;
+
     [Header("Watering can")]
     [Tooltip("Drops falling from the can's spout while it pours.")]
     [SerializeField] private ParticleSystem waterStream;
@@ -31,6 +42,8 @@ public class HandAnimator : MonoBehaviour
     [SerializeField] private InputActionReference interactAction;
 
     private ToolType shownTool = ToolType.None;
+    private ResourceType? shownItem;
+    private GameObject heldModel;
     private Coroutine toolSwap;
 
     public bool IsRightArmResting => IsResting(rightArm);
@@ -108,40 +121,80 @@ public class HandAnimator : MonoBehaviour
         }
     }
 
-    public bool SwitchTool(ToolType next)
+    public bool SwitchTool(ToolType next) => SwitchHeld(next, null);
+
+    // Puts a tool, or else an item (null for nothing), in the right hand. False while the arm is busy.
+    public bool SwitchHeld(ToolType tool, ResourceType? item)
     {
-        if (next == shownTool || !IsResting(rightArm))
+        if (tool != ToolType.None) item = null;
+        if ((tool == shownTool && Nullable.Equals(item, shownItem)) || !IsResting(rightArm))
         {
             return false;
         }
 
-        if (shownTool == ToolType.None)
+        bool wasHolding = shownTool != ToolType.None || shownItem.HasValue;
+        bool willHold = tool != ToolType.None || item.HasValue;
+        if (!wasHolding)
         {
             rightArm.Play("Equip", 0.05f, GripIdle, 0.05f);     // open hand -> gripping
         }
-        else if (next == ToolType.None)
+        else if (!willHold)
         {
             rightArm.Play("Unequip", 0.05f, Idle, 0.05f);       // gripping -> open hand
         }
         else
         {
-            rightArm.Play("Swap", 0.05f, GripIdle, 0.05f);      // one tool for another
+            rightArm.Play("Swap", 0.05f, GripIdle, 0.05f);      // one thing for another
         }
 
-        shownTool = next;
+        shownTool = tool;
+        shownItem = item;
         if (toolSwap != null)
         {
             StopCoroutine(toolSwap);
         }
-        toolSwap = StartCoroutine(ShowToolWhileHidden(next));
+        toolSwap = StartCoroutine(ShowWhileHidden(tool, item));
         return true;
     }
 
-    private IEnumerator ShowToolWhileHidden(ToolType tool)
+    private IEnumerator ShowWhileHidden(ToolType tool, ResourceType? item)
     {
         yield return new WaitForSeconds(toolSwapDelay);
         ShowTool(tool);
+        ShowItem(item);
         toolSwap = null;
+    }
+
+    // The item's model, sized to fit the palm, with its colliders off so it never gets in the way.
+    private void ShowItem(ResourceType? item)
+    {
+        if (heldModel != null)
+        {
+            Destroy(heldModel);
+            heldModel = null;
+        }
+        GameObject source = item.HasValue && itemModels != null ? itemModels.Get(item.Value) : null;
+        if (source == null || heldItemAnchor == null)
+        {
+            return;
+        }
+        heldModel = Instantiate(source, heldItemAnchor);
+        heldModel.name = "Held " + item.Value;
+        heldModel.transform.localRotation = Quaternion.Euler(itemModels.TurnFor(item.Value));
+        foreach (Collider part in heldModel.GetComponentsInChildren<Collider>(true)) part.enabled = false;
+        foreach (Renderer part in heldModel.GetComponentsInChildren<Renderer>(true))
+            part.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+        Renderer[] parts = heldModel.GetComponentsInChildren<Renderer>();
+        if (parts.Length == 0) return;
+        Bounds bounds = parts[0].bounds;
+        foreach (Renderer part in parts) bounds.Encapsulate(part.bounds);
+        float longest = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
+        if (longest > 0.0001f) heldModel.transform.localScale *= heldItemSize / longest;
+        // Centre it on the anchor.
+        bounds = parts[0].bounds;
+        foreach (Renderer part in parts) bounds.Encapsulate(part.bounds);
+        heldModel.transform.position += heldItemAnchor.position - bounds.center;
     }
 
     private void ShowTool(ToolType tool)
