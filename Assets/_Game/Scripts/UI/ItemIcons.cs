@@ -16,6 +16,8 @@ public class ItemIcons : ScriptableObject
 
     public Sprite Get(ResourceType item)
     {
+        // Named captures use the existing jar icon; their labels keep the species.
+        if (ResourceTypes.IsCapturedBoss(item)) item = ResourceType.CapturedBoss;
         foreach (Entry entry in icons)
         {
             if (entry.item == item)

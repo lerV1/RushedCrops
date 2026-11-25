@@ -22,6 +22,7 @@ public class ItemModels : ScriptableObject
 
     private Entry Find(ResourceType item)
     {
+        if (ResourceTypes.IsCapturedBoss(item)) item = ResourceType.CapturedBoss;
         foreach (Entry entry in models)
         {
             if (entry.item == item)

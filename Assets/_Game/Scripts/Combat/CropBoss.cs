@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,13 +8,6 @@ using UnityEngine;
 [RequireComponent(typeof(Health))]
 public class CropBoss : MonoBehaviour, IInteractable
 {
-    [Serializable]
-    public struct SeedDropEntry
-    {
-        public CropData crop;
-        [Min(1)] public int amount;
-    }
-
     [SerializeField] private string displayName = "Carrot King";
 
     [Tooltip("The model, scaled for the hit wobble and sunk into the ground on death.")]
@@ -24,9 +16,9 @@ public class CropBoss : MonoBehaviour, IInteractable
     [Header("Loot")]
     [Tooltip("The scene's shared Inventory. Picked-up seeds go into it.")]
     [SerializeField] private Inventory inventory;
-    [Tooltip("The drop that is thrown out for each entry below.")]
+    [Tooltip("The seed drop thrown out when this boss is killed.")]
     [SerializeField] private ItemDrop dropPrefab;
-    [SerializeField] private SeedDropEntry[] drops = Array.Empty<SeedDropEntry>();
+    [SerializeField, Min(1)] private int seedDropAmount = 2;
     [Tooltip("How far from the boss, in metres, the bags land.")]
     [SerializeField, Min(0.5f)] private float dropRadius = 2.2f;
 
@@ -50,19 +42,25 @@ public class CropBoss : MonoBehaviour, IInteractable
     private Quaternion modelRotation;
     private float wobbleLeft;
     private bool isCaptured;
+    private bool lootDropped;
     private const float WobbleTime = 0.25f;
 
-    public SeedDropEntry[] Drops => drops;
     public string DisplayName => displayName;
     public Health Health => health;
     public bool IsDead => health.IsDead;
     public bool IsGrownBoss => removeAfterDeath;
     public ResourceType SeedResource { get; private set; } = (ResourceType)(-1);
+    /// <summary>The seed for this species, including bosses placed directly in the map.</summary>
+    public ResourceType OwnSeedResource => (int)ResourceTypes.CapturedBossForSeed(SeedResource) >= 0
+        ? SeedResource : ResourceTypes.BossSeedForName(displayName);
+    /// <summary>The model-only hierarchy, for showing a captured boss without its combat scripts.</summary>
+    public Transform VisualModel => model != transform ? model : null;
 
     public bool TryCapture()
     {
-        if (isCaptured || health.IsDead || health.CurrentHealth * 3 > health.MaxHealth || inventory == null ||
-            !inventory.Add(ResourceType.CapturedBoss, 1))
+        ResourceType captured = ResourceTypes.CapturedBossForSeed(OwnSeedResource);
+        if ((int)captured < 0 || isCaptured || health.IsDead || health.CurrentHealth * 3 > health.MaxHealth || inventory == null ||
+            !inventory.Add(captured, 1))
         {
             return false;
         }
@@ -184,26 +182,31 @@ public class CropBoss : MonoBehaviour, IInteractable
         StartCoroutine(Sink());
     }
 
+    /// <summary>Drops this boss's seed once, after death; living or captured bosses drop nothing.</summary>
     public void DropSeeds()
     {
+        // Capturing and repeated death callbacks must not create extra loot.
+        if (!health.IsDead || isCaptured || lootDropped)
+        {
+            return;
+        }
         if (dropPrefab == null || inventory == null)
         {
             Debug.LogError($"{name} needs a drop prefab and the Inventory to drop seeds.", this);
             return;
         }
 
-        float start = UnityEngine.Random.Range(0f, 360f);
-        for (int i = 0; i < drops.Length; i++)
+        ResourceType seed = OwnSeedResource;
+        if ((int)ResourceTypes.CapturedBossForSeed(seed) < 0)
         {
-            if (drops[i].crop == null)
-            {
-                continue;
-            }
-            float angle = (start + 360f * i / drops.Length) * Mathf.Deg2Rad;
-            Vector3 landing = transform.position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * dropRadius;
-            ItemDrop bag = Instantiate(dropPrefab, transform.position + Vector3.up * 2f, Quaternion.identity, transform.parent);
-            bag.Launch(inventory, drops[i].crop.SeedResource, drops[i].amount, landing);
+            Debug.LogError($"{displayName} needs its own boss seed configured.", this);
+            return;
         }
+        lootDropped = true;
+        float angle = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
+        Vector3 landing = transform.position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * dropRadius;
+        ItemDrop bag = Instantiate(dropPrefab, transform.position + Vector3.up * 2f, Quaternion.identity, transform.parent);
+        bag.Launch(inventory, seed, Mathf.Max(1, seedDropAmount), landing);
     }
 
     private IEnumerator Sink()

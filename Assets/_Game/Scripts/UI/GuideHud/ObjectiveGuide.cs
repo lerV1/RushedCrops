@@ -357,7 +357,8 @@ public class ObjectiveGuide : MonoBehaviour
             foreach (MiniCrop crop in FindObjectsByType<MiniCrop>())
                 if (crop.CurrentState == MiniCrop.State.Dead) Complete(Lesson.Fight);
         if (gameManager != null && gameManager.IsBossDefeated) Complete(Lesson.Fight);
-        if (inventory.GetCount(ResourceType.CapturedBoss) > 0) Complete(Lesson.Capture);
+        for (int slot = 0; slot < Inventory.SlotCount; slot++)
+            if (!inventory.IsSlotEmpty(slot) && ResourceTypes.IsCapturedBoss(inventory.GetSlotItem(slot))) Complete(Lesson.Capture);
         if (barnRepair != null && barnRepair.JobsDone > 0) Complete(Lesson.Repair);
         foreach (BossTube tube in FindObjectsByType<BossTube>())
             if (tube.isPlaced) Complete(Lesson.Capture | Lesson.Tube);

@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 [Serializable]
 public class SaveData
 {
-    public int version = 2;
+    public int version = 3;
     public int coins;
     public int selectedSlot;
     public int[] slotTypes;
@@ -30,6 +30,7 @@ public class SaveData
     [Serializable]
     public class TubeData
     {
+        public int seedResource = -1;
         public bool placed;
         public int storedSeeds;
         public float seedTimer;
@@ -194,7 +195,7 @@ public class SaveSystem : MonoBehaviour
         {
             return false;
         }
-        if (data == null || data.version < 1 || data.version > 2 || data.slotTypes == null || data.slotCounts == null ||
+        if (data == null || data.version < 1 || data.version > 3 || data.slotTypes == null || data.slotCounts == null ||
             data.slotTypes.Length == 0 || data.slotTypes.Length > Inventory.SlotCount || data.slotCounts.Length != data.slotTypes.Length)
         {
             return false;
@@ -204,7 +205,7 @@ public class SaveSystem : MonoBehaviour
         gameManager.RestoreProgress(data.barnRepairStage, data.bossesBeaten, data.bossDefeated, data.hasWon);
         barnRepair.ShowRepairs(gameManager.BarnRepairs);
         barnTubes.RestoreUnlockedTubeCount(data.unlockedTubeCount, gameManager.BarnRepairs);
-        RestoreTubes(data.tubes);
+        RestoreTubes(data.tubes, data.version);
         farmField.RestoreSaveData(data.cropTiles);
         RestoreBosses(data.activeBosses);
         playerTools.RestoreWater(data.waterLeft);
@@ -238,6 +239,7 @@ public class SaveSystem : MonoBehaviour
             BossTube tube = sceneTubes[i];
             savedTubes[i] = tube == null ? new SaveData.TubeData() : new SaveData.TubeData
             {
+                seedResource = (int)tube.SeedOutput,
                 placed = tube.isPlaced,
                 storedSeeds = tube.StoredSeeds,
                 seedTimer = tube.SeedTimer
@@ -246,7 +248,7 @@ public class SaveSystem : MonoBehaviour
         return savedTubes;
     }
 
-    private void RestoreTubes(SaveData.TubeData[] savedTubes)
+    private void RestoreTubes(SaveData.TubeData[] savedTubes, int saveVersion)
     {
         BossTube[] sceneTubes = barnTubes.Tubes;
         for (int i = 0; i < sceneTubes.Length; i++)
@@ -261,7 +263,8 @@ public class SaveSystem : MonoBehaviour
                 : null;
             sceneTubes[i].RestoreState(saved != null && saved.placed,
                 saved != null ? saved.storedSeeds : 0,
-                saved != null ? saved.seedTimer : 0f);
+                saved != null ? saved.seedTimer : 0f,
+                saved != null && saveVersion >= 3 ? (ResourceType?)saved.seedResource : null);
         }
     }
 

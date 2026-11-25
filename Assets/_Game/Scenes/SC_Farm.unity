@@ -97165,9 +97165,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossTube
   seedOutput: 19
-  secondsPerSeed: 120
-  seedCapacity: 8
+  secondsPerSeed: 10
+  seedCapacity: 99
   bossVisual: {fileID: 830807540}
+  farmPlot: {fileID: 966141775}
   tubeRenderer: {fileID: 2085198287}
   tubeTint: {r: 0.38, g: 0.72, b: 0.82, a: 0.3}
   bossTint: {r: 0.95, g: 0.45, b: 0.1, a: 1}
@@ -428091,9 +428092,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossTube
   seedOutput: 21
-  secondsPerSeed: 60
-  seedCapacity: 16
+  secondsPerSeed: 10
+  seedCapacity: 99
   bossVisual: {fileID: 653471481}
+  farmPlot: {fileID: 966141775}
   tubeRenderer: {fileID: 1907535733}
   tubeTint: {r: 0.38, g: 0.72, b: 0.82, a: 0.3}
   bossTint: {r: 0.95, g: 0.45, b: 0.1, a: 1}
@@ -488378,9 +488380,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossTube
   seedOutput: 22
-  secondsPerSeed: 30
-  seedCapacity: 24
+  secondsPerSeed: 10
+  seedCapacity: 99
   bossVisual: {fileID: 1967818602}
+  farmPlot: {fileID: 966141775}
   tubeRenderer: {fileID: 1148052127}
   tubeTint: {r: 0.38, g: 0.72, b: 0.82, a: 0.3}
   bossTint: {r: 0.95, g: 0.45, b: 0.1, a: 1}
@@ -535059,9 +535062,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossTube
   seedOutput: 20
-  secondsPerSeed: 90
-  seedCapacity: 10
+  secondsPerSeed: 10
+  seedCapacity: 99
   bossVisual: {fileID: 1614884208}
+  farmPlot: {fileID: 966141775}
   tubeRenderer: {fileID: 1065675940}
   tubeTint: {r: 0.38, g: 0.72, b: 0.82, a: 0.3}
   bossTint: {r: 0.95, g: 0.45, b: 0.1, a: 1}
