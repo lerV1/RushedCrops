@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // A tree to chop with the hatchet, or a rock to mine with the pickaxe. Each hit shakes it; after a few hits it
-// breaks, throws out its wood or stone to pick up, and leaves a stump or rubble that grows back after a while.
+// breaks, throws out its wood or stone to pick up, and leaves a stump or rubble that grows back after two in-game days.
 public class ResourceNode : MonoBehaviour, IToolTarget, IInteractable
 {
     [Tooltip("The scene's shared Inventory. Picked-up wood and stone go into it.")]
@@ -22,8 +22,10 @@ public class ResourceNode : MonoBehaviour, IToolTarget, IInteractable
     [SerializeField, Min(1)] private int amount = 3;
     [Tooltip("How many hits it takes to break.")]
     [SerializeField, Min(1)] private int hitsToBreak = 3;
-    [Tooltip("Seconds before it grows back.")]
-    [SerializeField, Min(1f)] private float regrowSeconds = 120f;
+    [Tooltip("In-game days before it grows back.")]
+    [SerializeField, Min(0.05f)] private float regrowDays = 2f;
+    [Tooltip("The day/night cycle whose days are counted. Without one, a day counts as 8 real minutes.")]
+    [SerializeField] private EnvironmentCycle clock;
 
     [Header("Looks")]
     [Tooltip("Shown while it can be gathered.")]
@@ -34,7 +36,8 @@ public class ResourceNode : MonoBehaviour, IToolTarget, IInteractable
     [SerializeField] private bool topples = true;
 
     private int hits;
-    private float regrowAt;
+    private float regrowAt;   // in-game hours (or seconds of play, with no clock)
+    private const float SecondsPerDayWithoutClock = 480f;
     private Vector3 wholeScale;
     private Quaternion wholeRotation;
     private readonly List<Collider> solidParts = new List<Collider>();
@@ -62,7 +65,7 @@ public class ResourceNode : MonoBehaviour, IToolTarget, IInteractable
 
     private void Update()
     {
-        if (IsBroken && Time.time >= regrowAt && !PlayerStandsHere())
+        if (IsBroken && Now >= regrowAt && !PlayerStandsHere())
         {
             Regrow();
         }
@@ -128,7 +131,7 @@ public class ResourceNode : MonoBehaviour, IToolTarget, IInteractable
         }
 
         IsBroken = true;
-        regrowAt = Time.time + regrowSeconds;
+        regrowAt = Now + (clock != null ? regrowDays * 24f : regrowDays * SecondsPerDayWithoutClock);
         SetSolid(false);
         broken.SetActive(true);
         Vector3 away = transform.position - from;
@@ -275,7 +278,9 @@ public class ResourceNode : MonoBehaviour, IToolTarget, IInteractable
     }
 
     // Used by the setup menu.
-    public void Describe(string label, string action, ToolType needs, ResourceType gives, int count, int hitCount, float regrow, bool falls)
+    private float Now => clock != null ? clock.TotalHours : Time.time;
+
+    public void Describe(string label, string action, ToolType needs, ResourceType gives, int count, int hitCount, float regrowInDays, bool falls)
     {
         displayName = label;
         verb = action;
@@ -283,7 +288,7 @@ public class ResourceNode : MonoBehaviour, IToolTarget, IInteractable
         item = gives;
         amount = count;
         hitsToBreak = hitCount;
-        regrowSeconds = regrow;
+        regrowDays = regrowInDays;
         topples = falls;
     }
 }

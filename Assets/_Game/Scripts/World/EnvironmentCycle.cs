@@ -29,6 +29,8 @@ public class EnvironmentCycle : MonoBehaviour
     public float Hour => clock != null ? clock.Hour : currentHour;
     public int Day => clock != null ? clock.Day : 1;
     public bool IsNight => Hour < 6f || Hour >= 18.5f;
+    // In-game hours since the first morning: day 1 at 09:00 is 9, day 2 at 09:00 is 33.
+    public float TotalHours => (Day - 1) * 24f + Hour;
 
     private void OnEnable()
     {
