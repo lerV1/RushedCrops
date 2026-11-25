@@ -97,6 +97,13 @@ public class PlayerTools : MonoBehaviour
         {
             if (slotActions[i].action.WasPressedThisFrame()) inventory.SelectSlot(i);
         }
+        // The mouse wheel steps through the hotbar too, wrapping round at either end.
+        float wheel = Mouse.current != null ? Mouse.current.scroll.ReadValue().y : 0f;
+        if (Mathf.Abs(wheel) > 0.01f)
+        {
+            int step = wheel > 0f ? -1 : 1;
+            inventory.SelectSlot((inventory.SelectedSlot + step + Inventory.SlotCount) % Inventory.SlotCount);
+        }
     }
 
     // While the arm is mid-swing the switch waits for the next frame.

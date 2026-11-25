@@ -540,11 +540,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerTools
   useAction: {fileID: 4088291247242398431, guid: f5efa458efab1e94091419e01d045740, type: 3}
   slotActions:
-  - {fileID: 8793711796043367285, guid: f5efa458efab1e94091419e01d045740, type: 3}
-  - {fileID: 3435359906842964738, guid: f5efa458efab1e94091419e01d045740, type: 3}
-  - {fileID: -4988941543799580769, guid: f5efa458efab1e94091419e01d045740, type: 3}
-  - {fileID: 2217491394910506717, guid: f5efa458efab1e94091419e01d045740, type: 3}
-  - {fileID: 1354812399346111164, guid: f5efa458efab1e94091419e01d045740, type: 3}
+  - {fileID: 2663867591178616235, guid: f5efa458efab1e94091419e01d045740, type: 3}
+  - {fileID: 7138135616361550175, guid: f5efa458efab1e94091419e01d045740, type: 3}
+  - {fileID: 4062907561703774556, guid: f5efa458efab1e94091419e01d045740, type: 3}
+  - {fileID: -2461562253551861706, guid: f5efa458efab1e94091419e01d045740, type: 3}
+  - {fileID: -8777243683182285988, guid: f5efa458efab1e94091419e01d045740, type: 3}
+  - {fileID: 5662258427974718531, guid: f5efa458efab1e94091419e01d045740, type: 3}
+  - {fileID: -4704951477549451946, guid: f5efa458efab1e94091419e01d045740, type: 3}
+  - {fileID: 1341457516147582387, guid: f5efa458efab1e94091419e01d045740, type: 3}
+  - {fileID: -5890723322021350655, guid: f5efa458efab1e94091419e01d045740, type: 3}
   inventory: {fileID: 0}
   interactor: {fileID: 2143054289736561575}
   hands: {fileID: 2305179911293612690}

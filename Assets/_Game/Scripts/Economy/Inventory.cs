@@ -7,7 +7,7 @@ using UnityEngine;
 [DefaultExecutionOrder(-100)]
 public class Inventory : MonoBehaviour
 {
-    public const int SlotCount = 5;
+    public const int SlotCount = 9;
 
     [Tooltip("Coins the player starts with.")]
     [SerializeField, Min(0)] private int startingCoins = 0;
@@ -58,9 +58,10 @@ public class Inventory : MonoBehaviour
         coins = Mathf.Max(0, savedCoins);
         SelectedSlot = Mathf.Clamp(selectedSlot, 0, SlotCount - 1);
 
-        if (savedTypes != null && savedCounts != null && savedTypes.Length == SlotCount && savedCounts.Length == SlotCount)
+        // A save from before the hotbar grew has fewer slots: those fill the first slots and the rest stay empty.
+        if (savedTypes != null && savedCounts != null && savedTypes.Length == savedCounts.Length)
         {
-            for (int i = 0; i < SlotCount; i++)
+            for (int i = 0; i < Mathf.Min(SlotCount, savedTypes.Length); i++)
             {
                 ResourceType type = (ResourceType)savedTypes[i];
                 if (!Enum.IsDefined(typeof(ResourceType), type))

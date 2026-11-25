@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-// The coin counter and the 5-slot hotbar. Each slot shows its item's picture (or name) and count.
+// The coin counter and the 9-slot hotbar. Each slot shows its item's picture (or name) and count.
 // It redraws only when the Inventory changes.
 public class InventoryHud : MonoBehaviour
 {

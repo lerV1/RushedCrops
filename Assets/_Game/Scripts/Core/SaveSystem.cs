@@ -195,7 +195,7 @@ public class SaveSystem : MonoBehaviour
             return false;
         }
         if (data == null || data.version < 1 || data.version > 2 || data.slotTypes == null || data.slotCounts == null ||
-            data.slotTypes.Length != Inventory.SlotCount || data.slotCounts.Length != Inventory.SlotCount)
+            data.slotTypes.Length == 0 || data.slotTypes.Length > Inventory.SlotCount || data.slotCounts.Length != data.slotTypes.Length)
         {
             return false;
         }

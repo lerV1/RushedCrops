@@ -151,7 +151,7 @@ public class FarmTile : MonoBehaviour, IInteractable, IToolTarget
                 CropData selected = plot.SelectedCrop();
                 if (selected == null)
                 {
-                    return "Hold seeds to plant (keys 1-5)";
+                    return "Hold seeds to plant (keys 1-9)";
                 }
                 int seeds = plot.Inventory.GetCount(selected.SeedResource);
                 string crop = selected.DisplayName.ToLower();
