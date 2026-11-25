@@ -36,7 +36,7 @@
       <div><h2>Try the tools</h2><p>Pick up a tool from a stump near the plots. Till a square with the hoe, or fill the watering can at the river.</p></div>
     </section>
   </main>
-  <footer>Rushed Crops · You start over when you reload.</footer>
+  <footer>Rushed Crops</footer>
   <script>
     const canvas = document.getElementById('unity-canvas');
     const stage = document.getElementById('stage');
@@ -46,8 +46,19 @@
     let game = null;
     let started = false;
     let failed = false;
+    let inMenu = true;
+    window.rushedCropsSetMenu = value => {
+      inMenu = value;
+      if (!game || failed) return;
+      if (inMenu) {
+        veil.hidden = true;
+        if (document.pointerLockElement) document.exitPointerLock();
+        game.SendMessage('WebBridge', 'Resume');
+      } else pause();
+    };
     function pause() {
       if (!game || failed) return;
+      if (inMenu) { veil.hidden = true; return; }
       game.SendMessage('WebBridge', 'Pause');
       veil.hidden = false;
       if (started) {
@@ -72,6 +83,12 @@
     play.onclick = () => {
       if (!game) return;
       canvas.focus();
+      if (inMenu) {
+        started = true;
+        veil.hidden = true;
+        game.SendMessage('WebBridge', 'Resume');
+        return;
+      }
       try {
         const request = canvas.requestPointerLock();
         if (request && request.catch) request.catch(() => { status.textContent = 'Your browser blocked mouse capture. Click ' + play.textContent + ' to retry.'; });
@@ -79,6 +96,7 @@
     };
     document.addEventListener('pointerlockchange', () => {
       if (!game || failed) return;
+      if (inMenu) { if (document.pointerLockElement) document.exitPointerLock(); return; }
       if (document.pointerLockElement === canvas) {
         started = true;
         veil.hidden = true;
@@ -91,7 +109,7 @@
     });
     window.addEventListener('blur', () => { if (document.pointerLockElement) document.exitPointerLock(); pause(); });
     document.addEventListener('keydown', event => {
-      if (event.code === 'Escape' && game) {
+      if (event.code === 'Escape' && game && !inMenu) {
         if (document.fullscreenElement) document.exitFullscreen();
         if (document.pointerLockElement) document.exitPointerLock();
         pause();
@@ -103,7 +121,7 @@
         if (document.fullscreenElement) await document.exitFullscreen();
         else if (game) {
           canvas.focus();
-          await canvas.requestPointerLock();
+          if (!inMenu) await canvas.requestPointerLock();
           game.SetFullscreen(1);
         }
       } catch (error) { status.textContent = 'Your browser could not enter fullscreen.'; }
@@ -128,7 +146,9 @@
     }).then(instance => {
       game = instance;
       if (failed) return;
-      game.SendMessage('WebBridge', 'Pause');
+      started = true;
+      veil.hidden = inMenu;
+      game.SendMessage('WebBridge', inMenu ? 'Resume' : 'Pause');
       play.disabled = false;
       play.textContent = 'Play';
       status.textContent = '';

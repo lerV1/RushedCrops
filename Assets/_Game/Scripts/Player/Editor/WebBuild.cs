@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
-// Repeatable browser export. Only SC_Farm is included in the build.
+// Repeatable browser export, starting at the menu.
 public static class WebBuild
 {
     [MenuItem("Rushed Crops/Build Web")]
@@ -33,7 +33,7 @@ public static class WebBuild
 
         BuildReport report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
         {
-            scenes = new[] { "Assets/_Game/Scenes/SC_Farm.unity" },
+            scenes = new[] { "Assets/_Game/Scenes/SC_Menu.unity", "Assets/_Game/Scenes/SC_Farm.unity" },
             locationPathName = output,
             target = BuildTarget.WebGL,
             options = BuildOptions.None

@@ -1,10 +1,17 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
+#if UNITY_WEBGL && !UNITY_EDITOR
+using System.Runtime.InteropServices;
+#endif
 
 // The browser page calls these methods when the mouse is captured or released.
 // It installs itself in Web builds, so no scene or prefab setup is needed.
 public class WebBridge : MonoBehaviour
 {
 #if UNITY_WEBGL && !UNITY_EDITOR
+    [DllImport("__Internal")]
+    private static extern void RushedCropsSetMenu(int isMenu);
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Boot()
     {
@@ -12,6 +19,15 @@ public class WebBridge : MonoBehaviour
         DontDestroyOnLoad(bridge);
         bridge.AddComponent<WebBridge>().Pause();
         Application.targetFrameRate = 60;
+    }
+
+    private void OnEnable() => SceneManager.sceneLoaded += OnSceneLoaded;
+    private void OnDisable() => SceneManager.sceneLoaded -= OnSceneLoaded;
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // The title needs a free pointer; the farm uses the existing capture overlay.
+        RushedCropsSetMenu(scene.name == "SC_Menu" ? 1 : 0);
     }
 #endif
 
@@ -22,8 +38,9 @@ public class WebBridge : MonoBehaviour
         WebGLInput.captureAllKeyboardInput = true;
         Time.timeScale = 1f;
         AudioListener.pause = false;
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        bool inMenu = SceneManager.GetActiveScene().name == "SC_Menu";
+        Cursor.lockState = inMenu ? CursorLockMode.None : CursorLockMode.Locked;
+        Cursor.visible = inMenu;
 #endif
     }
 

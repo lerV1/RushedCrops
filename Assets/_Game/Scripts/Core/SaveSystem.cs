@@ -215,7 +215,17 @@ public class SaveSystem : MonoBehaviour
 
     public void DeleteSave()
     {
+        ClearSavedProgress();
+    }
+
+    /// <summary>Whether any progress exists, including an unreadable save that can be reset.</summary>
+    public static bool HasSavedProgress => PlayerPrefs.HasKey(SaveKey);
+
+    /// <summary>Deletes game progress without changing audio or display settings.</summary>
+    public static void ClearSavedProgress()
+    {
         PlayerPrefs.DeleteKey(SaveKey);
+        ObjectiveGuide.ClearSavedCompletion();
         PlayerPrefs.Save();
     }
 

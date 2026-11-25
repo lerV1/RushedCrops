@@ -5,6 +5,9 @@ public class ObjectiveGuide : MonoBehaviour
 {
     private const string CompletedKey = "RushedCrops.ObjectiveGuide.Completed";
 
+    /// <summary>Allows New Game to show the objectives again on the fresh farm.</summary>
+    public static void ClearSavedCompletion() => PlayerPrefs.DeleteKey(CompletedKey);
+
     [Header("Progress")]
     [SerializeField] private Inventory inventory;
     [SerializeField] private GameManager gameManager;
