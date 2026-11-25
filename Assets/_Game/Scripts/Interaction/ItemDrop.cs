@@ -5,6 +5,8 @@ using UnityEngine;
 // walks into it or presses Interact on it. It pops as it lands, and flies into the player when picked up.
 public class ItemDrop : MonoBehaviour, IInteractable
 {
+    /// <summary>Raised once when a ground item successfully enters the inventory.</summary>
+    public static event System.Action Collected;
     [Tooltip("The 3D model for each item.")]
     [SerializeField] private ItemModels models;
     [Tooltip("How big, in metres, the shown model is at its longest side.")]
@@ -157,6 +159,7 @@ public class ItemDrop : MonoBehaviour, IInteractable
             return false;
         }
         collected = true;
+        Collected?.Invoke();
         GameEffects.Play(Effect.Sparkle, transform.position + Vector3.up * 0.3f, 0.5f);
         GameAudio.Play2D(Sfx.Pickup);
         StartCoroutine(FlyToPlayer());

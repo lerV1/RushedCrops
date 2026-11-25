@@ -2,12 +2,29 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // Contextual field notes: explain the mechanic at hand without prescribing a playthrough.
+[DefaultExecutionOrder(1100)] // Read restored game state after SaveSystem.Start.
 public class ObjectiveGuide : MonoBehaviour
 {
     private const string CompletedKey = "RushedCrops.ObjectiveGuide.Completed";
+    private const string LessonsKey = "RushedCrops.ObjectiveGuide.Lessons";
 
-    /// <summary>Clears the legacy walkthrough flag when starting a new farm.</summary>
-    public static void ClearSavedCompletion() => PlayerPrefs.DeleteKey(CompletedKey);
+    [System.Flags]
+    private enum Lesson
+    {
+        None = 0, HoePickup = 1, CanPickup = 1 << 1, HatchetPickup = 1 << 2,
+        PickaxePickup = 1 << 3, SwordPickup = 1 << 4, JarPickup = 1 << 5,
+        Chop = 1 << 6, Mine = 1 << 7, Till = 1 << 8, Plant = 1 << 9,
+        Refill = 1 << 10, Grow = 1 << 11, Harvest = 1 << 12, Trade = 1 << 13,
+        Food = 1 << 14, Fight = 1 << 15, BossSeed = 1 << 16, Capture = 1 << 17,
+        Repair = 1 << 18, Tube = 1 << 19, Ground = 1 << 20, Space = 1 << 21
+    }
+
+    /// <summary>Lets a new farm introduce each mechanic again.</summary>
+    public static void ClearSavedCompletion()
+    {
+        PlayerPrefs.DeleteKey(CompletedKey);
+        PlayerPrefs.DeleteKey(LessonsKey);
+    }
 
     [Header("Progress")]
     [SerializeField] private Inventory inventory;
@@ -32,6 +49,13 @@ public class ObjectiveGuide : MonoBehaviour
     private WaterSource[] waterSources;
     private Merchant merchant;
     private float nextRefresh;
+    private Lesson completedLessons;
+    private Lesson visibleLesson;
+    private FarmPlot plot;
+    private FoodEater foodEater;
+    private ResourceNode[] resourceNodes;
+    private bool initialized;
+    private bool listening;
 
     private void Awake()
     {
@@ -48,11 +72,48 @@ public class ObjectiveGuide : MonoBehaviour
         pickups = FindObjectsByType<ToolPickup>();
         waterSources = FindObjectsByType<WaterSource>();
         merchant = FindAnyObjectByType<Merchant>();
+        plot = farmField != null ? farmField.GetComponent<FarmPlot>() : null;
+        foodEater = player.GetComponent<FoodEater>();
+        resourceNodes = gatheringRoot != null ? gatheringRoot.GetComponentsInChildren<ResourceNode>() : new ResourceNode[0];
         // Completion of the old quest chain must not suppress contextual help on saved farms.
+    }
+
+    private void Start()
+    {
+        completedLessons = (Lesson)PlayerPrefs.GetInt(LessonsKey, 0);
+        initialized = true;
+        Subscribe();
+        RefreshObjective();
+    }
+
+    private void OnEnable()
+    {
+        if (initialized) Subscribe();
+    }
+
+    private void Subscribe()
+    {
+        if (listening) return;
+        listening = true;
+        inventory.Changed += OnInventoryChanged;
+        ItemDrop.Collected += OnGroundItemCollected;
+        if (plot != null) plot.Harvested += OnHarvested;
+        if (merchant != null) merchant.Traded += OnTraded;
+        if (foodEater != null) foodEater.AteFood += OnAteFood;
     }
 
     private void OnDisable()
     {
+        if (listening)
+        {
+            inventory.Changed -= OnInventoryChanged;
+            ItemDrop.Collected -= OnGroundItemCollected;
+            if (plot != null) plot.Harvested -= OnHarvested;
+            if (merchant != null) merchant.Traded -= OnTraded;
+            if (foodEater != null) foodEater.AteFood -= OnAteFood;
+            listening = false;
+        }
+        if (objectiveText != null) objectiveText.text = "";
         if (arrow != null) arrow.Clear();
     }
 
@@ -65,6 +126,7 @@ public class ObjectiveGuide : MonoBehaviour
 
     private void RefreshObjective()
     {
+        RecordProgress();
         if (health != null && health.IsDead) { Show("", ""); return; }
         if (interactor != null)
         {
@@ -95,7 +157,7 @@ public class ObjectiveGuide : MonoBehaviour
         // Make the easily missed gathering tools discoverable even from the starting area.
         ToolPickup gatheringTool = NearestGatheringPickup();
         if (gatheringTool != null) { ExplainPickup(gatheringTool); return; }
-        Show("FARM NOTES", "Explore at your pace. Look at tools, soil, trees, rocks or the merchant to learn how they work.");
+        Show("", "");
     }
 
     private bool Explain(Component focus)
@@ -176,6 +238,7 @@ public class ObjectiveGuide : MonoBehaviour
     {
         if (!Owns(tool))
         {
+            if (IsComplete(PickupLesson(tool))) { Show("", ""); return; }
             ToolPickup pickup = NearestPickup(tool);
             if (pickup != null) { ExplainPickup(pickup); return; }
             foreach (ItemDrop drop in FindObjectsByType<ItemDrop>())
@@ -209,6 +272,7 @@ public class ObjectiveGuide : MonoBehaviour
         foreach (ToolPickup pickup in pickups)
         {
             if (pickup == null || !pickup.isActiveAndEnabled || Owns(pickup.Tool)
+                || IsComplete(PickupLesson(pickup.Tool))
                 || (tool != ToolType.None && pickup.Tool != tool)) continue;
             float candidate = (pickup.transform.position - player.position).sqrMagnitude;
             if (candidate < distance) { nearest = pickup; distance = candidate; }
@@ -243,9 +307,117 @@ public class ObjectiveGuide : MonoBehaviour
 
     private void Show(string title, string description, Transform target = null)
     {
+        Lesson lesson = LessonForTitle(title);
+        if (description == SpaceHint()) lesson = Lesson.Space;
+        visibleLesson = lesson;
+        if (IsComplete(lesson))
+        {
+            objectiveText.text = "";
+            arrow.Clear();
+            return;
+        }
         objectiveText.text = string.IsNullOrEmpty(title) ? "" : title + "\n" + description;
         if (target != null) arrow.SetTarget(target);
         else arrow.Clear();
+    }
+
+    private bool IsComplete(Lesson lesson) => lesson != Lesson.None && (completedLessons & lesson) == lesson;
+
+    private void Complete(Lesson lesson)
+    {
+        if (lesson == Lesson.None || IsComplete(lesson)) return;
+        completedLessons |= lesson;
+        PlayerPrefs.SetInt(LessonsKey, (int)completedLessons);
+        PlayerPrefs.Save();
+        if (IsComplete(visibleLesson))
+        {
+            objectiveText.text = "";
+            arrow.Clear();
+        }
+    }
+
+    private void RecordProgress()
+    {
+        foreach (ToolType tool in System.Enum.GetValues(typeof(ToolType)))
+            if (tool != ToolType.None && Owns(tool)) Complete(PickupLesson(tool));
+        foreach (ResourceNode node in resourceNodes)
+            if (node != null && node.IsBroken) Complete(node.Item == ResourceType.Wood ? Lesson.Chop : Lesson.Mine);
+        if (tools != null && tools.WaterLeft > 0) Complete(Lesson.Refill);
+        if (farmField != null)
+        {
+            foreach (FarmTile tile in farmField.GetComponentsInChildren<FarmTile>())
+            {
+                if (tile.State != FarmTile.TileState.Untilled) Complete(Lesson.Till);
+                if (tile.State == FarmTile.TileState.Growing || tile.State == FarmTile.TileState.Ripe) Complete(Lesson.Plant);
+                if (tile.IsWet || tile.Progress > 0f || tile.State == FarmTile.TileState.Ripe) Complete(Lesson.Grow);
+                if (tile.Crop != null && tile.Crop.IsBossSeed) Complete(Lesson.BossSeed);
+            }
+        }
+        if (!IsComplete(Lesson.Fight))
+            foreach (MiniCrop crop in FindObjectsByType<MiniCrop>())
+                if (crop.CurrentState == MiniCrop.State.Dead) Complete(Lesson.Fight);
+        if (gameManager != null && gameManager.IsBossDefeated) Complete(Lesson.Fight);
+        if (inventory.GetCount(ResourceType.CapturedBoss) > 0) Complete(Lesson.Capture);
+        if (barnRepair != null && barnRepair.JobsDone > 0) Complete(Lesson.Repair);
+        foreach (BossTube tube in FindObjectsByType<BossTube>())
+            if (tube.isPlaced) Complete(Lesson.Capture | Lesson.Tube);
+        if (visibleLesson == Lesson.Space)
+            for (int slot = 0; slot < Inventory.SlotCount; slot++)
+                if (inventory.IsSlotEmpty(slot)) { Complete(Lesson.Space); break; }
+    }
+
+    private void OnInventoryChanged() => RecordProgress();
+    private void OnGroundItemCollected() => Complete(Lesson.Ground);
+    private void OnHarvested() => Complete(Lesson.Till | Lesson.Plant | Lesson.Grow | Lesson.Harvest);
+    private void OnTraded(ResourceType item, int amount, bool bought) => Complete(Lesson.Trade);
+    private void OnAteFood() => Complete(Lesson.Food);
+
+    private static Lesson PickupLesson(ToolType tool)
+    {
+        switch (tool)
+        {
+            case ToolType.Hoe: return Lesson.HoePickup;
+            case ToolType.WateringCan: return Lesson.CanPickup;
+            case ToolType.Hatchet: return Lesson.HatchetPickup;
+            case ToolType.Pickaxe: return Lesson.PickaxePickup;
+            case ToolType.Sword: return Lesson.SwordPickup;
+            case ToolType.CaptureJar: return Lesson.JarPickup;
+            default: return Lesson.None;
+        }
+    }
+
+    private static Lesson LessonForTitle(string title)
+    {
+        foreach (ToolType tool in System.Enum.GetValues(typeof(ToolType)))
+        {
+            if (tool == ToolType.None) continue;
+            if (title == ToolName(tool).ToUpper() + " PICKUP") return PickupLesson(tool);
+        }
+        if (title == ToolName(ToolType.Hoe).ToUpper()) return Lesson.Till;
+        if (title == ToolName(ToolType.Hatchet).ToUpper()) return Lesson.Chop;
+        if (title == ToolName(ToolType.Pickaxe).ToUpper()) return Lesson.Mine;
+        if (title == ToolName(ToolType.WateringCan).ToUpper()) return Lesson.Grow;
+        if (title == ToolName(ToolType.Sword).ToUpper()) return Lesson.Fight;
+        if (title == ToolName(ToolType.CaptureJar).ToUpper()) return Lesson.Capture;
+        switch (title)
+        {
+            case "WOOD & HATCHET": return Lesson.Chop;
+            case "STONE & PICKAXE": return Lesson.Mine;
+            case "SOIL & SEEDS": return Lesson.Till;
+            case "PLANTING": return Lesson.Plant;
+            case "CROP GROWTH": return Lesson.Grow;
+            case "HARVESTS": return Lesson.Harvest;
+            case "REFILLING": case "EMPTY WATERING CAN": return Lesson.Refill;
+            case "TRADING": return Lesson.Trade;
+            case "BARN REPAIRS": return Lesson.Repair;
+            case "SEED TUBES": return Lesson.Tube;
+            case "BOSS CAPTURE": return Lesson.Capture;
+            case "EVIL CROPS": return Lesson.Fight;
+            case "BOSS SEEDS": return Lesson.BossSeed;
+            case "FOOD & HEALTH": return Lesson.Food;
+            case "GROUND ITEMS": return Lesson.Ground;
+            default: return Lesson.None;
+        }
     }
 
     private static string SpaceHint() => "Only five hotbar slots. Sell items or drop a selected stack (Shift + Backspace) to make room. Dropped tools can be recovered.";

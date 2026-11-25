@@ -6,6 +6,8 @@ using UnityEngine.UI;
 // Lets the player eat harvested crops with H when hurt.
 public class FoodEater : MonoBehaviour
 {
+    /// <summary>Raised after food was consumed and successfully restored health.</summary>
+    public event System.Action AteFood;
     [Serializable]
     private struct FoodHealing
     {
@@ -99,6 +101,7 @@ public class FoodEater : MonoBehaviour
             }
 
             health.Heal(food.healing);
+            AteFood?.Invoke();
             feedback = $"Ate {ResourceTypes.DisplayName(food.food)} (+{food.healing} HP)";
             feedbackUntil = Time.unscaledTime + feedbackSeconds;
             GameEffects.Play(Effect.Sparkle, transform.position + Vector3.up, 1f);
